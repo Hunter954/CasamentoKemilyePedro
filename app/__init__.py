@@ -107,7 +107,16 @@ def create_app():
     app = Flask(__name__)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///wedding.db').replace('postgres://', 'postgresql://', 1)
+    database_url = os.getenv('DATABASE_URL', 'sqlite:///wedding.db')
+    # Railway pode fornecer postgres://, postgresql:// ou postgresql+psycopg://.
+    # O projeto usa psycopg2-binary, então normalizamos explicitamente o driver.
+    if database_url.startswith('postgres://'):
+        database_url = 'postgresql+psycopg2://' + database_url[len('postgres://'):]
+    elif database_url.startswith('postgresql+psycopg://'):
+        database_url = 'postgresql+psycopg2://' + database_url[len('postgresql+psycopg://'):]
+    elif database_url.startswith('postgresql://'):
+        database_url = 'postgresql+psycopg2://' + database_url[len('postgresql://'):]
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_DIR'] = os.getenv('UPLOAD_DIR', os.path.join(app.root_path, 'static', 'uploads'))
     app.config['ADMIN_EMAIL'] = os.getenv('ADMIN_EMAIL', 'admin@casamento.com')
