@@ -203,6 +203,42 @@ def serialize_payload(data):
         return str(data or '')
 
 
+def extract_message_id(data) -> str:
+    """Extrai o ID da mensagem de payloads do Baileys e mantém compatibilidade com webhooks legados."""
+    if not isinstance(data, dict):
+        return ''
+
+    candidates = [
+        data.get('messageId'),
+        data.get('message_id'),
+        data.get('id'),
+        data.get('zaapId'),
+    ]
+
+    key = data.get('key')
+    if isinstance(key, dict):
+        candidates.extend([key.get('id'), key.get('messageId')])
+
+    message = data.get('message')
+    if isinstance(message, dict):
+        candidates.extend([message.get('id'), message.get('messageId')])
+        message_key = message.get('key')
+        if isinstance(message_key, dict):
+            candidates.extend([message_key.get('id'), message_key.get('messageId')])
+
+    response = data.get('response')
+    if isinstance(response, dict):
+        candidates.extend([response.get('id'), response.get('messageId')])
+        response_key = response.get('key')
+        if isinstance(response_key, dict):
+            candidates.extend([response_key.get('id'), response_key.get('messageId')])
+
+    for value in candidates:
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ''
+
+
 def send_campaign_messages(campaign, contacts: Iterable, tag_filter: str | None = None, send_scope: str = 'unsent', settings=None, site_url: str = '', batch_size: int | None = None, max_caption_length: int = 1024):
     status = get_instance_status()
     if not status.get('connected'):
