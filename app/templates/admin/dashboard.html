@@ -1,0 +1,26 @@
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<div class="admin-header admin-header-row"><div><span class="admin-kicker">Central de gestão</span><h1>Kemily & Pedro</h1><p>Organize convidados, WhatsApp, confirmações e presentes em um único fluxo.</p></div><a class="btn btn-soft" href="/" target="_blank">Ver site</a></div>
+
+<div class="workflow-card section-card">
+  <div class="admin-section-head"><div><span class="admin-kicker">Fluxo recomendado</span><h2>Do contato ao convite enviado</h2></div></div>
+  <div class="workflow-steps">
+    <a href="{{ url_for('admin.whatsapp_connection') }}"><b>1</b><span><strong>Conectar</strong><small>Leia o QR Code uma vez.</small></span></a>
+    <a href="{{ url_for('admin.contacts') }}"><b>2</b><span><strong>Contatos</strong><small>Cadastre e organize por tags.</small></span></a>
+    <a href="{{ url_for('admin.campaigns') }}"><b>3</b><span><strong>Criar campanha</strong><small>Mensagem, imagem e público.</small></span></a>
+    <a href="{{ url_for('admin.campaigns') }}"><b>4</b><span><strong>Disparar</strong><small>Envie em lotes e acompanhe erros.</small></span></a>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card"><span>Confirmações</span><strong>{{ stats.rsvps }}</strong></div>
+  <div class="stat-card"><span>Contatos</span><strong>{{ stats.contacts }}</strong></div>
+  <div class="stat-card"><span>Campanhas</span><strong>{{ stats.campaigns }}</strong></div>
+  <div class="stat-card"><span>Mensagens enviadas</span><strong>{{ stats.dispatches_sent }}</strong></div>
+  <div class="stat-card"><span>Presentes</span><strong>{{ stats.gifts }}</strong></div>
+  <div class="stat-card"><span>Pagamentos aprovados</span><strong>{{ stats.paid }}</strong></div>
+  <div class="stat-card"><span>Total recebido</span><strong>{{ stats.paid_total|currency_br }}</strong></div>
+  <div class="stat-card"><span>Recados aprovados</span><strong>{{ stats.approved_messages }}</strong></div>
+</div>
+<div class="section-card"><div class="admin-section-head"><div><span class="admin-kicker">Financeiro</span><h2>Últimas compras</h2></div></div><div class="table-wrap"><table><thead><tr><th>Comprador</th><th>Presente</th><th>Valor</th><th>Status</th></tr></thead><tbody>{% for item in purchases %}<tr><td>{{ item.buyer_name }}</td><td>{{ item.gift.title if item.gift else '-' }}</td><td>{{ item.amount|currency_br }}</td><td>{{ item.status }}</td></tr>{% else %}<tr><td colspan="4">Nenhuma compra ainda.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

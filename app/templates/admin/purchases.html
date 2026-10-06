@@ -1,0 +1,23 @@
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<div class="admin-header"><h1>Compras e pagamentos</h1><p>Dados completos dos presentes recebidos e opção para limpar compras de teste.</p></div>
+<div class="section-card"><div class="table-wrap"><table><thead><tr><th>Comprador</th><th>Presente</th><th>Valor</th><th>E-mail</th><th>Telefone</th><th>Presença</th><th>Recado</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+{% for item in purchases %}
+<tr>
+  <td>{{ item.buyer_name }}</td>
+  <td>{{ item.gift.title if item.gift else '-' }}</td>
+  <td>{{ item.amount|currency_br }}</td>
+  <td>{{ item.buyer_email }}</td>
+  <td>{{ item.buyer_phone|phone_br }}</td>
+  <td>{{ 'Sim' if item.confirmed_presence else 'Não' }}</td>
+  <td>{{ item.message }}</td>
+  <td>{{ item.status }}</td>
+  <td>
+    <form method="post" action="{{ url_for('admin.delete_purchase', purchase_id=item.id) }}" onsubmit="return confirm('Deseja realmente excluir esta compra?');">
+      <button class="btn btn-soft btn-danger-outline" type="submit">Excluir</button>
+    </form>
+  </td>
+</tr>
+{% else %}<tr><td colspan="9">Nenhuma compra ainda.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

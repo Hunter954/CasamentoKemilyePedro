@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Login do admin{% endblock %}
+{% block content %}
+<div class="page-shell container narrow">
+  <div class="section-card centered">
+    <span class="hero-pill">Painel administrativo</span>
+    <h1>Entrar</h1>
+    <form class="stack-form" method="post">
+      <input type="email" name="email" placeholder="E-mail" required>
+      <input type="password" name="password" placeholder="Senha" required>
+      <button class="btn btn-primary btn-full">Acessar painel</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

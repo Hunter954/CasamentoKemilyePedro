@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<div class="page-shell container narrow">
+  <a href="{{ url_for('public.gifts') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+  <div class="section-card">
+    <div class="section-title"><span>Pagamento do presente</span><h1>{{ gift.title }}</h1></div>
+    <p class="checkout-price">{{ gift.price|currency_br }}</p>
+    <p class="checkout-helper">Preencha seus dados para seguir para o checkout do Mercado Pago.</p>
+    <form class="stack-form" method="post">
+      <input name="buyer_name" placeholder="Nome e Sobrenome" required>
+      <input name="buyer_email" type="email" placeholder="Seu e-mail" required>
+      <input name="buyer_phone" placeholder="(45) 99999-9999" inputmode="numeric" data-phone-mask required>
+      <label class="checkline"><input type="checkbox" name="confirmed_presence"> Eu também confirmei presença</label>
+      <textarea name="message" id="gift-message" placeholder="Deixe uma mensagem para o casal">{{ initial_message }}</textarea>
+      <button type="button" class="btn btn-soft btn-full" id="generate-message-btn">Gerar outra mensagem carinhosa</button>
+      <button class="btn btn-primary btn-full">Ir para o pagamento no Mercado Pago</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

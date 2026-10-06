@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}{{ settings.couple_names if settings else 'Casamento' }}{% endblock %}
+{% block content %}
+<header class="site-header home-header">
+  <div class="container site-header-inner">
+    <a href="{{ url_for('public.home') }}" class="site-brand">{{ settings.couple_names if settings else 'Casamento' }}</a>
+    <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="site-drawer" data-menu-toggle>
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <nav class="desktop-nav" aria-label="Menu principal">
+      <a href="#evento">Evento</a>
+      <a href="{{ url_for('public.rsvp') }}">Confirmar presença</a>
+      <a href="{{ url_for('public.guestbook') }}">Mural</a>
+      <a href="{{ url_for('public.gifts') }}">Presentes</a>
+    </nav>
+  </div>
+</header>
+
+<div class="drawer-backdrop" data-menu-close></div>
+<aside class="site-drawer" id="site-drawer" aria-hidden="true">
+  <div class="site-drawer-head">
+    <strong>{{ settings.couple_names if settings else 'Casamento' }}</strong>
+    <button class="menu-toggle drawer-close" type="button" aria-label="Fechar menu" data-menu-close>
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <nav class="site-drawer-nav" aria-label="Menu mobile">
+    <a href="#evento" data-menu-close>Evento</a>
+    <a href="{{ url_for('public.rsvp') }}">Confirmar presença</a>
+    <a href="{{ url_for('public.guestbook') }}">Mural de recados</a>
+    <a href="{{ url_for('public.gifts') }}">Lista de presentes</a>
+  </nav>
+</aside>
+
+<section class="hero-section">
+  <div class="hero-overlay"></div>
+  <div class="hero-content container">
+    <span class="hero-pill">Nosso grande dia</span>
+    <h1>{{ settings.couple_names }}</h1>
+    <p class="hero-phrase">{{ settings.hero_phrase }}</p>
+    <div class="hero-date">Faltam para {{ settings.wedding_date.strftime('%d/%m/%Y') if settings and settings.wedding_date else 'o casamento' }}</div>
+    <div class="countdown-card" data-countdown="{{ countdown_target }}">
+      <div><strong data-days>00</strong><span>dias</span></div>
+      <div><strong data-hours>00</strong><span>horas</span></div>
+      <div><strong data-minutes>00</strong><span>min</span></div>
+      <div><strong data-seconds>00</strong><span>seg</span></div>
+    </div>
+    <div class="hero-actions">
+      <a href="{{ url_for('public.rsvp') }}" class="btn btn-primary">Confirmar presença</a>
+      <a href="#presentes-home" class="btn btn-soft">Presentear</a>
+    </div>
+  </div>
+</section>
+
+<main class="container main-stack home-stack">
+  <section id="evento" class="glass-card section-card event-section-card">
+    <div class="section-title">
+      <span>Detalhes do evento</span>
+      <h2>Onde e quando viver esse momento</h2>
+    </div>
+    <div class="event-meta">
+      <div class="meta-box"><i class="fa-solid fa-location-dot"></i><div><strong>{{ settings.wedding_location_name }}</strong><small>{{ settings.wedding_address }}<br>{{ settings.wedding_city }}</small></div></div>
+      <div class="meta-box"><i class="fa-regular fa-calendar"></i><div><strong>{{ settings.wedding_date.strftime('%d/%m/%Y') if settings and settings.wedding_date else '-' }}</strong><small>Data do casamento</small></div></div>
+      <div class="meta-box"><i class="fa-regular fa-clock"></i><div><strong>{{ settings.wedding_time }}</strong><small>Horário da cerimônia</small></div></div>
+    </div>
+    <div class="map-card">
+      {% if computed_map_embed_url %}
+      <iframe src="{{ computed_map_embed_url }}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      {% else %}
+      <div class="map-placeholder"><i class="fa-solid fa-heart"></i><p>Adicione o endereço no painel administrativo.</p></div>
+      {% endif %}
+      <a class="btn btn-route" href="{{ computed_route_url or '#' }}" target="_blank">Ir para rota</a>
+    </div>
+  </section>
+
+  <section id="presentes-home" class="section-card banner-card" style="background-image:linear-gradient(180deg, rgba(29,15,20,.15), rgba(29,15,20,.65)), var(--banner-image)">
+    <span>{{ settings.gift_banner_title }}</span>
+    <h2>Seu carinho também faz parte do nosso começo</h2>
+    <p>Escolha um presente simbólico e nos ajude a construir memórias lindas.</p>
+    <a href="{{ url_for('public.gifts') }}" class="btn btn-primary btn-full">{{ settings.gift_button_label }}</a>
+  </section>
+
+  <section class="section-card quote-card">
+    <h2>E assim permanecem a fé, a esperança e o amor… mas o maior destes é o amor.</h2>
+    <p>{{ settings.final_message }}</p>
+  </section>
+
+  <section class="section-card gifts-preview">
+    <div class="section-title small-gap">
+      <span>Lista de presentes</span>
+      <h2>Alguns presentes disponíveis</h2>
+    </div>
+    <div class="gift-grid preview-grid">
+      {% for gift in gifts %}
+      {% set gift_image = media_url(gift.image_url) if gift.image_url and not gift.image_url.startswith('http') else gift.image_url %}
+      <article class="gift-item preview-card">
+        <div class="gift-thumb" {% if gift_image %}style="background-image:url('{{ gift_image }}')"{% endif %}></div>
+        <div class="gift-content">
+          <div class="gift-head-row">
+            <h3>{{ gift.title }}</h3>
+            <strong class="gift-price">{{ gift.price|currency_br }}</strong>
+          </div>
+          <p>{{ gift.description }}</p>
+          <div class="gift-actions-row">
+            <a href="{{ url_for('public.gift_checkout', gift_id=gift.id) }}" class="btn btn-primary gift-buy-btn">Comprar presente</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="section-actions-center top-gap">
+      <a href="{{ url_for('public.gifts') }}" class="btn btn-soft">Ver todos os presentes</a>
+    </div>
+  </section>
+
+  <section class="section-card guestbook-home-card">
+    <div class="section-title small-gap">
+      <span>Mural de recados</span>
+      <h2>Carinho de quem estará com a gente</h2>
+    </div>
+    <div class="guestbook-list refined-guestbook-list">
+      {% for card in guestbook_messages %}
+      <article class="guestbook-item refined-guestbook-item">
+        <div class="guestbook-topline">
+          <span class="guestbook-avatar">{{ card.initials }}</span>
+          <div>
+            <strong>{{ card.item.author_name }}</strong>
+            <small>{{ card.posted_at }}</small>
+          </div>
+        </div>
+        <p>{{ card.item.message }}</p>
+      </article>
+      {% else %}
+      <article class="guestbook-item empty">Os primeiros recados aparecerão aqui.</article>
+      {% endfor %}
+    </div>
+    <a href="{{ url_for('public.guestbook') }}" class="btn btn-soft btn-full">Ver mural completo</a>
+  </section>
+</main>
+{% endblock %}

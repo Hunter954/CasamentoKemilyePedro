@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block body_class %}admin-body{% endblock %}
+{% block content %}
+<div class="admin-layout admin-v2">
+  <aside class="admin-sidebar">
+    <div class="admin-brand"><span class="admin-brand-mark">K<span>&</span>P</span><div><h2>Kemily & Pedro</h2><p>Gestão do casamento</p></div></div>
+    <nav>
+      <span class="admin-nav-label">Visão geral</span>
+      <a class="{% if request.endpoint == 'admin.dashboard' %}is-active{% endif %}" href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+      <span class="admin-nav-label">Convidados</span>
+      <a class="{% if request.endpoint == 'admin.contacts' %}is-active{% endif %}" href="{{ url_for('admin.contacts') }}">Contatos</a>
+      <a href="{{ url_for('admin.manage_rsvps') }}">Confirmações</a>
+      <a href="{{ url_for('admin.manage_guestbook') }}">Mural</a>
+      <span class="admin-nav-label">WhatsApp</span>
+      <a class="{% if request.endpoint == 'admin.whatsapp_connection' %}is-active{% endif %}" href="{{ url_for('admin.whatsapp_connection') }}">Conexão WhatsApp</a>
+      <a class="{% if request.endpoint == 'admin.campaigns' %}is-active{% endif %}" href="{{ url_for('admin.campaigns') }}">Campanhas</a>
+      <span class="admin-nav-label">Site e presentes</span>
+      <a href="{{ url_for('admin.manage_gifts') }}">Presentes</a>
+      <a href="{{ url_for('admin.purchases') }}">Compras</a>
+      <a href="{{ url_for('admin.settings') }}">Configurações</a>
+    </nav>
+    <a class="admin-logout" href="{{ url_for('admin.logout') }}">Sair do painel</a>
+  </aside>
+  <main class="admin-main">{% block admin_content %}{% endblock %}</main>
+</div>
+{% endblock %}

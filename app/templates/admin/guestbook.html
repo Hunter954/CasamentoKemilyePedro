@@ -1,0 +1,43 @@
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<div class="admin-header">
+  <h1>Mural de recados</h1>
+  <p>Aprove, desaprove e exclua mensagens com mais organização.</p>
+</div>
+
+<div class="section-card">
+  <div class="admin-section-head">
+    <div>
+      <span class="admin-kicker">Moderação</span>
+      <h2>Recados recebidos</h2>
+    </div>
+  </div>
+
+  <div class="admin-message-list">
+    {% for item in messages %}
+    <article class="admin-message-card">
+      <div class="admin-message-head">
+        <div>
+          <strong>{{ item.author_name }}</strong>
+          <small>{{ item.created_at.strftime('%d/%m/%Y às %H:%M') if item.created_at else '' }}</small>
+        </div>
+        <span class="admin-tag {{ 'tag-success' if item.approved else 'tag-warning' }}">{{ 'Aprovado' if item.approved else 'Pendente' }}</span>
+      </div>
+      <p>{{ item.message }}</p>
+      <div class="admin-card-actions">
+        {% if item.approved %}
+        <a href="{{ url_for('admin.disapprove_message', message_id=item.id) }}" class="btn btn-soft">Desaprovar</a>
+        {% else %}
+        <a href="{{ url_for('admin.approve_message', message_id=item.id) }}" class="btn btn-soft">Aprovar</a>
+        {% endif %}
+        <form method="post" action="{{ url_for('admin.delete_message', message_id=item.id) }}" onsubmit="return confirm('Deseja realmente excluir este recado?');">
+          <button class="btn btn-soft btn-danger-outline" type="submit">Excluir</button>
+        </form>
+      </div>
+    </article>
+    {% else %}
+    <div class="empty-admin-state">Nenhum recado ainda.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

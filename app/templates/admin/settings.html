@@ -1,0 +1,88 @@
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<div class="admin-header"><h1>Configurações do site</h1><p>Controle visual, textos, integrações e informações do casamento.</p></div>
+<form class="section-card stack-form admin-form-card" method="post" enctype="multipart/form-data">
+  <div class="admin-section-head">
+    <div>
+      <span class="admin-kicker">Informações gerais</span>
+      <h2>Site público</h2>
+    </div>
+  </div>
+  <div class="admin-form-grid two-cols">
+    <label>Nomes do casal<input name="couple_names" value="{{ settings.couple_names }}"></label>
+    <label>Frase principal<input name="hero_phrase" value="{{ settings.hero_phrase }}"></label>
+    <label>Data e hora do casamento<input type="datetime-local" name="wedding_date" value="{{ settings.wedding_date.strftime('%Y-%m-%dT%H:%M') if settings.wedding_date else '' }}"></label>
+    <label>Horário<input name="wedding_time" value="{{ settings.wedding_time }}"></label>
+    <label>Nome do local<input name="wedding_location_name" value="{{ settings.wedding_location_name }}"></label>
+    <label>Endereço<input name="wedding_address" value="{{ settings.wedding_address }}"></label>
+    <label>Cidade<input name="wedding_city" value="{{ settings.wedding_city }}"></label>
+    <label>Título do banner de presentes<input name="gift_banner_title" value="{{ settings.gift_banner_title }}"></label>
+    <label class="full-width">URL do mapa embed<textarea name="map_embed_url">{{ settings.map_embed_url }}</textarea></label>
+    <label class="full-width">URL de rota<textarea name="route_url">{{ settings.route_url }}</textarea></label>
+    <label>Texto do botão de presentes<input name="gift_button_label" value="{{ settings.gift_button_label }}"></label>
+    <label>Imagem do topo<input type="file" name="hero_image"></label>
+    <label>Imagem do banner de presentes<input type="file" name="gift_banner_image"></label>
+    <label class="full-width">Mensagem final<textarea name="final_message">{{ settings.final_message }}</textarea></label>
+  </div>
+
+  <div class="admin-section-head top-gap">
+    <div>
+      <span class="admin-kicker">Visual</span>
+      <h2>Cores e comunicação</h2>
+    </div>
+  </div>
+  <div class="color-row">
+    <label>Cor principal<input type="color" name="theme_primary" value="{{ settings.theme_primary }}"></label>
+    <label>Cor secundária<input type="color" name="theme_secondary" value="{{ settings.theme_secondary }}"></label>
+    <label>Cor destaque<input type="color" name="theme_accent" value="{{ settings.theme_accent }}"></label>
+  </div>
+  <label>Template do WhatsApp<textarea name="whatsapp_message_template">{{ settings.whatsapp_message_template }}</textarea></label>
+  <p class="admin-helper-text">Você pode usar placeholders como %contato%, %nome_noivos%, %site_url%, %data_casamento%, %horario_casamento%, %local_casamento%, %endereco_casamento%, %cidade_casamento% e %rota_url%.</p>
+
+  {% if settings.hero_image %}
+  <div class="admin-thumb-preview">
+    <span>Imagem atual do topo</span>
+    <img src="{{ media_url(settings.hero_image) }}" alt="Imagem atual do topo">
+  </div>
+  {% endif %}
+  {% if settings.gift_banner_image %}
+  <div class="admin-thumb-preview">
+    <span>Imagem atual do banner de presentes</span>
+    <img src="{{ media_url(settings.gift_banner_image) }}" alt="Imagem atual do banner de presentes">
+  </div>
+  {% endif %}
+  <label class="checkline"><input type="checkbox" name="allow_guestbook" {% if settings.allow_guestbook %}checked{% endif %}> Permitir mural de recados</label>
+  <label class="checkline"><input type="checkbox" name="require_guestbook_approval" {% if settings.require_guestbook_approval %}checked{% endif %}> Exigir aprovação dos recados</label>
+
+  <div class="integration-box top-gap">
+    <div class="admin-section-head">
+      <div>
+        <span class="admin-kicker">Pagamento</span>
+        <h2>Mercado Pago</h2>
+      </div>
+    </div>
+    <label class="checkline"><input type="checkbox" name="mercado_pago_enabled" {% if settings.mercado_pago_enabled %}checked{% endif %}> Ativar integração do Mercado Pago</label>
+    <div class="admin-form-grid two-cols">
+      <label>Access Token<textarea name="mercado_pago_access_token" placeholder="APP_USR-...">{{ settings.mercado_pago_access_token or '' }}</textarea></label>
+      <label>Public Key<input name="mercado_pago_public_key" placeholder="APP_USR-..." value="{{ settings.mercado_pago_public_key or '' }}"></label>
+    </div>
+    <p class="admin-helper-text">Com essa configuração preenchida, o checkout passa a criar a preferência real do Mercado Pago direto pelo painel admin, sem depender de variável manual no Railway.</p>
+  </div>
+
+  <div class="integration-box top-gap">
+    <div class="admin-section-head"><div><span class="admin-kicker">WhatsApp</span><h2>Conexão simplificada</h2></div></div>
+    <p class="admin-helper-text">O WhatsApp agora usa o mesmo motor Baileys do Reivilo. Não é mais necessário configurar Instance ID, token, Client-Token ou webhooks. A conexão é feita por QR Code e a sessão fica salva no PostgreSQL.</p>
+    <a class="btn btn-soft" href="{{ url_for('admin.whatsapp_connection') }}">Abrir conexão WhatsApp</a>
+    <div class="whatsapp-test-box stack-form compact-stack top-gap">
+      <div class="admin-section-head"><div><span class="admin-kicker">Teste rápido</span><h2>Mensagem de teste</h2></div></div>
+      <div class="admin-form-grid two-cols">
+        <label>Número para teste<input name="test_phone" inputmode="numeric" placeholder="45999999999"><small class="admin-helper-inline">Pode informar DDD + número; o código 55 é acrescentado automaticamente.</small></label>
+        <label>Mensagem<textarea name="test_message" placeholder="Olá! Este é um teste do WhatsApp do casamento."></textarea></label>
+      </div>
+      <button class="btn btn-soft" formaction="{{ url_for('admin.test_whatsapp') }}" formmethod="post">Enviar teste</button>
+    </div>
+  </div>
+
+  <button class="btn btn-primary">Salvar alterações</button>
+</form>
+{% endblock %}

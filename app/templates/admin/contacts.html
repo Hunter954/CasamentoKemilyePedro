@@ -1,0 +1,131 @@
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<div class="admin-header">
+  <h1>Contatos</h1>
+  <p>Base oficial para os disparos do WhatsApp e geração do código único de confirmação.</p>
+</div>
+
+<form class="section-card stack-form contacts-form-card{% if editing_contact %} is-editing{% endif %}" method="post">
+  <div class="contacts-form-head">
+    <div>
+      <span class="admin-kicker">{% if editing_contact %}Edição inline{% else %}Novo contato{% endif %}</span>
+      <h2>{% if editing_contact %}Editar contato{% else %}Cadastrar contato{% endif %}</h2>
+      <p>{% if editing_contact %}Altere os dados abaixo e salve no mesmo bloco, sem abrir outra aba.{% else %}Cadastre o telefone com DDD. O sistema normaliza o número automaticamente e cria o código único de confirmação.{% endif %}</p>
+    </div>
+    {% if editing_contact %}
+      <a class="btn btn-secondary contacts-cancel-btn" href="{{ url_for('admin.contacts') }}">Cancelar edição</a>
+    {% endif %}
+  </div>
+
+  <input type="hidden" name="contact_id" value="{{ editing_contact.id if editing_contact else '' }}">
+
+  <div class="contacts-form-grid">
+    <label class="contacts-field">
+      <span class="contacts-label">Nome do contato ou casal</span>
+      <input name="name" required placeholder="João & Maria" value="{{ editing_contact.name if editing_contact else '' }}">
+    </label>
+
+    <label class="contacts-field contacts-field-phone">
+      <span class="contacts-label">Telefone para envio</span>
+      <input name="phone" required inputmode="numeric" pattern="[0-9]{10,13}" maxlength="13" placeholder="45999999999" value="{{ editing_contact.phone if editing_contact else '' }}">
+      <small class="admin-helper-inline contacts-helper">Use somente números. Pode informar DDD + número ou 55 + DDD + número.</small>
+    </label>
+
+    <label class="contacts-field">
+      <span class="contacts-label">Tag</span>
+      <input name="tag" value="{{ editing_contact.tag if editing_contact else 'convidado' }}" placeholder="família, padrinhos, convidados">
+    </label>
+  </div>
+
+  <div class="contacts-form-actions">
+    <button class="btn btn-primary">{% if editing_contact %}Salvar alterações{% else %}Salvar contato{% endif %}</button>
+  </div>
+</form>
+
+<div class="section-card contacts-table-card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Telefone</th>
+          <th>Visual</th>
+          <th>Código</th>
+          <th>Tag</th>
+          <th style="width: 260px;">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for item in contacts %}
+        <tr>
+          <td>{{ item.name }}</td>
+          <td><code>{{ item.phone }}</code></td>
+          <td>{{ item.phone|phone_br }}</td>
+          <td><strong>{{ item.confirmation_code or '-' }}</strong></td>
+          <td>{{ item.tag }}</td>
+          <td>
+            <div class="table-actions-inline">
+              <a class="btn btn-secondary btn-sm" href="{{ url_for('admin.contacts', edit=item.id) }}">Editar</a>
+              <form method="post" action="{{ url_for('admin.regenerate_contact_code', contact_id=item.id) }}" onsubmit="return confirm('Gerar um novo código para este contato?');" style="margin:0;">
+                <button class="btn btn-soft btn-sm" type="submit">Novo código</button>
+              </form>
+              <form method="post" action="{{ url_for('admin.delete_contact', contact_id=item.id) }}" onsubmit="return confirm('Excluir este contato?');" style="margin:0;">
+                <button class="btn btn-danger btn-sm" type="submit">Excluir</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">Nenhum contato ainda.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  .contacts-form-card {
+    gap: 1.35rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    padding: 1.6rem;
+  }
+  .contacts-form-card.is-editing {
+    border-color: rgba(241, 77, 120, 0.35);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.14);
+  }
+  .contacts-form-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .contacts-form-head h2 { margin: 0.2rem 0 0.35rem; }
+  .contacts-form-head p { margin: 0; max-width: 62ch; opacity: 0.78; line-height: 1.6; }
+  .admin-kicker { display: inline-block; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+  .contacts-cancel-btn { white-space: nowrap; align-self: flex-start; }
+  .contacts-form-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(240px, 0.7fr); gap: 1rem; align-items: start; }
+  .contacts-field { display: grid; gap: 0.6rem; align-content: start; min-width: 0; }
+  .contacts-label { font-weight: 700; color: #5d3945; }
+  .contacts-field input { width: 100%; min-height: 58px; }
+  .contacts-field-phone input { letter-spacing: 0.02em; }
+  .contacts-helper { display: block; min-height: 2.8em; line-height: 1.45; color: #816570; }
+  .contacts-form-actions { display: flex; justify-content: flex-end; padding-top: 0.15rem; }
+  .contacts-form-actions .btn { min-width: 190px; }
+  .contacts-table-card { margin-top: 1rem; }
+  .table-actions-inline { display: flex; align-items: center; justify-content: flex-start; gap: 0.55rem; flex-wrap: wrap; }
+  .btn-sm { padding: 0.58rem 0.9rem; font-size: 0.84rem; }
+  @media (max-width: 1180px) {
+    .contacts-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .contacts-field:last-child { grid-column: 1 / -1; }
+  }
+  @media (max-width: 980px) {
+    .contacts-form-card { padding: 1.25rem; }
+    .contacts-form-grid { grid-template-columns: 1fr; }
+    .contacts-field:last-child { grid-column: auto; }
+    .contacts-form-head { flex-direction: column; align-items: stretch; }
+    .contacts-form-actions { justify-content: stretch; }
+    .contacts-form-actions .btn, .contacts-form-head .btn { width: 100%; text-align: center; }
+  }
+</style>
+{% endblock %}

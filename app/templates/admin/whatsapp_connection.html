@@ -1,0 +1,34 @@
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<div class="admin-header admin-header-row"><div><span class="admin-kicker">Etapa 1 do fluxo</span><h1>Conexão WhatsApp</h1><p>Mesmo motor Baileys usado no Reivilo, com a sessão salva no PostgreSQL.</p></div><a class="btn btn-soft" href="{{ url_for('admin.whatsapp_connection') }}">Atualizar</a></div>
+
+<div class="stats-grid whatsapp-mini-stats">
+  <div class="stat-card"><span>Status</span><strong>{{ 'Conectado' if status_data.get('connected') else 'Desconectado' }}</strong></div>
+  <div class="stat-card"><span>Motor</span><strong>{{ instance_data.get('engine') or 'Baileys' }}</strong></div>
+  <div class="stat-card"><span>Sessão</span><strong>{{ instance_data.get('authStore') or 'PostgreSQL' }}</strong></div>
+  <div class="stat-card"><span>Número</span><strong>{{ instance_data.get('phone') or '—' }}</strong></div>
+</div>
+{% if error_message %}<div class="section-card alert-card"><strong>Motor do WhatsApp indisponível.</strong><p>{{ error_message }}</p></div>{% endif %}
+
+<div class="admin-grid two-columns whatsapp-connect-grid">
+  <div class="section-card connection-panel">
+    <div class="admin-section-head"><div><span class="admin-kicker">Estado atual</span><h2>{{ status_data.get('status') or 'Aguardando conexão' }}</h2></div><span class="status-dot {% if status_data.get('connected') %}online{% endif %}"></span></div>
+    <div class="connection-info">
+      <div><span>Conectado em</span><strong>{{ instance_data.get('connectedAt') or '—' }}</strong></div>
+      <div><span>Último QR</span><strong>{{ instance_data.get('lastQrAt') or '—' }}</strong></div>
+      <div><span>ID da sessão</span><strong>{{ instance_data.get('sessionId') or 'kemily-pedro-casamento' }}</strong></div>
+    </div>
+    <div class="admin-card-actions">
+      <form method="post" action="{{ url_for('admin.whatsapp_connection_restart') }}"><button class="btn btn-soft">Reiniciar conexão</button></form>
+      <form method="post" action="{{ url_for('admin.whatsapp_connection_disconnect') }}" onsubmit="return confirm('Trocar a sessão atual? Será necessário ler um novo QR Code.');"><button class="btn btn-danger-outline">Trocar número / gerar novo QR</button></form>
+    </div>
+  </div>
+  <div class="section-card qr-panel">
+    <div class="admin-section-head"><div><span class="admin-kicker">Pareamento</span><h2>{% if status_data.get('connected') %}WhatsApp pronto{% else %}Leia o QR Code{% endif %}</h2></div></div>
+    {% if status_data.get('connected') %}<div class="connection-success"><strong>Conectado com sucesso</strong><p>Agora você já pode ir para Campanhas e fazer os disparos.</p><a class="btn btn-primary" href="{{ url_for('admin.campaigns') }}">Ir para campanhas</a></div>
+    {% elif qr_code_image %}<div class="qr-wrap"><img src="{{ qr_code_image }}" alt="QR Code WhatsApp"></div><p class="admin-helper-text">No celular: WhatsApp → Aparelhos conectados → Conectar aparelho.</p>
+    {% else %}<div class="empty-admin-state">O QR está sendo preparado. Esta tela atualiza automaticamente.</div>{% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}{{ super() }}{% if not status_data.get('connected') %}<script>setTimeout(()=>window.location.reload(),8000)</script>{% endif %}{% endblock %}

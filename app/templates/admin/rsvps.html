@@ -1,0 +1,30 @@
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<div class="admin-header"><h1>Confirmações de presença</h1><p>Cada convidado possui um código único. Aqui você acompanha quem já confirmou e quem ainda está pendente.</p></div>
+<div class="section-card"><div class="table-wrap"><table><thead><tr><th>Contato</th><th>Telefone</th><th>Código</th><th>Status</th><th>Pessoas</th><th>Quando</th><th>Mensagem</th></tr></thead><tbody>
+{% for row in rows %}
+<tr>
+  <td>{{ row.contact.name }}</td>
+  <td>{{ row.contact.phone|phone_br }}</td>
+  <td><strong>{{ row.contact.confirmation_code or '-' }}</strong></td>
+  <td>
+    <span class="admin-tag {{ 'tag-success' if row.confirmed else 'tag-neutral' }}">{{ 'confirmado' if row.confirmed else 'pendente' }}</span>
+  </td>
+  <td>{{ row.rsvp.guests_count if row.rsvp else '-' }}</td>
+  <td>{{ row.rsvp.confirmed_at.strftime('%d/%m/%Y %H:%M') if row.rsvp and row.rsvp.confirmed_at else '-' }}</td>
+  <td>{{ row.rsvp.message if row.rsvp and row.rsvp.message else '-' }}</td>
+</tr>
+{% else %}<tr><td colspan="7">Nenhum contato cadastrado ainda.</td></tr>{% endfor %}
+</tbody></table></div></div>
+
+{% if legacy_rsvps %}
+<div class="section-card" style="margin-top:1rem;">
+  <div class="admin-section-head"><div><span class="admin-kicker">Histórico antigo</span><h2>Confirmações manuais anteriores</h2></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Telefone</th><th>Presença</th><th>Pessoas</th><th>Mensagem</th></tr></thead><tbody>
+  {% for item in legacy_rsvps %}
+  <tr><td>{{ item.guest_name }}</td><td>{{ item.phone|phone_br }}</td><td>{{ item.attendance }}</td><td>{{ item.guests_count }}</td><td>{{ item.message }}</td></tr>
+  {% endfor %}
+  </tbody></table></div>
+</div>
+{% endif %}
+{% endblock %}

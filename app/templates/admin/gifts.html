@@ -1,0 +1,92 @@
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<div class="admin-header">
+  <h1>Presentes</h1>
+  <p>Cadastre, edite e controle presentes com compra única ou compras ilimitadas.</p>
+</div>
+
+<form class="section-card stack-form admin-form-card" method="post" enctype="multipart/form-data" {% if edit_gift %}action="{{ url_for('admin.edit_gift', gift_id=edit_gift.id) }}"{% endif %}>
+  <div class="admin-section-head">
+    <div>
+      <span class="admin-kicker">Cadastro de presentes</span>
+      <h2>{{ 'Editar presente' if edit_gift else 'Novo presente' }}</h2>
+    </div>
+    {% if edit_gift %}
+    <a href="{{ url_for('admin.manage_gifts') }}" class="btn btn-soft">Cancelar edição</a>
+    {% endif %}
+  </div>
+
+  <div class="admin-form-grid two-cols">
+    <label>Título
+      <input name="title" required value="{{ edit_gift.title if edit_gift else '' }}">
+    </label>
+    <label>Valor
+      <input type="number" step="0.01" name="price" required value="{{ edit_gift.price if edit_gift else '' }}">
+    </label>
+    <label class="full-width">Descrição
+      <textarea name="description">{{ edit_gift.description if edit_gift else '' }}</textarea>
+    </label>
+    <label>Imagem do presente
+      <input type="file" name="image" accept="image/*">
+    </label>
+    <div class="gift-config-box">
+      <label class="checkline"><input type="checkbox" name="active" {% if edit_gift %}{% if edit_gift.active %}checked{% endif %}{% else %}checked{% endif %}> Presente ativo no site</label>
+      <label class="checkline"><input type="checkbox" name="allow_multiple_purchases" {% if edit_gift %}{% if edit_gift.allow_multiple_purchases %}checked{% endif %}{% else %}checked{% endif %}> Pode ser comprado várias vezes</label>
+      <p>Desmarque a opção acima para transformar o presente em compra única. Quando for aprovado um pagamento, ele fica esgotado automaticamente no site.</p>
+    </div>
+  </div>
+
+  {% if edit_gift and edit_gift.image_url %}
+  <div class="admin-thumb-preview">
+    <span>Imagem atual</span>
+    <img src="{{ media_url(edit_gift.image_url) }}" alt="Imagem atual do presente">
+  </div>
+  {% endif %}
+
+  <button class="btn btn-primary">{{ 'Salvar alterações' if edit_gift else 'Cadastrar presente' }}</button>
+</form>
+
+<div class="section-card">
+  <div class="admin-section-head">
+    <div>
+      <span class="admin-kicker">Lista cadastrada</span>
+      <h2>Presentes do site</h2>
+    </div>
+  </div>
+
+  <div class="admin-gift-list">
+    {% for gift in gifts %}
+    {% set gift_image = media_url(gift.image_url) if gift.image_url and not gift.image_url.startswith('http') else gift.image_url %}
+    <article class="admin-gift-card {% if gift.is_sold_out %}is-sold-out{% endif %}">
+      <div class="admin-gift-card-top">
+        <div class="admin-gift-thumb" {% if gift_image %}style="background-image:url('{{ gift_image }}')"{% endif %}></div>
+        <div class="admin-gift-main">
+          <div class="admin-gift-title-row">
+            <div>
+              <h3>{{ gift.title }}</h3>
+              <p>{{ gift.description or 'Sem descrição cadastrada.' }}</p>
+            </div>
+            <strong>{{ gift.price|currency_br }}</strong>
+          </div>
+          <div class="admin-tag-row">
+            <span class="admin-tag {{ 'tag-success' if gift.active else 'tag-neutral' }}">{{ 'Ativo' if gift.active else 'Inativo' }}</span>
+            <span class="admin-tag {{ 'tag-warning' if gift.is_sold_out else 'tag-info' }}">{{ 'Esgotado' if gift.is_sold_out else 'Disponível' }}</span>
+            <span class="admin-tag tag-neutral">{{ 'Compra única' if not gift.allow_multiple_purchases else 'Compra múltipla' }}</span>
+            <span class="admin-tag tag-neutral">{{ gift.approved_purchases_count }} pagamento(s) aprovado(s)</span>
+          </div>
+        </div>
+      </div>
+      <div class="admin-card-actions">
+        <a href="{{ url_for('admin.manage_gifts', edit=gift.id) }}" class="btn btn-soft">Editar</a>
+        <form method="post" action="{{ url_for('admin.toggle_gift', gift_id=gift.id) }}"><button type="submit" class="btn btn-soft">{{ 'Desativar' if gift.active else 'Ativar' }}</button></form>
+        <form method="post" action="{{ url_for('admin.delete_gift', gift_id=gift.id) }}" onsubmit="return confirm('Deseja realmente excluir este presente?');">
+          <button class="btn btn-soft btn-danger-outline" type="submit">Excluir</button>
+        </form>
+      </div>
+    </article>
+    {% else %}
+    <div class="empty-admin-state">Nenhum presente cadastrado ainda.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

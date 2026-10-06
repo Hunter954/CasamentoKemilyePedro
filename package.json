@@ -1,0 +1,13 @@
+{
+  "name": "kemily-pedro-casamento",
+  "private": true,
+  "version": "2.0.0",
+  "engines": {"node": ">=20"},
+  "dependencies": {
+    "@hapi/boom": "10.0.1",
+    "@whiskeysockets/baileys": "6.7.23",
+    "pg": "^8.13.1",
+    "pino": "^9.7.0",
+    "qrcode": "1.5.4"
+  }
+}

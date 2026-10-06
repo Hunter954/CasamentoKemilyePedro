@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Lista de presentes{% endblock %}
+{% block content %}
+<div class="page-shell container gifts-page-shell">
+  <a href="{{ url_for('public.home') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+  <div class="section-card gifts-page-card">
+    <div class="section-title gifts-page-title"><span>Presentes</span><h1>Escolha um presente especial</h1></div>
+    {% if gifts %}
+    <div class="gift-grid gifts-catalog-grid">
+      {% for gift in gifts %}
+      {% set gift_image = media_url(gift.image_url) if gift.image_url and not gift.image_url.startswith('http') else gift.image_url %}
+      <article class="gift-item gift-catalog-card {% if gift.is_sold_out %}is-sold-out{% endif %}">
+        <div class="gift-thumb gift-catalog-thumb" {% if gift_image %}style="background-image:url('{{ gift_image }}')"{% endif %}></div>
+        <div class="gift-content">
+          <div class="gift-head-row gift-head-row-stack">
+            <div>
+              <h3>{{ gift.title }}</h3>
+              <div class="gift-meta-row">
+                <span class="gift-badge">{{ 'Compra única' if not gift.allow_multiple_purchases else 'Pode repetir' }}</span>
+                {% if gift.is_sold_out %}<span class="gift-badge soldout">Esgotado</span>{% endif %}
+              </div>
+            </div>
+            <strong class="gift-price">{{ gift.price|currency_br }}</strong>
+          </div>
+          <p>{{ gift.description }}</p>
+          {% if gift.is_available %}
+          <a href="{{ url_for('public.gift_checkout', gift_id=gift.id) }}" class="btn btn-primary btn-full">Comprar presente</a>
+          {% else %}
+          <span class="btn btn-soft btn-full disabled-btn">Presente esgotado</span>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:32px 24px;text-align:center;">
+      <h3 style="margin-bottom:8px;">Nenhum presente disponível no momento</h3>
+      <p>Cadastre ou ative presentes no painel administrativo para que eles apareçam aqui.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

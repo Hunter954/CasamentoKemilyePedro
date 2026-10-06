@@ -1,0 +1,44 @@
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<div class="admin-header admin-header-row"><div><span class="admin-kicker">Etapas 3 e 4 do fluxo</span><h1>Campanhas WhatsApp</h1><p>Crie, revise e dispare convites em lotes. Uma campanha salva nunca envia sozinha.</p></div><a class="btn btn-soft" href="{{ url_for('admin.contacts') }}">Gerenciar contatos</a></div>
+
+<div class="stats-grid whatsapp-mini-stats">
+  <div class="stat-card"><span>WhatsApp</span><strong>{{ 'Conectado' if whatsapp_status.get('connected') else 'Desconectado' }}</strong></div>
+  <div class="stat-card"><span>Contatos</span><strong>{{ contacts|length }}</strong></div>
+  <div class="stat-card"><span>Campanhas</span><strong>{{ campaigns|length }}</strong></div>
+  <div class="stat-card"><span>Enviadas</span><strong>{{ dispatch_summary.delivered }}</strong></div>
+  <div class="stat-card"><span>Erros recentes</span><strong>{{ dispatch_summary.error }}</strong></div>
+</div>
+{% if whatsapp_error %}<div class="section-card alert-card"><strong>Não foi possível consultar o WhatsApp.</strong><p>{{ whatsapp_error }}</p></div>{% elif not whatsapp_status.get('connected') %}<div class="section-card flow-warning"><div><strong>WhatsApp desconectado</strong><p>Conecte o número antes de disparar. Você pode criar campanhas normalmente.</p></div><a class="btn btn-primary" href="{{ url_for('admin.whatsapp_connection') }}">Conectar agora</a></div>{% endif %}
+
+<form class="section-card stack-form admin-form-card" method="post" enctype="multipart/form-data">
+  <div class="admin-section-head"><div><span class="admin-kicker">Nova campanha</span><h2>1. Defina público e conteúdo</h2></div></div>
+  <div class="admin-form-grid two-cols">
+    <label>Título interno<input name="title" required placeholder="Convite oficial - família"></label>
+    <label>Público / tag<select name="target_tag">{% for tag in tags %}<option value="{{ tag }}">{{ 'Todos os contatos' if tag == 'todos' else tag }}</option>{% endfor %}</select></label>
+    <label class="full-width">Imagem opcional<input type="file" name="image" accept="image/*"></label>
+    <label class="full-width">Mensagem<textarea name="message" required placeholder="Olá %contato%, ...">{{ settings.whatsapp_message_template if settings else '' }}</textarea></label>
+  </div>
+  <div class="placeholder-box"><strong>Personalização automática</strong><span>%contato% · %codigo% · %nome_noivos% · %site_url% · %data_casamento% · %horario_casamento% · %local_casamento% · %endereco_casamento% · %cidade_casamento% · %rota_url%</span></div>
+  <button class="btn btn-primary">Salvar campanha</button>
+</form>
+
+<div class="section-card">
+  <div class="admin-section-head"><div><span class="admin-kicker">Campanhas salvas</span><h2>2. Revise e faça o disparo</h2></div></div>
+  <div class="campaign-list">
+  {% for item in campaigns %}{% set metrics = campaign_metrics.get(item.id, {}) %}
+    <article class="campaign-card">
+      <div class="campaign-card-main"><div><span class="admin-tag tag-neutral">{{ 'Todos' if item.target_tag == 'todos' else item.target_tag }}</span><h3>{{ item.title }}</h3><small>{{ item.created_at.strftime('%d/%m/%Y %H:%M') if item.created_at else '' }}{% if item.image_path %} · com imagem{% endif %}</small></div><div class="campaign-metrics"><span><b>{{ metrics.get('eligible',0) }}</b> público</span><span><b>{{ metrics.get('sent',0) }}</b> enviados</span><span><b>{{ metrics.get('pending',0) }}</b> pendentes</span><span><b>{{ metrics.get('errors',0) }}</b> erros</span></div></div>
+      <div class="campaign-message">{{ item.message }}</div>
+      <div class="admin-card-actions campaign-actions">
+        <form method="post" action="{{ url_for('admin.trigger_campaign', campaign_id=item.id) }}" class="inline-form"><input type="hidden" name="send_scope" value="unsent"><label>Lote <input type="number" name="batch_size" value="20" min="1" max="50"></label><button class="btn btn-primary" {% if not whatsapp_status.get('connected') %}disabled{% endif %}>Enviar pendentes</button></form>
+        <form method="post" action="{{ url_for('admin.trigger_campaign', campaign_id=item.id) }}"><input type="hidden" name="send_scope" value="errors"><input type="hidden" name="batch_size" value="20"><button class="btn btn-soft" {% if not whatsapp_status.get('connected') %}disabled{% endif %}>Reenviar erros</button></form>
+        <form method="post" action="{{ url_for('admin.delete_campaign', campaign_id=item.id) }}" onsubmit="return confirm('Excluir esta campanha e seu histórico?')"><button class="btn btn-danger-outline">Excluir</button></form>
+      </div>
+    </article>
+  {% else %}<div class="empty-admin-state">Nenhuma campanha criada ainda.</div>{% endfor %}
+  </div>
+</div>
+
+<div class="section-card"><div class="admin-section-head"><div><span class="admin-kicker">Histórico</span><h2>3. Acompanhe os últimos envios</h2></div></div><div class="table-wrap"><table><thead><tr><th>Contato</th><th>Telefone</th><th>Campanha</th><th>Status</th><th>Quando / erro</th></tr></thead><tbody>{% for item in dispatches %}<tr><td>{{ item.contact.name if item.contact else '-' }}</td><td>{{ item.phone_sent or '-' }}</td><td>{{ item.campaign.title if item.campaign else '-' }}</td><td><span class="admin-tag {% if item.status in ['sent','delivered','read'] %}tag-success{% elif item.status == 'error' %}tag-warning{% else %}tag-neutral{% endif %}">{{ item.status }}</span></td><td>{% if item.error_message %}{{ item.error_message }}{% elif item.sent_at %}{{ item.sent_at.strftime('%d/%m/%Y %H:%M') }}{% else %}-{% endif %}</td></tr>{% else %}<tr><td colspan="5">Nenhum envio registrado.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}
