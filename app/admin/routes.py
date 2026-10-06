@@ -51,9 +51,10 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('admin.dashboard'))
     if request.method == 'POST':
-        email = request.form.get('email', '').strip()
-        password = request.form.get('password', '').strip()
-        user = AdminUser.query.filter_by(email=email).first()
+        email = request.form.get('email', '').strip().lower()
+        # Não aplicar strip na senha: espaços podem fazer parte legitimamente dela.
+        password = request.form.get('password', '')
+        user = AdminUser.query.filter(db.func.lower(AdminUser.email) == email).first()
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for('admin.dashboard'))

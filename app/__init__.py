@@ -179,4 +179,32 @@ def create_app():
         db.create_all()
         _sync_schema(app)
 
+        # Mantém o acesso administrativo sincronizado com as variáveis do Railway.
+        # Antes, ADMIN_EMAIL/ADMIN_PASSWORD só eram usados pelo seed na primeira criação
+        # do usuário; mudanças posteriores nas env vars não atualizavam o hash salvo no banco.
+        env_admin_email = os.getenv('ADMIN_EMAIL')
+        env_admin_password = os.getenv('ADMIN_PASSWORD')
+        if env_admin_email and env_admin_password:
+            normalized_email = env_admin_email.strip().lower()
+            admin_user = AdminUser.query.filter(db.func.lower(AdminUser.email) == normalized_email).first()
+
+            if admin_user is None:
+                # Se já existe um único admin criado por uma configuração antiga, reutiliza-o
+                # para não deixar uma conta órfã ao trocar o e-mail nas variáveis.
+                admin_user = AdminUser.query.order_by(AdminUser.id.asc()).first()
+
+            if admin_user is None:
+                admin_user = AdminUser(name='Administrador', email=normalized_email)
+                db.session.add(admin_user)
+            else:
+                admin_user.email = normalized_email
+
+            # A variável de ambiente é a fonte de verdade para a senha administrativa.
+            # Atualizar o hash no boot garante que uma alteração no Railway passe a valer
+            # imediatamente após o redeploy.
+            if not admin_user.password_hash or not admin_user.check_password(env_admin_password):
+                admin_user.set_password(env_admin_password)
+
+            db.session.commit()
+
     return app
