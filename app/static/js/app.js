@@ -1,28 +1,40 @@
 document.addEventListener('DOMContentLoaded', () => {
   const countdown = document.querySelector('[data-countdown]');
   if (countdown) {
-    const target = new Date(countdown.getAttribute('data-countdown'));
+    const rawTarget = countdown.getAttribute('data-countdown') || '';
+    const target = new Date(rawTarget);
+    const hasValidTarget = !Number.isNaN(target.getTime());
     const els = {
       days: countdown.querySelector('[data-days]'),
       hours: countdown.querySelector('[data-hours]'),
       minutes: countdown.querySelector('[data-minutes]'),
       seconds: countdown.querySelector('[data-seconds]'),
     };
-    const update = () => {
-      const now = new Date();
-      const diff = Math.max(0, target - now);
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
+
+    const renderValues = (days, hours, minutes, seconds) => {
       if (els.days) els.days.textContent = String(days).padStart(2, '0');
       if (els.hours) els.hours.textContent = String(hours).padStart(2, '0');
       if (els.minutes) els.minutes.textContent = String(minutes).padStart(2, '0');
       if (els.seconds) els.seconds.textContent = String(seconds).padStart(2, '0');
     };
-    update();
-    setInterval(update, 1000);
+
+    if (hasValidTarget) {
+      const update = () => {
+        const now = new Date();
+        const diff = Math.max(0, target - now);
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        renderValues(days, hours, minutes, seconds);
+      };
+      update();
+      setInterval(update, 1000);
+    } else {
+      renderValues(0, 0, 0, 0);
+    }
   }
+
 
   const generateBtn = document.getElementById('generate-message-btn');
   const messageArea = document.getElementById('gift-message');

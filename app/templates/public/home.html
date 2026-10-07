@@ -5,6 +5,7 @@
 {% set couple_names = settings.couple_names if settings and settings.couple_names else 'Kemily & Pedro' %}
 {% set hero_phrase = settings.hero_phrase if settings and settings.hero_phrase else 'NOSSO AMOR GANHOU RAÍZES, SONHOS E UM NOVO CORAÇÃO BATENDO JUNTO AO NOSSO.' %}
 {% set wedding_footer_date = settings.wedding_date.strftime('%d | %m | %Y') if settings and settings.wedding_date else '11 | DEZEMBRO | 2026' %}
+{% set wedding_countdown_target = countdown_target if countdown_target else '2026-12-11T18:00:00-03:00' %}
 <header class="kp-header kp-header-home">
   <div class="kp-shell kp-header-inner">
     <a href="#inicio" class="kp-monogram" aria-label="Kemily e Pedro">K + P</a>
@@ -53,8 +54,8 @@
     </div>
     <div class="kp-home-meadow" data-parallax="0.05" aria-hidden="true"></div>
     <div class="kp-home-couple-wrap">
-      <div class="kp-home-couple" data-parallax="-0.035" aria-hidden="true"></div>
-      <div class="kp-home-hero-panels kp-home-countdown-grid" data-countdown="{{ countdown_target }}">
+      <div class="kp-home-couple" data-parallax="-0.05" aria-hidden="true"></div>
+      <div class="kp-home-hero-panels kp-home-countdown-grid" data-countdown="{{ wedding_countdown_target }}">
         <div class="kp-home-countdown-box"><strong data-days>00</strong><span>Dias</span></div>
         <div class="kp-home-countdown-box"><strong data-hours>00</strong><span>Horas</span></div>
         <div class="kp-home-countdown-box"><strong data-minutes>00</strong><span>Minutos</span></div>
