@@ -1916,3 +1916,62 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
   .wedding-home .kp-home-botanical-left{left:-30px}
   .wedding-home .kp-home-botanical-right{right:-30px}
 }
+
+
+/* V13 — restaura as plantas do rodapé do hero (pseudo-elementos
+   desativados em v4 impediam que aparecessem na v12). */
+.wedding-home .kp-home-hero{
+  position:relative;
+  isolation:isolate;
+}
+.wedding-home .kp-home-botanical{
+  position:absolute;
+  top:auto;
+  bottom:0;
+  width:360px;
+  height:480px;
+  z-index:16;
+  opacity:1;
+  pointer-events:none;
+  background-size:contain;
+  background-repeat:no-repeat;
+}
+.wedding-home .kp-home-botanical-left{
+  left:-62px;
+  right:auto;
+  background-image:url('/static/images/kemily-pedro/decor/floral-left.png');
+  background-position:left bottom;
+}
+.wedding-home .kp-home-botanical-right{
+  right:-62px;
+  left:auto;
+  background-image:url('/static/images/kemily-pedro/decor/floral-right.png');
+  background-position:right bottom;
+}
+/* A lista passa a começar diretamente depois do hero, sem a barra de atalhos. */
+.wedding-home .kp-home-gifts{margin-top:0}
+/* Folhagem acima do título da lista, mantendo-a encostada à margem. */
+.wedding-home .kp-art-gifts-left{
+  top:-112px;
+  left:-175px;
+  width:320px;
+  height:250px;
+}
+@media(max-width:900px){
+  .wedding-home .kp-home-botanical{width:280px;height:370px}
+  .wedding-home .kp-home-botanical-left{left:-50px}
+  .wedding-home .kp-home-botanical-right{right:-50px}
+  .wedding-home .kp-art-gifts-left{top:-86px;left:-138px;width:260px;height:205px}
+}
+@media(max-width:760px){
+  .wedding-home .kp-home-botanical{width:190px;height:270px}
+  .wedding-home .kp-home-botanical-left{left:-35px}
+  .wedding-home .kp-home-botanical-right{right:-35px}
+  .wedding-home .kp-art-gifts-left{top:-70px;left:-96px;width:210px;height:165px}
+}
+@media(max-width:560px){
+  .wedding-home .kp-home-botanical{width:150px;height:210px}
+  .wedding-home .kp-home-botanical-left{left:-30px}
+  .wedding-home .kp-home-botanical-right{right:-30px}
+  .wedding-home .kp-art-gifts-left{top:-56px;left:-82px;width:180px;height:145px}
+}
