@@ -41,7 +41,7 @@
 
 <main class="kp-page kp-home-page">
   <section class="kp-home-hero" id="inicio">
-    <div class="kp-home-paper" aria-hidden="true"></div>
+    <div class="kp-home-paper" data-parallax="0.04" aria-hidden="true"></div>
     <div class="kp-home-botanical kp-home-botanical-left" data-parallax="0.18" aria-hidden="true"></div>
     <div class="kp-home-botanical kp-home-botanical-right" data-parallax="0.24" aria-hidden="true"></div>
     <div class="kp-home-leaves-top kp-home-leaves-left" data-parallax="0.08" aria-hidden="true"></div>
@@ -54,11 +54,11 @@
     <div class="kp-home-meadow" data-parallax="0.05" aria-hidden="true"></div>
     <div class="kp-home-couple-wrap">
       <div class="kp-home-couple" data-parallax="0.14" aria-hidden="true"></div>
-      <div class="kp-home-hero-panels">
-        <a href="#historia" class="kp-home-mini-card"><strong>Nossa</strong><span>História</span></a>
-        <a href="#informacoes" class="kp-home-mini-card"><strong>O Grande</strong><span>Dia</span></a>
-        <a href="#locais" class="kp-home-mini-card"><strong>Local</strong><span>do Evento</span></a>
-        <a href="{{ url_for('public.gifts') }}" class="kp-home-mini-card"><strong>Lista de</strong><span>Presentes</span></a>
+      <div class="kp-home-hero-panels kp-home-countdown-grid" data-countdown="{{ countdown_target }}">
+        <div class="kp-home-countdown-box"><strong data-days>00</strong><span>Dias</span></div>
+        <div class="kp-home-countdown-box"><strong data-hours>00</strong><span>Horas</span></div>
+        <div class="kp-home-countdown-box"><strong data-minutes>00</strong><span>Minutos</span></div>
+        <div class="kp-home-countdown-box"><strong data-seconds>00</strong><span>Segundos</span></div>
       </div>
     </div>
   </section>

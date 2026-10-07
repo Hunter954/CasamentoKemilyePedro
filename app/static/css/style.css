@@ -286,11 +286,10 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
   content:'';
   position:absolute;
   inset:0;
-  background-image:var(--hero-image);
-  background-position:center 38%;
+  background-image:url('/static/images/kemily-pedro/home-hero-bg.png');
+  background-position:center top;
   background-size:cover;
-  opacity:.08;
-  mix-blend-mode:multiply;
+  opacity:.96;
   pointer-events:none;
 }
 .wedding-home .kp-home-hero-inner{
@@ -386,23 +385,22 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
 .wedding-home .kp-home-meadow::before{left:-10px;transform:scaleX(1)}
 .wedding-home .kp-home-meadow::after{right:-10px;transform:scaleX(-1)}
 .wedding-home .kp-home-couple{
-  width:min(410px,54vw);
-  aspect-ratio:10/14;
+  width:min(520px,58vw);
+  aspect-ratio:670/1059;
   margin:0 auto;
-  background-image:url('/static/images/kemily-pedro/hero-couple.jpg');
+  background-image:url('/static/images/kemily-pedro/home-hero-couple.png');
   background-position:center top;
-  background-size:cover;
-  border-radius:40px 40px 16px 16px;
-  box-shadow:0 20px 60px rgba(93,89,55,.10);
-  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 86%,transparent 100%);
-  mask-image:linear-gradient(180deg,#000 0%,#000 86%,transparent 100%);
+  background-size:contain;
+  background-repeat:no-repeat;
+  border-radius:0;
+  box-shadow:none;
 }
 .wedding-home .kp-home-hero-panels{
-  width:min(100% - 40px,820px);
+  width:min(100% - 40px,760px);
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:20px;
-  margin:-54px auto 0;
+  margin:-18px auto 0;
 }
 .wedding-home .kp-home-mini-card{
   display:flex;
@@ -815,4 +813,117 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
   .wedding-home .kp-home-secondary-btn,
   .wedding-home .kp-home-location-panel a,
   .wedding-home .kp-home-mini-card{transition:none}
+}
+
+
+/* Ajustes v3 - hero com assets enviados pelo usuário */
+.wedding-home .kp-home-hero{
+  min-height:1120px;
+}
+.wedding-home .kp-home-hero::after{
+  background:linear-gradient(180deg,rgba(246,241,231,.08) 0%,rgba(246,241,231,.02) 36%,rgba(246,241,231,0) 100%);
+}
+.wedding-home .kp-home-paper{
+  background:
+    radial-gradient(circle at 50% 20%,rgba(255,255,255,.18),transparent 22%),
+    radial-gradient(circle at 52% 34%,rgba(216,195,137,.11),transparent 18%),
+    linear-gradient(180deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,.02) 100%);
+}
+.wedding-home .kp-home-couple-wrap{
+  margin-top:112px;
+  padding-bottom:108px;
+}
+.wedding-home .kp-home-countdown-grid{
+  position:relative;
+  z-index:3;
+}
+.wedding-home .kp-home-countdown-box{
+  display:flex;
+  min-height:142px;
+  padding:14px 12px;
+  border-radius:18px;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  background:rgba(127,119,70,.94);
+  color:#f4f0e7;
+  box-shadow:0 16px 30px rgba(88,83,55,.16);
+}
+.wedding-home .kp-home-countdown-box strong{
+  display:block;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3.2rem;
+  line-height:.9;
+  font-weight:700;
+  margin-bottom:8px;
+}
+.wedding-home .kp-home-countdown-box span{
+  font-size:.84rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.wedding-home .kp-home-mini-card{display:none}
+.wedding-home .kp-home-iconbar,
+.wedding-home .kp-home-gifts,
+.wedding-home .kp-home-locations,
+.wedding-home .kp-home-guestbook,
+.wedding-home .kp-home-faq,
+.wedding-home .kp-home-bottom-cta{
+  width:min(calc(100% - 120px),1320px);
+  margin-left:auto;
+  margin-right:auto;
+}
+.wedding-home .kp-home-iconbar{margin-top:0}
+.wedding-home .kp-home-gifts,
+.wedding-home .kp-home-guestbook,
+.wedding-home .kp-home-faq,
+.wedding-home .kp-home-bottom-cta{border-radius:2px}
+.wedding-home .kp-home-footer-inner{
+  width:min(calc(100% - 120px),1320px);
+  margin:0 auto;
+}
+@media (max-width: 1180px){
+  .wedding-home .kp-home-iconbar,
+  .wedding-home .kp-home-gifts,
+  .wedding-home .kp-home-locations,
+  .wedding-home .kp-home-guestbook,
+  .wedding-home .kp-home-faq,
+  .wedding-home .kp-home-bottom-cta,
+  .wedding-home .kp-home-footer-inner{width:min(calc(100% - 56px),1320px)}
+}
+@media (max-width: 900px){
+  .wedding-home .kp-home-hero{min-height:1040px}
+  .wedding-home .kp-home-couple{width:min(400px,74vw)}
+  .wedding-home .kp-home-countdown-box{min-height:124px}
+  .wedding-home .kp-home-countdown-box strong{font-size:2.8rem}
+}
+@media (max-width: 760px){
+  .wedding-home .kp-home-hero{min-height:980px}
+  .wedding-home .kp-home-couple-wrap{margin-top:84px}
+  .wedding-home .kp-home-couple{width:min(300px,78vw)}
+  .wedding-home .kp-home-hero-panels{width:min(100% - 20px,520px);gap:12px;margin-top:-6px}
+  .wedding-home .kp-home-countdown-box{min-height:104px;border-radius:16px}
+  .wedding-home .kp-home-countdown-box strong{font-size:2.2rem;margin-bottom:5px}
+  .wedding-home .kp-home-countdown-box span{font-size:.68rem;letter-spacing:.08em}
+  .wedding-home .kp-home-iconbar,
+  .wedding-home .kp-home-gifts,
+  .wedding-home .kp-home-locations,
+  .wedding-home .kp-home-guestbook,
+  .wedding-home .kp-home-faq,
+  .wedding-home .kp-home-bottom-cta,
+  .wedding-home .kp-home-footer-inner{width:min(calc(100% - 28px),1320px)}
+}
+@media (max-width: 560px){
+  .wedding-home .kp-home-hero{min-height:900px}
+  .wedding-home .kp-home-hero-panels{grid-template-columns:repeat(2,1fr)}
+  .wedding-home .kp-home-countdown-box{min-height:92px}
+  .wedding-home .kp-home-countdown-box strong{font-size:1.95rem}
+}
+.wedding-home .kp-home-paper{
+  background-image:
+    linear-gradient(180deg,rgba(255,255,255,.08) 0%,rgba(255,255,255,.02) 100%),
+    url('/static/images/kemily-pedro/home-hero-bg.png');
+  background-position:center top;
+  background-size:cover;
+  background-repeat:no-repeat;
 }
