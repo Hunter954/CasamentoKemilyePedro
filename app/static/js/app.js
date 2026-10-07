@@ -34,6 +34,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const giftSort = document.getElementById('kp-gift-sort');
+  const giftGrid = document.getElementById('kp-gift-grid');
+  giftSort?.addEventListener('change', () => {
+    if (!giftGrid) return;
+    const cards = Array.from(giftGrid.querySelectorAll('.kp-gift-card'));
+    cards.sort((a, b) => giftSort.value === 'name'
+      ? a.dataset.name.localeCompare(b.dataset.name, 'pt-BR')
+      : giftSort.value === 'desc'
+        ? Number(b.dataset.price) - Number(a.dataset.price)
+        : Number(a.dataset.price) - Number(b.dataset.price));
+    cards.forEach(card => giftGrid.appendChild(card));
+  });
+
   const body = document.body;
   const drawer = document.getElementById('site-drawer');
   const backdrop = document.querySelector('.drawer-backdrop');

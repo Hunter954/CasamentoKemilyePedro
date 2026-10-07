@@ -1,21 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}Confirmar presença{% endblock %}
+{% block body_class %}wedding-home kp-inner-page{% endblock %}
 {% block content %}
-<div class="page-shell container narrow">
-  <a href="{{ url_for('public.home') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
-  <div class="section-card">
-    <div class="section-title"><span>RSVP</span><h1>Confirmar presença</h1></div>
-    <p style="margin-top:-.25rem; opacity:.78; line-height:1.7;">Digite apenas o código que você recebeu no WhatsApp. Se esse código já tiver sido usado, o sistema vai avisar na hora.</p>
-    <form class="stack-form" method="post">
-      <input name="confirmation_code" placeholder="Digite seu código" inputmode="numeric" pattern="[0-9]{4,20}" maxlength="20" required>
-      <select name="attendance">
-        <option value="yes">Confirmo presença</option>
-        <option value="no">Não poderei comparecer</option>
-      </select>
-      <input name="guests_count" type="number" min="1" max="10" value="1" placeholder="Quantidade de pessoas">
-      <textarea name="message" placeholder="Quer deixar um recado?"></textarea>
-      <button class="btn btn-primary btn-full">Confirmar presença</button>
-    </form>
-  </div>
-</div>
-{% endblock %}
+<header class="kp-header kp-header-home">
+ <div class="kp-shell kp-header-inner">
+  <a href="{{ url_for('public.home') }}#inicio" class="kp-monogram" aria-label="Kemily e Pedro">K + P</a>
+  <button class="kp-mobile-menu" type="button" aria-label="Abrir menu" aria-expanded="false" data-menu-toggle><i class="fa-solid fa-bars"></i></button>
+  <nav class="kp-nav" aria-label="Navegação principal">
+   <a href="{{ url_for('public.home') }}#inicio">INÍCIO</a><a href="{{ url_for('public.home') }}#locais">LOCALIZAÇÃO</a><a href="{{ url_for('public.home') }}#mural">MURAL DE RECADOS</a><a href="{{ url_for('public.rsvp') }}">CONFIRMAR PRESENÇA</a><a href="{{ url_for('public.gifts') }}">PRESENTES</a><a href="{{ url_for('public.home') }}#faq">DÚVIDAS FREQUENTES</a>
+  </nav>
+ </div>
+</header>
+<div class="drawer-backdrop" data-menu-close></div>
+<aside class="site-drawer kp-drawer" id="site-drawer" aria-hidden="true">
+ <div class="site-drawer-head"><strong>K + P</strong><button type="button" class="menu-toggle drawer-close" aria-label="Fechar menu" data-menu-close><i class="fa-solid fa-xmark"></i></button></div>
+ <nav class="site-drawer-nav" aria-label="Menu mobile"><a data-menu-close href="{{ url_for('public.home') }}#inicio">Início</a><a data-menu-close href="{{ url_for('public.home') }}#locais">Localização</a><a data-menu-close href="{{ url_for('public.home') }}#mural">Mural de Recados</a><a data-menu-close href="{{ url_for('public.rsvp') }}">Confirmar Presença</a><a data-menu-close href="{{ url_for('public.gifts') }}">Lista de Presentes</a><a data-menu-close href="{{ url_for('public.home') }}#faq">Dúvidas Frequentes</a></nav>
+</aside><main class="kp-page kp-inner-main"><section class="kp-inner-hero"><div class="kp-inner-decor kp-inner-decor-left" data-parallax="0.12" aria-hidden="true"></div><div class="kp-inner-decor kp-inner-decor-right" data-parallax="0.17" aria-hidden="true"></div><div class="kp-inner-hero-text"><span class="kp-inner-eyebrow">KEMILY <i class="fa-regular fa-heart"></i> PEDRO</span><h1>Confirme sua presença</h1><div class="kp-home-divider"><span></span><i class="fa-regular fa-heart"></i><span></span></div><p>Nossa alegria será ainda maior com você ao nosso lado neste dia tão especial.</p></div></section>
+<section class="kp-inner-content kp-form-section"><div class="kp-form-layout"><div class="kp-form-aside"><span class="kp-inner-kicker">ESPERAMOS VOCÊ</span><h2>Um dia para guardar no coração.</h2><p>Recebeu seu convite pelo WhatsApp? Basta informar o código enviado e confirmar sua participação.</p><div class="kp-aside-note"><i class="fa-regular fa-envelope-open"></i><span>Cada convite possui um código exclusivo. Respeite a quantidade de convidados informada no convite.</span></div></div>
+<div class="kp-form-panel"><div class="kp-form-panel-head"><i class="fa-regular fa-heart"></i><h2>Sua confirmação</h2><p>Preencha os dados abaixo.</p></div><form class="kp-elegant-form" method="post">
+ <label for="confirmation_code">CÓDIGO DO CONVITE</label><input id="confirmation_code" name="confirmation_code" placeholder="Digite o código recebido" inputmode="numeric" pattern="[0-9]{4,20}" maxlength="20" required>
+ <div class="kp-form-duo"><div><label for="attendance">VOCÊ IRÁ COMPARECER?</label><select id="attendance" name="attendance"><option value="yes">Sim, confirmo presença!</option><option value="no">Não poderei comparecer</option></select></div><div><label for="guests_count">NÚMERO DE PESSOAS</label><input id="guests_count" name="guests_count" type="number" min="1" max="10" value="1" required></div></div>
+ <label for="rsvp_message">RECADO PARA O CASAL (OPCIONAL)</label><textarea id="rsvp_message" name="message" rows="4" placeholder="Escreva aqui uma mensagem de carinho..."></textarea><button class="kp-home-primary-btn kp-submit-btn">ENVIAR CONFIRMAÇÃO <i class="fa-solid fa-arrow-right-long"></i></button></form></div></div></section><footer class="kp-home-footer"><div class="kp-section-art kp-art-floral-left kp-art-footer-left" data-parallax="0.05" aria-hidden="true"></div><div class="kp-section-art kp-art-floral-right kp-art-footer-right" data-parallax="0.08" aria-hidden="true"></div><div class="kp-home-footer-inner"><div class="kp-home-footer-monogram">K + P</div><p class="kp-home-footer-note">Feito com muito amor <i class="fa-regular fa-heart"></i></p></div></footer></main>{% endblock %}

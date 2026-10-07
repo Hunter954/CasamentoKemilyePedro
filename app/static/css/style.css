@@ -1494,3 +1494,52 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
   .wedding-home .kp-home-countdown-box{min-height:90px}
   .wedding-home .kp-home-countdown-box strong{font-size:1.85rem}
 }
+
+/* Identidade visual compartilhada entre home e páginas internas — patch KP */
+.wedding-home.kp-inner-page{background:#f8f4ec;color:#3f4637}
+.kp-inner-page .kp-page{width:100%;max-width:none;overflow:hidden;box-shadow:none}
+.kp-inner-page .kp-inner-hero{min-height:355px;display:grid;place-items:center;position:relative;isolation:isolate;overflow:hidden;padding:82px 22px 74px;background:radial-gradient(ellipse at 50% 14%,#fffdf8 0%,#f9f5eb 55%,#f2eddf 100%)}
+.kp-inner-page .kp-inner-hero-text{position:relative;z-index:2;text-align:center;max-width:730px}
+.kp-inner-page .kp-inner-eyebrow,.kp-inner-page .kp-inner-kicker{font-family:Inter,sans-serif;font-size:.67rem;letter-spacing:.25em;color:#778065;font-weight:600}
+.kp-inner-page .kp-inner-eyebrow i{font-size:.7rem;margin:0 10px}
+.kp-inner-page .kp-inner-hero h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(3.4rem,7vw,6.3rem);line-height:.98;font-weight:500;font-style:italic;color:#46543b;margin:23px 0 17px}
+.kp-inner-page .kp-inner-hero p{font-size:1rem;line-height:1.8;color:#797967;max-width:570px;margin:0 auto}
+.kp-inner-page .kp-inner-hero .kp-home-divider{justify-content:center;margin:0 auto 18px}
+.kp-inner-page .kp-inner-decor{position:absolute;background-repeat:no-repeat;background-size:contain;pointer-events:none;z-index:1;width:clamp(220px,31vw,460px);height:420px;opacity:.75}
+.kp-inner-page .kp-inner-decor-left{left:-65px;top:-65px;background-image:url('/static/images/kemily-pedro/decor/leaves-left.png');background-position:left top}
+.kp-inner-page .kp-inner-decor-right{right:-70px;top:-55px;background-image:url('/static/images/kemily-pedro/decor/leaves-right.png');background-position:right top}
+.kp-inner-page .kp-inner-content{padding:65px max(26px,calc((100vw - 1260px)/2)) 105px;position:relative;background:linear-gradient(180deg,#f8f4ec,#fcfaf5)}
+.kp-inner-page .kp-gift-intro{text-align:center;max-width:660px;margin:0 auto 50px}
+.kp-inner-page .kp-gift-intro h2,.kp-inner-page .kp-form-aside h2,.kp-inner-page .kp-guest-feed>h2{font-family:'Cormorant Garamond',serif;color:#46543b;font-style:italic;font-size:clamp(2.2rem,3.3vw,3.3rem);font-weight:500;line-height:1.07;margin:13px 0}
+.kp-inner-page .kp-gift-intro p,.kp-inner-page .kp-form-aside>p{line-height:1.75;color:#79796d}
+.kp-inner-page .kp-gift-toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 26px;padding-bottom:18px;border-bottom:1px solid #e6e1d4;font:500 .78rem Inter,sans-serif;color:#70745d}
+.kp-inner-page .kp-gift-toolbar i{margin-right:8px}.kp-inner-page .kp-gift-toolbar select{font:inherit;color:#49573e;background:transparent;border:0;padding:8px;cursor:pointer}
+.kp-inner-page .kp-gift-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+.kp-inner-page .kp-gift-card{background:#fffdf9;border:1px solid #e9e4d9;overflow:hidden;box-shadow:0 13px 38px #454a3320;transition:transform .3s ease,box-shadow .3s ease}
+.kp-inner-page .kp-gift-card:hover{transform:translateY(-7px);box-shadow:0 23px 45px #454a332b}
+.kp-inner-page .kp-gift-photo{height:245px;position:relative;background:#e8e7db;background-image:linear-gradient(130deg,#e9e9da,#d7decd);background-size:cover;background-position:center;display:grid;place-items:center}
+.kp-inner-page .kp-gift-photo>i{font-size:3.4rem;color:#a1aa90}.kp-inner-page .kp-gift-label{position:absolute;top:16px;left:16px;background:#fcfaf4ec;color:#53654b;padding:9px 15px;font:600 .58rem Inter,sans-serif;letter-spacing:.15em;text-transform:uppercase}
+.kp-inner-page .kp-gift-info{padding:26px 26px 23px}.kp-inner-page .kp-gift-number{font:600 .58rem Inter,sans-serif;color:#a4a18b;letter-spacing:.18em}
+.kp-inner-page .kp-gift-info h3{font:500 1.8rem/1.08 'Cormorant Garamond',serif;color:#47563d;margin:12px 0}
+.kp-inner-page .kp-gift-info p{font-size:.87rem;line-height:1.65;color:#79796e;min-height:46px;margin:0 0 24px}
+.kp-inner-page .kp-gift-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #ece8dc;padding-top:19px}
+.kp-inner-page .kp-gift-bottom strong{font:600 1.5rem 'Cormorant Garamond',serif;color:#44513d;white-space:nowrap}
+.kp-inner-page .kp-gift-buy,.kp-inner-page .kp-gift-sold{display:inline-flex;align-items:center;gap:9px;background:#606c4d;color:white;padding:13px 16px;font:600 .61rem Inter,sans-serif;letter-spacing:.09em;text-decoration:none;white-space:nowrap}
+.kp-inner-page .kp-gift-buy:hover{background:#455638;color:white}.kp-inner-page .kp-gift-sold{background:#aaa;color:white}
+.kp-inner-page .kp-gift-end{text-align:center;padding-top:72px}.kp-inner-page .kp-gift-end>i{font-size:1.5rem;color:#768365}.kp-inner-page .kp-gift-end p{font:italic 1.9rem 'Cormorant Garamond',serif;color:#5c6b50}.kp-inner-page .kp-gift-end .kp-home-secondary-btn{margin:0 auto}
+.kp-inner-page .kp-no-gifts{grid-column:1/-1;text-align:center;padding:80px 24px}.kp-inner-page .kp-no-gifts i{font-size:2rem}
+.kp-inner-page .kp-form-layout,.kp-inner-page .kp-guest-layout{display:grid;grid-template-columns:.85fr 1.15fr;align-items:start;gap:clamp(30px,7vw,100px);max-width:1100px;margin:auto}
+.kp-inner-page .kp-form-aside{padding:42px 0}.kp-inner-page .kp-form-aside h2{font-size:clamp(2.8rem,4vw,4.2rem)}
+.kp-inner-page .kp-aside-note{margin-top:42px;border-top:1px solid #e1decf;padding-top:22px;display:flex;gap:16px;color:#7b7e69;line-height:1.7;font-size:.9rem}.kp-inner-page .kp-aside-note i{font-size:1.7rem;color:#798a6e}
+.kp-inner-page .kp-form-panel{background:#fffdf9;border:1px solid #e6e1d4;padding:clamp(24px,4vw,48px);box-shadow:0 18px 55px #4b4e3616}
+.kp-inner-page .kp-form-panel-head{text-align:center;margin-bottom:30px}.kp-inner-page .kp-form-panel-head>i{color:#738265;font-size:1.5rem}.kp-inner-page .kp-form-panel-head h2{font:italic 2.9rem 'Cormorant Garamond',serif;color:#47563d;margin:10px 0}.kp-inner-page .kp-form-panel-head p{font-size:.86rem;color:#868474}
+.kp-inner-page .kp-elegant-form{display:flex;flex-direction:column;gap:12px}.kp-inner-page .kp-elegant-form label{font:600 .65rem Inter,sans-serif;letter-spacing:.13em;color:#697159;margin-top:9px}
+.kp-inner-page .kp-elegant-form input,.kp-inner-page .kp-elegant-form select,.kp-inner-page .kp-elegant-form textarea{width:100%;background:#faf9f5;border:1px solid #dedfce;border-radius:0;color:#404b3b;padding:15px 16px;font:400 .9rem Inter,sans-serif;outline-offset:3px;min-height:50px}
+.kp-inner-page .kp-elegant-form textarea{resize:vertical}.kp-inner-page .kp-form-duo{display:grid;grid-template-columns:1fr 1fr;gap:15px}.kp-inner-page .kp-form-duo>div{display:flex;flex-direction:column;gap:11px}
+.kp-inner-page .kp-submit-btn{width:100%;margin-top:14px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px}
+.kp-inner-page .kp-guest-layout{grid-template-columns:1fr 1fr;max-width:1200px}.kp-inner-page .kp-guest-feed{padding-top:12px}.kp-inner-page .kp-guest-messages{display:grid;gap:16px;margin-top:27px}.kp-inner-page .kp-guest-messages .kp-home-message-card{width:100%;max-width:none;margin:0;text-align:left}
+.kp-inner-page .kp-checkout-wrap{max-width:730px;margin:auto}.kp-inner-page .kp-checkout-wrap .page-shell{padding:0;width:100%;max-width:none}.kp-inner-page .kp-checkout-wrap .section-card{background:#fffdf9;border:1px solid #e6e1d4;box-shadow:0 14px 40px #4b4e3615}.kp-inner-page .kp-checkout-wrap .btn-primary{background:#606c4d;border-color:#606c4d}
+.wedding-home .kp-mural-link{margin:34px auto 0;position:relative;z-index:2}
+@media(max-width:960px){.kp-inner-page .kp-gift-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kp-inner-page .kp-form-layout,.kp-inner-page .kp-guest-layout{gap:30px}}
+@media(max-width:680px){.kp-inner-page .kp-inner-hero{min-height:290px;padding:65px 18px 55px}.kp-inner-page .kp-inner-decor{opacity:.35;width:230px}.kp-inner-page .kp-inner-content{padding:44px 20px 80px}.kp-inner-page .kp-gift-grid,.kp-inner-page .kp-form-layout,.kp-inner-page .kp-guest-layout{grid-template-columns:1fr}.kp-inner-page .kp-gift-grid{gap:20px}.kp-inner-page .kp-gift-photo{height:245px}.kp-inner-page .kp-form-aside{padding:0}.kp-inner-page .kp-form-duo{grid-template-columns:1fr}.kp-inner-page .kp-gift-info{padding:22px}.kp-inner-page .kp-gift-intro{margin-bottom:28px}.kp-inner-page .kp-form-panel-head h2{font-size:2.4rem}.kp-inner-page .kp-inner-hero h1{font-size:3.8rem}}
+@media(prefers-reduced-motion:reduce){.kp-inner-page .kp-gift-card{transition:none}.kp-inner-page .kp-gift-card:hover{transform:none}}

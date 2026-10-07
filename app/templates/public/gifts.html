@@ -1,43 +1,34 @@
 {% extends 'base.html' %}
-{% block title %}Lista de presentes{% endblock %}
+{% block body_class %}wedding-home kp-inner-page{% endblock %}
 {% block content %}
-<div class="page-shell container gifts-page-shell">
-  <a href="{{ url_for('public.home') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
-  <div class="section-card gifts-page-card">
-    <div class="section-title gifts-page-title"><span>Presentes</span><h1>Escolha um presente especial</h1></div>
-    {% if gifts %}
-    <div class="gift-grid gifts-catalog-grid">
-      {% for gift in gifts %}
-      {% set gift_image = media_url(gift.image_url) if gift.image_url and not gift.image_url.startswith('http') else gift.image_url %}
-      <article class="gift-item gift-catalog-card {% if gift.is_sold_out %}is-sold-out{% endif %}">
-        <div class="gift-thumb gift-catalog-thumb" {% if gift_image %}style="background-image:url('{{ gift_image }}')"{% endif %}></div>
-        <div class="gift-content">
-          <div class="gift-head-row gift-head-row-stack">
-            <div>
-              <h3>{{ gift.title }}</h3>
-              <div class="gift-meta-row">
-                <span class="gift-badge">{{ 'Compra única' if not gift.allow_multiple_purchases else 'Pode repetir' }}</span>
-                {% if gift.is_sold_out %}<span class="gift-badge soldout">Esgotado</span>{% endif %}
-              </div>
-            </div>
-            <strong class="gift-price">{{ gift.price|currency_br }}</strong>
-          </div>
-          <p>{{ gift.description }}</p>
-          {% if gift.is_available %}
-          <a href="{{ url_for('public.gift_checkout', gift_id=gift.id) }}" class="btn btn-primary btn-full">Comprar presente</a>
-          {% else %}
-          <span class="btn btn-soft btn-full disabled-btn">Presente esgotado</span>
-          {% endif %}
-        </div>
-      </article>
-      {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-state" style="padding:32px 24px;text-align:center;">
-      <h3 style="margin-bottom:8px;">Nenhum presente disponível no momento</h3>
-      <p>Cadastre ou ative presentes no painel administrativo para que eles apareçam aqui.</p>
-    </div>
-    {% endif %}
-  </div>
-</div>
-{% endblock %}
+<header class="kp-header kp-header-home">
+ <div class="kp-shell kp-header-inner">
+  <a href="{{ url_for('public.home') }}#inicio" class="kp-monogram" aria-label="Kemily e Pedro">K + P</a>
+  <button class="kp-mobile-menu" type="button" aria-label="Abrir menu" aria-expanded="false" data-menu-toggle><i class="fa-solid fa-bars"></i></button>
+  <nav class="kp-nav" aria-label="Navegação principal">
+   <a href="{{ url_for('public.home') }}#inicio">INÍCIO</a><a href="{{ url_for('public.home') }}#locais">LOCALIZAÇÃO</a><a href="{{ url_for('public.home') }}#mural">MURAL DE RECADOS</a><a href="{{ url_for('public.rsvp') }}">CONFIRMAR PRESENÇA</a><a href="{{ url_for('public.gifts') }}">PRESENTES</a><a href="{{ url_for('public.home') }}#faq">DÚVIDAS FREQUENTES</a>
+  </nav>
+ </div>
+</header>
+<div class="drawer-backdrop" data-menu-close></div>
+<aside class="site-drawer kp-drawer" id="site-drawer" aria-hidden="true">
+ <div class="site-drawer-head"><strong>K + P</strong><button type="button" class="menu-toggle drawer-close" aria-label="Fechar menu" data-menu-close><i class="fa-solid fa-xmark"></i></button></div>
+ <nav class="site-drawer-nav" aria-label="Menu mobile"><a data-menu-close href="{{ url_for('public.home') }}#inicio">Início</a><a data-menu-close href="{{ url_for('public.home') }}#locais">Localização</a><a data-menu-close href="{{ url_for('public.home') }}#mural">Mural de Recados</a><a data-menu-close href="{{ url_for('public.rsvp') }}">Confirmar Presença</a><a data-menu-close href="{{ url_for('public.gifts') }}">Lista de Presentes</a><a data-menu-close href="{{ url_for('public.home') }}#faq">Dúvidas Frequentes</a></nav>
+</aside><main class="kp-page kp-inner-main"><section class="kp-inner-hero"><div class="kp-inner-decor kp-inner-decor-left" data-parallax="0.12" aria-hidden="true"></div><div class="kp-inner-decor kp-inner-decor-right" data-parallax="0.17" aria-hidden="true"></div><div class="kp-inner-hero-text"><span class="kp-inner-eyebrow">KEMILY <i class="fa-regular fa-heart"></i> PEDRO</span><h1>Lista de Presentes</h1><div class="kp-home-divider"><span></span><i class="fa-regular fa-heart"></i><span></span></div><p>O melhor presente é ter você conosco. Se desejar, escolha um carinho para fazer parte do nosso novo começo.</p></div></section>
+<section class="kp-inner-content kp-gift-section">
+ <div class="kp-gift-intro"><span class="kp-inner-kicker">ESCOLHIDOS COM CARINHO</span><h2>Pequenos gestos, grandes memórias</h2><p>Explore os presentes e escolha aquele que combina com seu carinho por nós.</p></div>
+ <div class="kp-gift-toolbar"><span><i class="fa-solid fa-gift"></i> {{ gifts|length }} {{ 'presente' if gifts|length == 1 else 'presentes' }}</span><label>Ordenar por <select id="kp-gift-sort" aria-label="Ordenar presentes"><option value="default">Menor valor</option><option value="desc">Maior valor</option><option value="name">Nome A–Z</option></select></label></div>
+ <div class="kp-gift-grid" id="kp-gift-grid">
+ {% for gift in gifts %}
+ {% set gift_image = media_url(gift.image_url) if gift.image_url and not gift.image_url.startswith('http') else gift.image_url %}
+ <article class="kp-gift-card {% if gift.is_sold_out %}kp-gift-unavailable{% endif %}" data-price="{{ gift.price }}" data-name="{{ gift.title|lower }}">
+ <div class="kp-gift-photo" {% if gift_image %}style="background-image:url('{{ gift_image|e }}')"{% endif %}>
+ {% if not gift_image %}<i class="fa-solid fa-gift" aria-hidden="true"></i>{% endif %}
+ <span class="kp-gift-label">{{ 'Indisponível' if not gift.is_available else 'Com carinho' }}</span></div>
+ <div class="kp-gift-info"><span class="kp-gift-number">PRESENTE {{ '%02d'|format(loop.index) }}</span><h3>{{ gift.title }}</h3><p>{{ gift.description or 'Um gesto especial para celebrar nosso novo capítulo.' }}</p><div class="kp-gift-bottom"><strong>{{ gift.price|currency_br }}</strong>{% if gift.is_available %}<a href="{{ url_for('public.gift_checkout', gift_id=gift.id) }}" class="kp-gift-buy">PRESENTEAR <i class="fa-solid fa-arrow-right-long"></i></a>{% else %}<span class="kp-gift-sold">INDISPONÍVEL</span>{% endif %}</div></div></article>
+ {% else %}
+ <div class="kp-no-gifts"><i class="fa-regular fa-heart"></i><h3>Nossa lista está sendo preparada</h3><p>Volte em breve para escolher um presente.</p></div>
+ {% endfor %}
+ </div>
+ <div class="kp-gift-end"><i class="fa-regular fa-heart"></i><p>Obrigado por fazer parte da nossa história!</p><a href="{{ url_for('public.home') }}" class="kp-home-secondary-btn">VOLTAR AO INÍCIO <i class="fa-solid fa-arrow-right-long"></i></a></div>
+</section><footer class="kp-home-footer"><div class="kp-section-art kp-art-floral-left kp-art-footer-left" data-parallax="0.05" aria-hidden="true"></div><div class="kp-section-art kp-art-floral-right kp-art-footer-right" data-parallax="0.08" aria-hidden="true"></div><div class="kp-home-footer-inner"><div class="kp-home-footer-monogram">K + P</div><p class="kp-home-footer-note">Feito com muito amor <i class="fa-regular fa-heart"></i></p></div></footer></main>{% endblock %}
