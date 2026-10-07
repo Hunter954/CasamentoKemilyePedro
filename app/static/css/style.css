@@ -1168,3 +1168,180 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
   .wedding-home .kp-home-message-card,
   .wedding-home .kp-home-faq-list{backdrop-filter:none}
 }
+
+/* =========================================================
+   Ajustes finos v5 pedidos pelo usuário
+   ========================================================= */
+/* Corrige inversão e posicionamento dos elementos do hero */
+.wedding-home .kp-home-leaves-right,
+.wedding-home .kp-home-botanical-right{
+  transform:none !important;
+}
+.wedding-home .kp-home-leaves-left,
+.wedding-home .kp-home-leaves-right{
+  top:-6px;
+}
+.wedding-home .kp-home-botanical-left{left:-62px}
+.wedding-home .kp-home-botanical-right{right:-62px}
+
+/* Seções com mais respiro e aparência contínua */
+.wedding-home .kp-home-gifts,
+.wedding-home .kp-home-locations,
+.wedding-home .kp-home-guestbook,
+.wedding-home .kp-home-faq,
+.wedding-home .kp-home-bottom-cta{
+  margin-top:28px;
+}
+.wedding-home .kp-home-gifts{padding-top:66px;padding-bottom:42px}
+.wedding-home .kp-home-locations{padding-top:18px;padding-bottom:26px}
+.wedding-home .kp-home-guestbook{padding-top:74px;padding-bottom:44px}
+.wedding-home .kp-home-faq{padding-top:56px;padding-bottom:36px}
+.wedding-home .kp-home-bottom-cta{padding-top:36px;padding-bottom:42px}
+
+/* Localização com título acima */
+.wedding-home .kp-home-locations{
+  display:block;
+}
+.wedding-home .kp-home-locations-heading{
+  margin-bottom:26px;
+}
+.wedding-home .kp-home-locations-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:18px;
+}
+
+/* Artes mais nos cantos, sem invadir conteúdo */
+.wedding-home .kp-art-gifts-left{
+  width:220px;
+  height:170px;
+  left:-122px;
+  top:50px;
+  opacity:.88;
+}
+.wedding-home .kp-art-gifts-butterfly{
+  width:92px;
+  height:92px;
+  right:-6px;
+  top:36px;
+}
+.wedding-home .kp-art-location-top{
+  width:240px;
+  height:170px;
+  right:-88px;
+  top:26px;
+  opacity:.82;
+}
+.wedding-home .kp-art-mural-left{
+  width:270px;
+  height:360px;
+  left:-118px;
+  bottom:18px;
+  opacity:.9;
+}
+.wedding-home .kp-art-mural-bird{
+  width:170px;
+  height:170px;
+  right:-8px;
+  top:-14px;
+  opacity:.96;
+}
+.wedding-home .kp-art-faq-right{
+  width:250px;
+  height:190px;
+  right:-102px;
+  top:12px;
+  opacity:.82;
+}
+.wedding-home .kp-art-faq-butterfly{
+  width:82px;
+  height:82px;
+  left:4px;
+  top:18px;
+}
+
+/* Rodapé com mais plantas */
+.wedding-home .kp-home-footer{
+  overflow:hidden;
+  min-height:350px;
+  padding-top:26px;
+}
+.wedding-home .kp-art-footer-left,
+.wedding-home .kp-art-footer-right,
+.wedding-home .kp-art-footer-top-left,
+.wedding-home .kp-art-footer-top-right{
+  display:block !important;
+  z-index:0;
+}
+.wedding-home .kp-art-footer-left{
+  width:330px;
+  height:440px;
+  left:-92px;
+  bottom:-8px;
+  opacity:.95;
+}
+.wedding-home .kp-art-footer-right{
+  width:330px;
+  height:440px;
+  right:-92px;
+  bottom:-8px;
+  opacity:.95;
+}
+.wedding-home .kp-art-footer-top-left{
+  width:250px;
+  height:150px;
+  left:-48px;
+  top:8px;
+  opacity:.72;
+}
+.wedding-home .kp-art-footer-top-right{
+  width:250px;
+  height:150px;
+  right:-48px;
+  top:8px;
+  opacity:.72;
+}
+.wedding-home .kp-home-footer-meadow{
+  inset:auto 0 0 0;
+  height:220px;
+  z-index:0;
+}
+.wedding-home .kp-home-footer-inner{
+  position:relative;
+  z-index:1;
+}
+
+@media (max-width: 900px){
+  .wedding-home .kp-home-locations-grid{grid-template-columns:1fr}
+  .wedding-home .kp-art-gifts-left,
+  .wedding-home .kp-art-location-top,
+  .wedding-home .kp-art-mural-left,
+  .wedding-home .kp-art-faq-right{opacity:.72}
+  .wedding-home .kp-art-mural-bird{width:128px;height:128px;right:0;top:-6px}
+  .wedding-home .kp-art-footer-left,
+  .wedding-home .kp-art-footer-right{width:240px;height:320px;bottom:6px}
+  .wedding-home .kp-art-footer-top-left,
+  .wedding-home .kp-art-footer-top-right{width:180px;height:108px}
+}
+@media (max-width: 760px){
+  .wedding-home .kp-home-gifts,
+  .wedding-home .kp-home-locations,
+  .wedding-home .kp-home-guestbook,
+  .wedding-home .kp-home-faq,
+  .wedding-home .kp-home-bottom-cta{margin-top:20px}
+  .wedding-home .kp-art-gifts-left,
+  .wedding-home .kp-art-location-top,
+  .wedding-home .kp-art-mural-left,
+  .wedding-home .kp-art-faq-right,
+  .wedding-home .kp-art-footer-top-left,
+  .wedding-home .kp-art-footer-top-right{display:none !important}
+  .wedding-home .kp-art-footer-left,
+  .wedding-home .kp-art-footer-right{width:180px;height:240px;bottom:0;opacity:.84}
+}
+@media (max-width: 560px){
+  .wedding-home .kp-home-gifts{padding-top:50px}
+  .wedding-home .kp-home-guestbook{padding-top:60px}
+  .wedding-home .kp-art-mural-bird{width:96px;height:96px;top:0;right:0}
+  .wedding-home .kp-art-footer-left,
+  .wedding-home .kp-art-footer-right{width:140px;height:190px}
+}

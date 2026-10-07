@@ -87,22 +87,28 @@
 
   <section class="kp-home-locations kp-home-section-blend" id="locais">
     <div class="kp-section-art kp-art-leaves-right kp-art-location-top" data-parallax="0.06" aria-hidden="true"></div>
-    <article class="kp-home-location kp-home-location-church">
-      <div class="kp-home-location-panel">
-        <div class="kp-home-location-icon"><i class="fa-solid fa-location-dot"></i></div>
-        <h3>Paróquia Nossa Senhora de Fátima</h3>
-        <p>R. Exemplo, 123 – Centro<br>Sua Cidade - UF</p>
-        <a href="{{ computed_route_url or '#' }}" target="_blank" rel="noopener">VER NO GOOGLE MAPS <i class="fa-solid fa-arrow-right-long"></i></a>
-      </div>
-    </article>
-    <article class="kp-home-location kp-home-location-party">
-      <div class="kp-home-location-panel">
-        <div class="kp-home-location-icon"><i class="fa-solid fa-location-dot"></i></div>
-        <h3>Espaço Porto Dourado</h3>
-        <p>Av. Exemplo, 456 – Bairro<br>Sua Cidade - UF</p>
-        <a href="{{ computed_route_url or '#' }}" target="_blank" rel="noopener">VER NO GOOGLE MAPS <i class="fa-solid fa-arrow-right-long"></i></a>
-      </div>
-    </article>
+    <div class="kp-home-section-heading kp-home-locations-heading">
+      <h2>Localização</h2>
+      <div class="kp-home-divider"><span></span><i class="fa-solid fa-location-dot"></i><span></span></div>
+    </div>
+    <div class="kp-home-locations-grid">
+      <article class="kp-home-location kp-home-location-church">
+        <div class="kp-home-location-panel">
+          <div class="kp-home-location-icon"><i class="fa-solid fa-location-dot"></i></div>
+          <h3>Paróquia Nossa Senhora de Fátima</h3>
+          <p>R. Exemplo, 123 – Centro<br>Sua Cidade - UF</p>
+          <a href="{{ computed_route_url or '#' }}" target="_blank" rel="noopener">VER NO GOOGLE MAPS <i class="fa-solid fa-arrow-right-long"></i></a>
+        </div>
+      </article>
+      <article class="kp-home-location kp-home-location-party">
+        <div class="kp-home-location-panel">
+          <div class="kp-home-location-icon"><i class="fa-solid fa-location-dot"></i></div>
+          <h3>Espaço Porto Dourado</h3>
+          <p>Av. Exemplo, 456 – Bairro<br>Sua Cidade - UF</p>
+          <a href="{{ computed_route_url or '#' }}" target="_blank" rel="noopener">VER NO GOOGLE MAPS <i class="fa-solid fa-arrow-right-long"></i></a>
+        </div>
+      </article>
+    </div>
   </section>
 
   <section class="kp-home-guestbook kp-home-section-blend" id="mural">
@@ -179,6 +185,10 @@
   </section>
 
   <footer class="kp-home-footer">
+    <div class="kp-section-art kp-art-floral-left kp-art-footer-left" data-parallax="0.05" aria-hidden="true"></div>
+    <div class="kp-section-art kp-art-floral-right kp-art-footer-right" data-parallax="0.08" aria-hidden="true"></div>
+    <div class="kp-section-art kp-art-leaves-left kp-art-footer-top-left" data-parallax="0.04" aria-hidden="true"></div>
+    <div class="kp-section-art kp-art-leaves-right kp-art-footer-top-right" data-parallax="0.06" aria-hidden="true"></div>
     <div class="kp-home-footer-meadow" data-parallax="0.08" aria-hidden="true"></div>
     <div class="kp-home-footer-inner">
       <div class="kp-home-footer-monogram">K + P</div>
