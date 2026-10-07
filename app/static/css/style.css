@@ -1175,7 +1175,7 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
 /* Corrige inversão e posicionamento dos elementos do hero */
 .wedding-home .kp-home-leaves-right,
 .wedding-home .kp-home-botanical-right{
-  transform:none !important;
+  transform:none;
 }
 .wedding-home .kp-home-leaves-left,
 .wedding-home .kp-home-leaves-right{
@@ -1794,4 +1794,125 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
   .wedding-home .kp-home-couple{width:min(304px,83vw);left:calc(50% + 10px);bottom:-18px}
   .wedding-home .kp-home-meadow{height:286px}
   .wedding-home .kp-home-iconbar{margin-top:-34px}
+}
+
+
+/* V12: layout real contador -> 80px -> casal; base exata da V10 */
+.wedding-home .kp-home-hero{
+  min-height:0;
+  overflow:hidden;
+  padding-bottom:0;
+}
+.wedding-home .kp-home-couple-wrap{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:min(100%,980px);
+  min-height:0;
+  margin:105px auto 0;
+  padding:0 0 0;
+}
+.wedding-home .kp-home-countdown-grid{
+  position:relative;
+  inset:auto;
+  order:0;
+  z-index:5;
+  transform:none;
+  width:min(100% - 44px,760px);
+  margin:0 auto;
+}
+.wedding-home .kp-home-couple{
+  position:relative;
+  inset:auto;
+  order:1;
+  z-index:4;
+  display:block;
+  flex:none;
+  width:min(560px,59vw);
+  margin:80px 0 0;
+  transform:none;
+  -webkit-mask-image:none;
+  mask-image:none;
+  background-position:center top;
+}
+.wedding-home .kp-home-meadow{
+  height:400px;
+  bottom:0;
+}
+.wedding-home .kp-home-iconbar{
+  position:relative;
+  z-index:7;
+  margin:-26px auto 0;
+}
+/* Os dois lados usam exatamente a mesma arte; o direito é espelhado. */
+.wedding-home .kp-home-botanical{
+  z-index:12;
+  width:360px;
+  height:480px;
+  bottom:22px;
+  opacity:1;
+  background-image:none;
+  pointer-events:none;
+}
+.wedding-home .kp-home-botanical::before,
+.wedding-home .kp-home-botanical::after{
+  content:none;
+}
+.wedding-home .kp-home-botanical-left{
+  left:-62px;
+  right:auto;
+}
+.wedding-home .kp-home-botanical-right{
+  right:-62px;
+  left:auto;
+  transform:none;
+}
+.wedding-home .kp-home-botanical::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:url('/static/images/kemily-pedro/decor/floral-left.png') left bottom / contain no-repeat;
+}
+.wedding-home .kp-home-botanical-right::before{
+  transform:scaleX(-1);
+}
+.wedding-home .kp-home-leaves-top{
+  z-index:12;
+  pointer-events:none;
+}
+/* Plantas das seções na frente de textos, imagens e cartões, sem impedir cliques. */
+.wedding-home .kp-home-section-blend{isolation:auto;overflow:visible}
+.wedding-home .kp-section-art,
+.wedding-home .kp-home-guestbook-deco{
+  z-index:15 !important;
+  pointer-events:none;
+}
+@media(max-width:1180px){
+  .wedding-home .kp-home-countdown-grid{width:min(100% - 34px,700px)}
+  .wedding-home .kp-home-couple{width:min(510px,61vw)}
+}
+@media(max-width:900px){
+  .wedding-home .kp-home-couple-wrap{margin-top:90px;padding:0}
+  .wedding-home .kp-home-countdown-grid{width:min(100% - 26px,620px)}
+  .wedding-home .kp-home-couple{width:min(430px,74vw);margin-top:80px}
+  .wedding-home .kp-home-botanical{width:280px;height:370px;bottom:14px}
+  .wedding-home .kp-home-botanical-left{left:-50px}
+  .wedding-home .kp-home-botanical-right{right:-50px}
+}
+@media(max-width:760px){
+  .wedding-home .kp-home-couple-wrap{margin-top:78px;padding:0}
+  .wedding-home .kp-home-countdown-grid{width:min(100% - 20px,520px)}
+  .wedding-home .kp-home-couple{width:min(340px,82vw);margin-top:80px}
+  .wedding-home .kp-home-botanical{width:190px;height:270px;bottom:10px}
+  .wedding-home .kp-home-botanical-left{left:-35px}
+  .wedding-home .kp-home-botanical-right{right:-35px}
+}
+@media(max-width:560px){
+  .wedding-home .kp-home-couple-wrap{margin-top:72px;padding:0}
+  .wedding-home .kp-home-countdown-grid{width:min(100% - 14px,460px);gap:12px}
+  .wedding-home .kp-home-couple{width:min(304px,83vw);margin-top:80px}
+  .wedding-home .kp-home-botanical{width:150px;height:210px;bottom:6px}
+  .wedding-home .kp-home-botanical-left{left:-30px}
+  .wedding-home .kp-home-botanical-right{right:-30px}
 }
