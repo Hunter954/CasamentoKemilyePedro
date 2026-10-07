@@ -103,42 +103,47 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     sanitizeDigits();
   });
-});
 
-// Parallax suave da home do casamento. Usa transform (GPU) e respeita reduced-motion.
-(() => {
-  const home = document.querySelector('.wedding-home');
-  if (!home || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const homeHeader = document.querySelector('.kp-header-home');
+  if (homeHeader) {
+    const syncHeader = () => {
+      homeHeader.classList.toggle('is-scrolled', window.scrollY > 24);
+    };
+    syncHeader();
+    window.addEventListener('scroll', syncHeader, { passive: true });
+  }
 
-  const hero = document.querySelector('.kp-hero-background');
-  const layers = [...document.querySelectorAll('[data-parallax]')];
-  let ticking = false;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const parallaxItems = reduceMotion ? [] : [...document.querySelectorAll('[data-parallax]')];
 
-  const renderParallax = () => {
-    const scrollY = window.scrollY || window.pageYOffset || 0;
-    if (hero) {
-      const heroShift = Math.max(-70, Math.min(95, scrollY * 0.16));
-      hero.style.setProperty('--hero-parallax', `${heroShift}px`);
-    }
+  if (parallaxItems.length) {
+    let ticking = false;
 
-    layers.forEach((layer) => {
-      const rect = layer.parentElement?.getBoundingClientRect();
-      if (!rect) return;
-      const speed = Number(layer.dataset.parallax || 0.06);
-      const centerDelta = (window.innerHeight * 0.5) - (rect.top + rect.height * 0.5);
-      const shift = Math.max(-90, Math.min(90, centerDelta * speed));
-      layer.style.setProperty('--parallax-y', `${shift}px`);
+    const updateParallax = () => {
+      const scrolled = window.scrollY || window.pageYOffset || 0;
+      parallaxItems.forEach((item) => {
+        const factor = Number(item.dataset.parallax || 0.1);
+        const offset = scrolled * factor;
+        const existing = item.dataset.baseTransform || '';
+        item.style.transform = `${existing} translate3d(0, ${offset}px, 0)`;
+      });
+      ticking = false;
+    };
+
+    parallaxItems.forEach((item) => {
+      const computed = window.getComputedStyle(item).transform;
+      item.dataset.baseTransform = computed && computed !== 'none' ? computed : '';
     });
-    ticking = false;
-  };
 
-  const requestTick = () => {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(renderParallax);
-  };
+    const requestTick = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateParallax);
+        ticking = true;
+      }
+    };
 
-  renderParallax();
-  window.addEventListener('scroll', requestTick, { passive: true });
-  window.addEventListener('resize', requestTick, { passive: true });
-})();
+    requestTick();
+    window.addEventListener('scroll', requestTick, { passive: true });
+    window.addEventListener('resize', requestTick);
+  }
+});

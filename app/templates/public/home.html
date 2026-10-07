@@ -2,20 +2,23 @@
 {% block title %}Kemily & Pedro{% endblock %}
 {% block body_class %}wedding-home{% endblock %}
 {% block content %}
-<header class="kp-header">
+{% set couple_names = settings.couple_names if settings and settings.couple_names else 'Kemily & Pedro' %}
+{% set hero_phrase = settings.hero_phrase if settings and settings.hero_phrase else 'NOSSO AMOR GANHOU RAÍZES, SONHOS E UM NOVO CORAÇÃO BATENDO JUNTO AO NOSSO.' %}
+{% set wedding_footer_date = settings.wedding_date.strftime('%d | %m | %Y') if settings and settings.wedding_date else '11 | DEZEMBRO | 2026' %}
+<header class="kp-header kp-header-home">
   <div class="kp-shell kp-header-inner">
     <a href="#inicio" class="kp-monogram" aria-label="Kemily e Pedro">K + P</a>
     <button class="kp-mobile-menu" type="button" aria-label="Abrir menu" data-menu-toggle>
       <i class="fa-solid fa-bars"></i>
     </button>
     <nav class="kp-nav" aria-label="Navegação principal">
-      <a class="is-active" href="#inicio">Início</a>
-      <a href="#historia">Nossa História</a>
-      <a href="#grande-dia">Informações</a>
-      <a href="#confirmar">Confirme sua Presença</a>
-      <a href="#presentes-home">Lista de Presentes</a>
+      <a class="is-active" href="#inicio">INÍCIO</a>
+      <a href="#historia">NOSSA HISTÓRIA</a>
+      <a href="#informacoes">INFORMAÇÕES</a>
+      <a href="{{ url_for('public.rsvp') }}">CONFIRME SUA PRESENÇA</a>
+      <a href="{{ url_for('public.gifts') }}">LISTA DE PRESENTES</a>
       <a href="#faq">FAQ</a>
-      <a href="#confirmar" class="kp-nav-heart" aria-label="Confirmar presença"><i class="fa-regular fa-heart"></i></a>
+      <a href="{{ url_for('public.rsvp') }}" class="kp-nav-heart" aria-label="Confirmar presença"><i class="fa-regular fa-heart"></i></a>
     </nav>
   </div>
 </header>
@@ -29,179 +32,90 @@
   <nav class="site-drawer-nav" aria-label="Menu mobile">
     <a href="#inicio" data-menu-close>Início</a>
     <a href="#historia" data-menu-close>Nossa História</a>
-    <a href="#grande-dia" data-menu-close>Informações</a>
-    <a href="#confirmar" data-menu-close>Confirme sua Presença</a>
-    <a href="#presentes-home" data-menu-close>Lista de Presentes</a>
+    <a href="#informacoes" data-menu-close>Informações</a>
+    <a href="{{ url_for('public.rsvp') }}" data-menu-close>Confirmar Presença</a>
+    <a href="{{ url_for('public.gifts') }}" data-menu-close>Lista de Presentes</a>
     <a href="#faq" data-menu-close>Dúvidas Frequentes</a>
   </nav>
 </aside>
 
-<main class="kp-page">
-  <section class="kp-hero kp-hero-centered" id="inicio">
-    <div class="kp-hero-background" aria-hidden="true"></div>
-    <div class="kp-hero-shade" aria-hidden="true"></div>
-    <div class="kp-hero-bottom-fade" aria-hidden="true"></div>
-    <div class="kp-hero-copy">
-      <div class="kp-title-lockup">
-        <span>Kemily</span>
-        <em>&amp;</em>
-        <span>Pedro</span>
+<main class="kp-page kp-home-page">
+  <section class="kp-home-hero" id="inicio">
+    <div class="kp-home-paper" aria-hidden="true"></div>
+    <div class="kp-home-botanical kp-home-botanical-left" data-parallax="0.18" aria-hidden="true"></div>
+    <div class="kp-home-botanical kp-home-botanical-right" data-parallax="0.24" aria-hidden="true"></div>
+    <div class="kp-home-leaves-top kp-home-leaves-left" data-parallax="0.08" aria-hidden="true"></div>
+    <div class="kp-home-leaves-top kp-home-leaves-right" data-parallax="0.12" aria-hidden="true"></div>
+    <div class="kp-home-hero-inner">
+      <h1 class="kp-home-script">{{ couple_names }}</h1>
+      <p class="kp-home-phrase">{{ hero_phrase }}</p>
+      <a href="{{ url_for('public.rsvp') }}" class="kp-home-primary-btn">CONFIRMAR PRESENÇA</a>
+    </div>
+    <div class="kp-home-meadow" data-parallax="0.05" aria-hidden="true"></div>
+    <div class="kp-home-couple-wrap">
+      <div class="kp-home-couple" data-parallax="0.14" aria-hidden="true"></div>
+      <div class="kp-home-hero-panels">
+        <a href="#historia" class="kp-home-mini-card"><strong>Nossa</strong><span>História</span></a>
+        <a href="#informacoes" class="kp-home-mini-card"><strong>O Grande</strong><span>Dia</span></a>
+        <a href="#locais" class="kp-home-mini-card"><strong>Local</strong><span>do Evento</span></a>
+        <a href="{{ url_for('public.gifts') }}" class="kp-home-mini-card"><strong>Lista de</strong><span>Presentes</span></a>
       </div>
-      <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
-      <p class="kp-hero-phrase">NOSSO AMOR GANHOU RAÍZES,<br>SONHOS E UM NOVO CORAÇÃO<br>BATENDO JUNTO AO NOSSO.</p>
-      <p class="kp-date-label">11 DE DEZEMBRO DE 2026</p>
-      <div class="kp-countdown" data-countdown="{{ countdown_target }}">
-        <div><strong data-days>00</strong><span>Dias</span></div>
-        <div><strong data-hours>00</strong><span>Horas</span></div>
-        <div><strong data-minutes>00</strong><span>Minutos</span></div>
-        <div><strong data-seconds>00</strong><span>Segundos</span></div>
-      </div>
-      <a href="#confirmar" class="kp-button">CONFIRMAR PRESENÇA <i class="fa-solid fa-arrow-right-long"></i></a>
     </div>
   </section>
 
-  <section class="kp-shortcuts" aria-label="Atalhos">
+  <section class="kp-home-iconbar" id="informacoes" aria-label="Atalhos principais">
     <a href="#historia"><i class="fa-regular fa-heart"></i><span>NOSSA<br>HISTÓRIA</span></a>
-    <a href="#grande-dia"><i class="fa-regular fa-calendar-days"></i><span>INFORMAÇÕES<br>DO DIA</span></a>
+    <a href="#informacoes"><i class="fa-regular fa-calendar-days"></i><span>INFORMAÇÕES<br>DO DIA</span></a>
     <a href="#locais"><i class="fa-solid fa-location-dot"></i><span>LOCALIZAÇÃO</span></a>
-    <a href="#presentes-home"><i class="fa-solid fa-gift"></i><span>LISTA DE<br>PRESENTES</span></a>
+    <a href="{{ url_for('public.gifts') }}"><i class="fa-solid fa-gift"></i><span>LISTA DE<br>PRESENTES</span></a>
     <a href="#faq"><i class="fa-regular fa-circle-question"></i><span>DÚVIDAS<br>FREQUENTES</span></a>
   </section>
 
-  <section class="kp-section kp-story kp-botanical-section" id="historia">
-    <span class="kp-floral-decor kp-floral-left" data-parallax="0.10" aria-hidden="true"></span>
-    <span class="kp-floral-decor kp-floral-right" data-parallax="-0.08" aria-hidden="true"></span>
-    <div class="kp-section-heading">
-      <h2>Nossa História</h2>
-      <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
-      <p>De encontros simples a grandes planos, construímos uma história cheia de amor, respeito e cumplicidade. Agora, queremos viver o nosso maior sonho ao lado das pessoas que fazem parte dele.</p>
-      <a href="#grande-dia" class="kp-button kp-button-small">CONHEÇA NOSSA HISTÓRIA <i class="fa-solid fa-arrow-right-long"></i></a>
+  <div id="historia" class="kp-anchor-spacer" aria-hidden="true"></div>
+
+  <section class="kp-home-gifts" id="presentes-home">
+    <div class="kp-home-section-heading">
+      <h2>Lista de Presentes</h2>
+      <div class="kp-home-divider"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
+      <p>O maior presente é ter vocês com a gente neste dia tão especial!<br>Mas, se desejar nos presentear, preparamos uma lista com muito carinho.</p>
+      <a href="{{ url_for('public.gifts') }}" class="kp-home-secondary-btn">VER LISTA DE PRESENTES <i class="fa-solid fa-arrow-right-long"></i></a>
     </div>
-    <div class="kp-story-grid">
-      <img src="{{ url_for('static', filename='images/kemily-pedro/story-portrait.jpg') }}" alt="Casal em retrato romântico">
-      <img src="{{ url_for('static', filename='images/kemily-pedro/story-rings.jpg') }}" alt="Detalhe das alianças">
-      <img src="{{ url_for('static', filename='images/kemily-pedro/story-field.jpg') }}" alt="Casal caminhando ao pôr do sol">
-    </div>
+    <div class="kp-home-gifts-visual" aria-hidden="true"></div>
   </section>
 
-  <section class="kp-quote">
-    <p>“Contar com a presença de vocês<br>é a parte mais especial dessa história.”</p>
-    <i class="fa-regular fa-heart"></i>
-  </section>
-
-  <section class="kp-section kp-day kp-botanical-section" id="grande-dia">
-    <span class="kp-floral-decor kp-floral-left kp-floral-soft" data-parallax="0.08" aria-hidden="true"></span>
-    <span class="kp-floral-decor kp-floral-right kp-floral-soft" data-parallax="-0.07" aria-hidden="true"></span>
-    <div class="kp-section-heading">
-      <h2>O Grande Dia</h2>
-      <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
-      <p>Serão dois momentos especiais, para celebrar o nosso amor em toda a sua essência.</p>
-    </div>
-    <div class="kp-ceremonies">
-      <article>
-        <i class="fa-solid fa-church"></i>
-        <h3><b>16h</b><br>Cerimônia Católica</h3>
-        <p><i class="fa-solid fa-location-dot"></i> Paróquia Nossa Senhora<br>de Fátima</p>
-        <a href="#locais">Ver no mapa <i class="fa-solid fa-arrow-right-long"></i></a>
-      </article>
-      <article>
-        <i class="fa-brands fa-pagelines"></i>
-        <h3><b>17h30</b><br>Cerimônia Umbanda</h3>
-        <p><i class="fa-solid fa-location-dot"></i> Espaço Porto Dourado</p>
-        <a href="#locais">Ver no mapa <i class="fa-solid fa-arrow-right-long"></i></a>
-      </article>
-    </div>
-    <div class="kp-day-bottom">
-      <img src="{{ url_for('static', filename='images/kemily-pedro/story-rings.jpg') }}" alt="Alianças do casal">
-      <div>
-        <p class="kp-date-label">11 DE DEZEMBRO DE 2026</p>
-        <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
-        <p>Esperamos você para viver<br>esse momento conosco!</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="kp-locations" id="locais">
-    <article class="kp-location-card kp-location-church">
-      <div class="kp-location-panel">
-        <i class="fa-solid fa-location-dot"></i>
-        <div><h3>Paróquia Nossa Senhora de Fátima</h3><p>R. Exemplo, 123 — Centro<br>Sua Cidade - UF</p><a href="{{ computed_route_url or '#' }}" target="_blank" rel="noopener">VER NO GOOGLE MAPS <i class="fa-solid fa-arrow-right-long"></i></a></div>
+  <section class="kp-home-locations" id="locais">
+    <article class="kp-home-location kp-home-location-church">
+      <div class="kp-home-location-panel">
+        <div class="kp-home-location-icon"><i class="fa-solid fa-location-dot"></i></div>
+        <h3>Paróquia Nossa Senhora de Fátima</h3>
+        <p>R. Exemplo, 123 – Centro<br>Sua Cidade - UF</p>
+        <a href="{{ computed_route_url or '#' }}" target="_blank" rel="noopener">VER NO GOOGLE MAPS <i class="fa-solid fa-arrow-right-long"></i></a>
       </div>
     </article>
-    <article class="kp-location-card kp-location-party">
-      <div class="kp-location-panel">
-        <i class="fa-solid fa-location-dot"></i>
-        <div><h3>Espaço Porto Dourado</h3><p>Av. Exemplo, 456 — Bairro<br>Sua Cidade - UF</p><a href="{{ computed_route_url or '#' }}" target="_blank" rel="noopener">VER NO GOOGLE MAPS <i class="fa-solid fa-arrow-right-long"></i></a></div>
+    <article class="kp-home-location kp-home-location-party">
+      <div class="kp-home-location-panel">
+        <div class="kp-home-location-icon"><i class="fa-solid fa-location-dot"></i></div>
+        <h3>Espaço Porto Dourado</h3>
+        <p>Av. Exemplo, 456 – Bairro<br>Sua Cidade - UF</p>
+        <a href="{{ computed_route_url or '#' }}" target="_blank" rel="noopener">VER NO GOOGLE MAPS <i class="fa-solid fa-arrow-right-long"></i></a>
       </div>
     </article>
   </section>
 
-  <section class="kp-section kp-rsvp kp-botanical-section" id="confirmar">
-    <span class="kp-floral-decor kp-floral-left" data-parallax="0.06" aria-hidden="true"></span>
-    <span class="kp-floral-decor kp-floral-right" data-parallax="-0.06" aria-hidden="true"></span>
-    <div class="kp-section-heading">
-      <h2>Confirme sua Presença</h2>
-      <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
-      <p>Sua presença tornará esse dia ainda mais especial!<br>Pedimos que confirme sua presença até o dia 01 de novembro de 2026.</p>
-    </div>
-    <form class="kp-rsvp-form" action="{{ url_for('public.rsvp') }}" method="get">
-      <div class="kp-form-row">
-        <label>Nome completo *<input type="text" name="nome" placeholder="Digite seu nome"></label>
-        <label>Quantas pessoas? *<select name="pessoas"><option>Selecione</option><option>1 pessoa</option><option>2 pessoas</option><option>3 pessoas</option><option>4 pessoas</option></select></label>
-      </div>
-      <fieldset><legend>Você irá para qual cerimônia? *</legend><label><input type="checkbox"> Cerimônia Católica (16h)</label><label><input type="checkbox"> Cerimônia Umbanda (17h30)</label></fieldset>
-      <label>Alguma observação?<textarea name="observacao" placeholder="Escreva aqui (opcional)"></textarea></label>
-      <button type="submit" class="kp-button">CONFIRMAR PRESENÇA <i class="fa-solid fa-arrow-right-long"></i></button>
-    </form>
-  </section>
-
-  <section class="kp-section kp-gifts kp-botanical-section" id="presentes-home">
-    <span class="kp-floral-decor kp-floral-left kp-floral-soft" data-parallax="0.08" aria-hidden="true"></span>
-    <span class="kp-floral-decor kp-floral-right kp-floral-soft" data-parallax="-0.08" aria-hidden="true"></span>
-    <div class="kp-gifts-layout">
-      <div class="kp-gifts-copy">
-        <div class="kp-section-heading">
-          <h2>Lista de Presentes</h2>
-          <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
-          <p>O maior presente é ter vocês com a gente neste dia tão especial!<br>Mas, se desejar nos presentear, preparamos uma lista com muito carinho.</p>
-          <a href="{{ url_for('public.gifts') }}" class="kp-button kp-button-small">VER LISTA DE PRESENTES <i class="fa-solid fa-arrow-right-long"></i></a>
-        </div>
-      </div>
-      <div class="kp-gifts-visual" aria-hidden="true"></div>
-    </div>
-    {% if gifts %}
-    <div class="kp-gifts-preview">
-      {% for gift in gifts[:3] %}
-      {% set gift_image = media_url(gift.image_url) if gift.image_url and not gift.image_url.startswith('http') else gift.image_url %}
-      <article class="kp-gift-card">
-        <div class="kp-gift-image" {% if gift_image %}style="background-image:url('{{ gift_image }}')"{% endif %}></div>
-        <div class="kp-gift-info">
-          <h3>{{ gift.title }}</h3>
-          <strong>{{ gift.price|currency_br }}</strong>
-          <a href="{{ url_for('public.gift_checkout', gift_id=gift.id) }}">Ver presente <i class="fa-solid fa-arrow-right-long"></i></a>
-        </div>
-      </article>
-      {% endfor %}
-    </div>
-    {% endif %}
-  </section>
-
-
-  <section class="kp-section kp-guestbook-home kp-botanical-section" id="mural">
-    <span class="kp-floral-decor kp-floral-left" data-parallax="0.07" aria-hidden="true"></span>
-    <span class="kp-floral-decor kp-floral-right" data-parallax="-0.06" aria-hidden="true"></span>
-    <div class="kp-section-heading">
-      <p class="kp-eyebrow">PALAVRAS QUE FICAM</p>
+  <section class="kp-home-guestbook" id="mural">
+    <div class="kp-home-guestbook-deco kp-home-guestbook-deco-left" data-parallax="0.1" aria-hidden="true"></div>
+    <div class="kp-home-guestbook-deco kp-home-guestbook-deco-right" data-parallax="0.14" aria-hidden="true"></div>
+    <div class="kp-home-section-heading kp-home-section-heading-soft">
       <h2>Mural de Recados</h2>
-      <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
-      <p>Deixe uma mensagem, um conselho ou um desejo para a nossa nova jornada.<br>Suas palavras vão ficar guardadas com muito carinho!</p>
+      <div class="kp-home-divider"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
+      <p>Deixe aqui uma mensagem, um conselho ou um desejo para a nossa nova jornada.<br>Suas palavras vão ficar guardadas com muito carinho!</p>
     </div>
-    <div class="kp-guestbook-grid">
+    <div class="kp-home-message-grid">
       {% for card in guestbook_messages[:3] %}
-      <article class="kp-message-card">
-        <div class="kp-message-head">
+      <article class="kp-home-message-card">
+        <div class="kp-home-message-top">
           <div>
-            <strong>{{ card.item.author_name }}</strong>
+            <h3>{{ card.item.author_name }}</h3>
             <small>{{ card.posted_at }}</small>
           </div>
           <i class="fa-regular fa-heart"></i>
@@ -209,38 +123,61 @@
         <p>{{ card.item.message }}</p>
       </article>
       {% else %}
-      <article class="kp-message-card kp-message-empty">
-        <i class="fa-regular fa-envelope-open"></i>
-        <p>O mural está esperando os primeiros recados dos convidados.</p>
+      <article class="kp-home-message-card">
+        <div class="kp-home-message-top">
+          <div>
+            <h3>Seu nome aqui</h3>
+            <small>Em breve</small>
+          </div>
+          <i class="fa-regular fa-heart"></i>
+        </div>
+        <p>Assim que os convidados deixarem recados aprovados, eles aparecerão aqui nesse mural.</p>
       </article>
       {% endfor %}
     </div>
-    <div class="kp-section-cta">
-      <a href="{{ url_for('public.guestbook') }}" class="kp-text-link">DEIXAR UM RECADO <i class="fa-solid fa-arrow-right-long"></i></a>
-    </div>
+    <div class="kp-home-slider-dots" aria-hidden="true"><span class="is-active"></span><span></span><span></span></div>
   </section>
 
-  <section class="kp-section kp-faq kp-botanical-section" id="faq">
-    <span class="kp-floral-decor kp-floral-left kp-floral-soft" data-parallax="0.05" aria-hidden="true"></span>
-    <span class="kp-floral-decor kp-floral-right kp-floral-soft" data-parallax="-0.05" aria-hidden="true"></span>
-    <div class="kp-section-heading">
+  <section class="kp-home-faq" id="faq">
+    <div class="kp-home-section-heading">
       <h2>Dúvidas Frequentes</h2>
-      <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
+      <div class="kp-home-divider"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
     </div>
-    <div class="kp-faq-list">
-      <details><summary>Posso levar acompanhante?</summary><p>Consulte o convite recebido, pois nele estará indicada a quantidade de pessoas incluídas no seu convite.</p></details>
-      <details><summary>Qual o traje sugerido?</summary><p>Traje social leve / esporte fino. Escolha algo confortável e elegante para celebrar conosco.</p></details>
-      <details><summary>Haverá estacionamento?</summary><p>As informações de estacionamento serão disponibilizadas junto às orientações de cada local.</p></details>
-      <details><summary>Crianças são bem-vindas?</summary><p>Sim. Para organização, pedimos apenas que elas sejam incluídas na confirmação de presença.</p></details>
-      <details><summary>Como confirmar minha presença?</summary><p>Clique em “Confirmar presença” e utilize o código recebido pelo WhatsApp.</p></details>
+    <div class="kp-home-faq-list">
+      <details>
+        <summary>Posso levar acompanhante?</summary>
+        <p>Consulte o convite recebido, pois nele estará indicada a quantidade de pessoas incluídas no seu convite.</p>
+      </details>
+      <details>
+        <summary>Qual o traje sugerido?</summary>
+        <p>Traje social leve / esporte fino. Escolha algo confortável e elegante para celebrar conosco.</p>
+      </details>
+      <details>
+        <summary>Haverá estacionamento?</summary>
+        <p>As informações de estacionamento serão disponibilizadas junto às orientações de cada local.</p>
+      </details>
+      <details>
+        <summary>Crianças são bem-vindas?</summary>
+        <p>Sim. Para organização, pedimos apenas que elas sejam incluídas na confirmação de presença.</p>
+      </details>
+      <details>
+        <summary>Como confirmar minha presença?</summary>
+        <p>Clique em “Confirmar presença” para acessar a página dedicada e concluir sua confirmação.</p>
+      </details>
     </div>
   </section>
 
-  <footer class="kp-footer">
-    <p>Estamos ansiosos para<br>compartilhar esse momento com vocês!</p>
-    <div class="kp-ornament kp-ornament-light"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
-    <h2>Kemily &amp; Pedro</h2>
-    <p class="kp-date-label">11 | DEZEMBRO | 2026</p>
+  <section class="kp-home-bottom-cta">
+    <a href="{{ url_for('public.rsvp') }}" class="kp-home-primary-btn">CONFIRMAR PRESENÇA</a>
+  </section>
+
+  <footer class="kp-home-footer">
+    <div class="kp-home-footer-meadow" data-parallax="0.08" aria-hidden="true"></div>
+    <div class="kp-home-footer-inner">
+      <div class="kp-home-footer-monogram">K + P</div>
+      <p class="kp-home-footer-date">{{ wedding_footer_date }}</p>
+      <p class="kp-home-footer-note">Feito com muito amor <i class="fa-regular fa-heart"></i></p>
+    </div>
   </footer>
 </main>
 {% endblock %}
