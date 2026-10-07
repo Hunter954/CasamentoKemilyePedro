@@ -104,3 +104,41 @@ document.addEventListener('DOMContentLoaded', () => {
     sanitizeDigits();
   });
 });
+
+// Parallax suave da home do casamento. Usa transform (GPU) e respeita reduced-motion.
+(() => {
+  const home = document.querySelector('.wedding-home');
+  if (!home || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const hero = document.querySelector('.kp-hero-background');
+  const layers = [...document.querySelectorAll('[data-parallax]')];
+  let ticking = false;
+
+  const renderParallax = () => {
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    if (hero) {
+      const heroShift = Math.max(-70, Math.min(95, scrollY * 0.16));
+      hero.style.setProperty('--hero-parallax', `${heroShift}px`);
+    }
+
+    layers.forEach((layer) => {
+      const rect = layer.parentElement?.getBoundingClientRect();
+      if (!rect) return;
+      const speed = Number(layer.dataset.parallax || 0.06);
+      const centerDelta = (window.innerHeight * 0.5) - (rect.top + rect.height * 0.5);
+      const shift = Math.max(-90, Math.min(90, centerDelta * speed));
+      layer.style.setProperty('--parallax-y', `${shift}px`);
+    });
+    ticking = false;
+  };
+
+  const requestTick = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(renderParallax);
+  };
+
+  renderParallax();
+  window.addEventListener('scroll', requestTick, { passive: true });
+  window.addEventListener('resize', requestTick, { passive: true });
+})();

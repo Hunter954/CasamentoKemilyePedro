@@ -68,7 +68,9 @@
     <a href="#faq"><i class="fa-regular fa-circle-question"></i><span>DÚVIDAS<br>FREQUENTES</span></a>
   </section>
 
-  <section class="kp-section kp-story" id="historia">
+  <section class="kp-section kp-story kp-botanical-section" id="historia">
+    <span class="kp-floral-decor kp-floral-left" data-parallax="0.10" aria-hidden="true"></span>
+    <span class="kp-floral-decor kp-floral-right" data-parallax="-0.08" aria-hidden="true"></span>
     <div class="kp-section-heading">
       <h2>Nossa História</h2>
       <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
@@ -87,7 +89,9 @@
     <i class="fa-regular fa-heart"></i>
   </section>
 
-  <section class="kp-section kp-day" id="grande-dia">
+  <section class="kp-section kp-day kp-botanical-section" id="grande-dia">
+    <span class="kp-floral-decor kp-floral-left kp-floral-soft" data-parallax="0.08" aria-hidden="true"></span>
+    <span class="kp-floral-decor kp-floral-right kp-floral-soft" data-parallax="-0.07" aria-hidden="true"></span>
     <div class="kp-section-heading">
       <h2>O Grande Dia</h2>
       <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
@@ -132,7 +136,9 @@
     </article>
   </section>
 
-  <section class="kp-section kp-rsvp" id="confirmar">
+  <section class="kp-section kp-rsvp kp-botanical-section" id="confirmar">
+    <span class="kp-floral-decor kp-floral-left" data-parallax="0.06" aria-hidden="true"></span>
+    <span class="kp-floral-decor kp-floral-right" data-parallax="-0.06" aria-hidden="true"></span>
     <div class="kp-section-heading">
       <h2>Confirme sua Presença</h2>
       <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
@@ -149,7 +155,9 @@
     </form>
   </section>
 
-  <section class="kp-section kp-gifts" id="presentes-home">
+  <section class="kp-section kp-gifts kp-botanical-section" id="presentes-home">
+    <span class="kp-floral-decor kp-floral-left kp-floral-soft" data-parallax="0.08" aria-hidden="true"></span>
+    <span class="kp-floral-decor kp-floral-right kp-floral-soft" data-parallax="-0.08" aria-hidden="true"></span>
     <div class="kp-gifts-layout">
       <div class="kp-gifts-copy">
         <div class="kp-section-heading">
@@ -178,7 +186,43 @@
     {% endif %}
   </section>
 
-  <section class="kp-section kp-faq" id="faq">
+
+  <section class="kp-section kp-guestbook-home kp-botanical-section" id="mural">
+    <span class="kp-floral-decor kp-floral-left" data-parallax="0.07" aria-hidden="true"></span>
+    <span class="kp-floral-decor kp-floral-right" data-parallax="-0.06" aria-hidden="true"></span>
+    <div class="kp-section-heading">
+      <p class="kp-eyebrow">PALAVRAS QUE FICAM</p>
+      <h2>Mural de Recados</h2>
+      <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
+      <p>Deixe uma mensagem, um conselho ou um desejo para a nossa nova jornada.<br>Suas palavras vão ficar guardadas com muito carinho!</p>
+    </div>
+    <div class="kp-guestbook-grid">
+      {% for card in guestbook_messages[:3] %}
+      <article class="kp-message-card">
+        <div class="kp-message-head">
+          <div>
+            <strong>{{ card.item.author_name }}</strong>
+            <small>{{ card.posted_at }}</small>
+          </div>
+          <i class="fa-regular fa-heart"></i>
+        </div>
+        <p>{{ card.item.message }}</p>
+      </article>
+      {% else %}
+      <article class="kp-message-card kp-message-empty">
+        <i class="fa-regular fa-envelope-open"></i>
+        <p>O mural está esperando os primeiros recados dos convidados.</p>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="kp-section-cta">
+      <a href="{{ url_for('public.guestbook') }}" class="kp-text-link">DEIXAR UM RECADO <i class="fa-solid fa-arrow-right-long"></i></a>
+    </div>
+  </section>
+
+  <section class="kp-section kp-faq kp-botanical-section" id="faq">
+    <span class="kp-floral-decor kp-floral-left kp-floral-soft" data-parallax="0.05" aria-hidden="true"></span>
+    <span class="kp-floral-decor kp-floral-right kp-floral-soft" data-parallax="-0.05" aria-hidden="true"></span>
     <div class="kp-section-heading">
       <h2>Dúvidas Frequentes</h2>
       <div class="kp-ornament"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
