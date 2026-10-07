@@ -1706,3 +1706,92 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
   .wedding-home .kp-home-couple{width:min(300px,82vw);margin-top:60px;left:12px}
   .wedding-home .kp-home-meadow{height:290px}
 }
+
+
+/* Patch v10 — casal ancorado na base e iconbar sobrepondo os pés */
+.wedding-home .kp-home-hero{
+  min-height:1080px;
+  padding-bottom:0;
+  overflow:visible;
+}
+.wedding-home .kp-home-hero-inner{
+  padding-top:34px;
+}
+.wedding-home .kp-home-script{
+  margin:52px 0 14px;
+}
+.wedding-home .kp-home-phrase{
+  margin:0 auto 24px;
+}
+.wedding-home .kp-home-couple-wrap{
+  position:relative;
+  margin-top:88px;
+  padding-top:142px;
+  padding-bottom:0;
+  width:min(100%,980px);
+  min-height:540px;
+}
+.wedding-home .kp-home-countdown-grid{
+  position:absolute;
+  top:0;
+  left:50%;
+  z-index:4;
+  transform:translateX(-50%);
+}
+.wedding-home .kp-home-couple{
+  position:absolute;
+  left:calc(50% + 18px);
+  bottom:-34px;
+  z-index:2;
+  width:min(565px,59vw);
+  margin:0;
+  transform:translateX(-50%);
+  transform-origin:center bottom;
+}
+.wedding-home .kp-home-meadow{
+  height:380px;
+  bottom:0;
+}
+.wedding-home .kp-home-iconbar{
+  position:relative;
+  z-index:7;
+  margin-top:-54px;
+}
+@media (max-width: 1180px){
+  .wedding-home .kp-home-hero{min-height:1100px}
+  .wedding-home .kp-home-couple{width:min(525px,61vw);left:calc(50% + 16px);bottom:-34px}
+  .wedding-home .kp-home-iconbar{margin-top:-50px}
+}
+@media (max-width: 900px){
+  .wedding-home .kp-home-hero{min-height:1060px}
+  .wedding-home .kp-home-hero-inner{padding-top:44px}
+  .wedding-home .kp-home-script{margin-top:64px}
+  .wedding-home .kp-home-couple-wrap{margin-top:82px;padding-top:138px;min-height:500px}
+  .wedding-home .kp-home-couple{width:min(455px,74vw);left:calc(50% + 14px);bottom:-28px}
+  .wedding-home .kp-home-iconbar{margin-top:-46px}
+}
+@media (max-width: 760px){
+  .wedding-home .kp-home-hero{min-height:1015px}
+  .wedding-home .kp-home-hero-inner{padding-top:66px}
+  .wedding-home .kp-home-script{font-size:3.75rem;margin-top:76px;margin-bottom:12px}
+  .wedding-home .kp-home-phrase{font-size:.93rem;line-height:1.42;width:min(100%,336px);margin-bottom:18px}
+  .wedding-home .kp-home-primary-btn{min-height:52px;padding:0 24px;font-size:.86rem}
+  .wedding-home .kp-home-couple-wrap{margin-top:74px;padding-top:132px;min-height:454px}
+  .wedding-home .kp-home-countdown-grid{width:min(100% - 18px,516px)}
+  .wedding-home .kp-home-couple{width:min(344px,82vw);left:calc(50% + 12px);bottom:-22px}
+  .wedding-home .kp-home-meadow{height:318px}
+  .wedding-home .kp-home-iconbar{margin-top:-40px}
+}
+@media (max-width: 560px){
+  .wedding-home .kp-home-hero{min-height:960px}
+  .wedding-home .kp-home-hero-inner{padding-top:78px}
+  .wedding-home .kp-home-script{font-size:3.12rem;margin-top:84px}
+  .wedding-home .kp-home-phrase{font-size:.86rem;letter-spacing:.05em;width:min(100%,300px)}
+  .wedding-home .kp-home-couple-wrap{margin-top:68px;padding-top:122px;min-height:402px}
+  .wedding-home .kp-home-countdown-grid{width:min(100% - 14px,466px);gap:12px}
+  .wedding-home .kp-home-countdown-box{min-height:84px;padding:12px 10px}
+  .wedding-home .kp-home-countdown-box strong{font-size:1.8rem}
+  .wedding-home .kp-home-couple{width:min(304px,83vw);left:calc(50% + 10px);bottom:-18px}
+  .wedding-home .kp-home-meadow{height:286px}
+  .wedding-home .kp-home-iconbar{margin-top:-34px}
+}
