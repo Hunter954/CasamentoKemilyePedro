@@ -1345,3 +1345,152 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
   .wedding-home .kp-art-footer-left,
   .wedding-home .kp-art-footer-right{width:140px;height:190px}
 }
+
+/* =========================================================
+   Ajustes finos v6 - hero, contagem e parallax mais forte
+   ========================================================= */
+.wedding-home .kp-home-hero{
+  min-height:1210px;
+}
+.wedding-home .kp-home-hero-inner{
+  margin-top:26px;
+}
+.wedding-home .kp-home-script{
+  margin:54px 0 10px;
+  font-size:clamp(4.2rem,7.3vw,8rem);
+  line-height:.86;
+  letter-spacing:-.03em;
+}
+.wedding-home .kp-home-phrase{
+  width:min(100%,590px);
+  margin-bottom:28px;
+}
+.wedding-home .kp-home-leaves-top{
+  width:470px;
+  height:232px;
+}
+.wedding-home .kp-home-leaves-left{
+  left:-30px;
+  top:-8px;
+  background-position:left top;
+}
+.wedding-home .kp-home-leaves-right{
+  right:-30px;
+  top:-8px;
+  background-position:right top;
+}
+.wedding-home .kp-home-couple-wrap{
+  margin-top:152px;
+  padding-top:128px;
+  padding-bottom:126px;
+  width:min(100%,920px);
+  margin-left:auto;
+  margin-right:auto;
+}
+.wedding-home .kp-home-countdown-grid{
+  position:absolute;
+  top:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(100% - 60px,760px);
+}
+.wedding-home .kp-home-couple{
+  position:relative;
+  z-index:2;
+  width:min(540px,58vw);
+  margin-top:76px;
+  background-position:center top;
+}
+.wedding-home .kp-home-meadow{
+  height:455px;
+}
+.wedding-home .kp-home-countdown-box{
+  min-height:132px;
+}
+.wedding-home .kp-home-countdown-box strong{
+  font-size:3rem;
+}
+
+/* Decorações mais no limite do site */
+.wedding-home .kp-art-gifts-left{
+  width:320px;
+  height:250px;
+  left:-206px;
+  top:38px;
+}
+.wedding-home .kp-art-location-top{
+  width:360px;
+  height:250px;
+  right:-210px;
+  top:10px;
+}
+.wedding-home .kp-art-faq-right{
+  width:340px;
+  height:240px;
+  right:-204px;
+  top:8px;
+}
+.wedding-home .kp-art-faq-butterfly{
+  left:-12px;
+}
+.wedding-home .kp-art-mural-bird{
+  width:194px;
+  height:194px;
+  right:-12px;
+  top:-40px;
+}
+
+/* Mais espaço visual entre blocos */
+.wedding-home .kp-home-gifts,
+.wedding-home .kp-home-locations,
+.wedding-home .kp-home-guestbook,
+.wedding-home .kp-home-faq,
+.wedding-home .kp-home-bottom-cta{
+  margin-top:40px;
+}
+
+@media (max-width: 1180px){
+  .wedding-home .kp-home-hero{min-height:1160px}
+  .wedding-home .kp-home-countdown-grid{width:min(100% - 44px,700px)}
+  .wedding-home .kp-home-couple{width:min(500px,60vw)}
+  .wedding-home .kp-home-leaves-top{width:390px;height:196px}
+  .wedding-home .kp-art-gifts-left{width:260px;height:205px;left:-150px}
+  .wedding-home .kp-art-location-top{width:290px;height:205px;right:-150px}
+  .wedding-home .kp-art-faq-right{width:290px;height:205px;right:-156px}
+}
+@media (max-width: 900px){
+  .wedding-home .kp-home-hero{min-height:1080px}
+  .wedding-home .kp-home-script{margin-top:44px}
+  .wedding-home .kp-home-couple-wrap{margin-top:132px;padding-top:116px}
+  .wedding-home .kp-home-countdown-grid{width:min(100% - 28px,620px)}
+  .wedding-home .kp-home-couple{width:min(420px,72vw);margin-top:66px}
+  .wedding-home .kp-home-countdown-box{min-height:118px}
+  .wedding-home .kp-home-countdown-box strong{font-size:2.55rem}
+  .wedding-home .kp-art-mural-bird{width:150px;height:150px;top:-20px}
+}
+@media (max-width: 760px){
+  .wedding-home .kp-home-hero{min-height:1020px}
+  .wedding-home .kp-home-script{margin-top:36px;font-size:4rem}
+  .wedding-home .kp-home-couple-wrap{margin-top:106px;padding-top:98px;padding-bottom:118px}
+  .wedding-home .kp-home-countdown-grid{position:absolute;top:0;width:min(100% - 16px,520px)}
+  .wedding-home .kp-home-couple{width:min(320px,78vw);margin-top:56px}
+  .wedding-home .kp-home-countdown-box{min-height:98px}
+  .wedding-home .kp-home-countdown-box strong{font-size:2.05rem}
+  .wedding-home .kp-home-leaves-top{width:200px;height:110px}
+  .wedding-home .kp-home-botanical-left{left:-24px}
+  .wedding-home .kp-home-botanical-right{right:-24px}
+  .wedding-home .kp-home-gifts,
+  .wedding-home .kp-home-locations,
+  .wedding-home .kp-home-guestbook,
+  .wedding-home .kp-home-faq,
+  .wedding-home .kp-home-bottom-cta{margin-top:26px}
+}
+@media (max-width: 560px){
+  .wedding-home .kp-home-hero{min-height:960px}
+  .wedding-home .kp-home-script{font-size:3.45rem;line-height:.9}
+  .wedding-home .kp-home-couple-wrap{padding-top:92px}
+  .wedding-home .kp-home-couple{width:min(284px,80vw);margin-top:52px}
+  .wedding-home .kp-home-countdown-grid{width:min(100% - 10px,460px)}
+  .wedding-home .kp-home-countdown-box{min-height:90px}
+  .wedding-home .kp-home-countdown-box strong{font-size:1.85rem}
+}

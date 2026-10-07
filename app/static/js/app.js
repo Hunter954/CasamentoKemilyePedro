@@ -123,7 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const scrolled = window.scrollY || window.pageYOffset || 0;
       parallaxItems.forEach((item) => {
         const factor = Number(item.dataset.parallax || 0.1);
-        const offset = scrolled * factor;
+        const intensity = 1.85;
+        const offset = scrolled * factor * intensity;
         const existing = item.dataset.baseTransform || '';
         item.style.transform = `${existing} translate3d(0, ${offset}px, 0)`;
       });
