@@ -1608,12 +1608,22 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
   background:rgba(116,131,92,.07);
 }
 .wedding-home.menu-open{overflow:hidden}
-/* O parallax continua nas plantas e no campo; o casal permanece assentado. */
+/* V8: casal completo, sem mascara/degrade; movimento parallax leve para cima
+   enquanto o cenario segue em profundidade, evitando o corte na base do hero. */
 .wedding-home .kp-home-couple{
   position:relative;
   left:12px;
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 76%,rgba(0,0,0,.95) 82%,rgba(0,0,0,.5) 91%,transparent 100%);
-  mask-image:linear-gradient(to bottom,#000 0%,#000 76%,rgba(0,0,0,.95) 82%,rgba(0,0,0,.5) 91%,transparent 100%);
+  -webkit-mask-image:none;
+  mask-image:none;
+}
+/* O botao e inline-flex no estilo base; margens automaticas nao centralizam
+   elementos inline. Torna-se bloco flex centralizado em qualquer viewport. */
+.wedding-home .kp-home-guestbook > .kp-mural-link{
+  display:flex;
+  width:max-content;
+  max-width:100%;
+  margin:34px auto 0;
+  text-align:center;
 }
 @media(max-width:760px){
   .wedding-home .kp-home-couple{left:10px}
@@ -1621,6 +1631,7 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
 }
 @media(max-width:560px){
   .wedding-home .kp-home-couple{left:9px}
+  .wedding-home .kp-home-guestbook > .kp-mural-link{width:min(100%,340px)}
 }
 @media(prefers-reduced-motion:reduce){
   .wedding-home .kp-drawer .site-drawer-nav a{transition:none}
