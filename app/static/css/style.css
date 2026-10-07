@@ -1543,3 +1543,85 @@ body.wedding-home{background:#f6f1e7;color:#3c392f;font-family:Georgia,'Times Ne
 @media(max-width:960px){.kp-inner-page .kp-gift-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kp-inner-page .kp-form-layout,.kp-inner-page .kp-guest-layout{gap:30px}}
 @media(max-width:680px){.kp-inner-page .kp-inner-hero{min-height:290px;padding:65px 18px 55px}.kp-inner-page .kp-inner-decor{opacity:.35;width:230px}.kp-inner-page .kp-inner-content{padding:44px 20px 80px}.kp-inner-page .kp-gift-grid,.kp-inner-page .kp-form-layout,.kp-inner-page .kp-guest-layout{grid-template-columns:1fr}.kp-inner-page .kp-gift-grid{gap:20px}.kp-inner-page .kp-gift-photo{height:245px}.kp-inner-page .kp-form-aside{padding:0}.kp-inner-page .kp-form-duo{grid-template-columns:1fr}.kp-inner-page .kp-gift-info{padding:22px}.kp-inner-page .kp-gift-intro{margin-bottom:28px}.kp-inner-page .kp-form-panel-head h2{font-size:2.4rem}.kp-inner-page .kp-inner-hero h1{font-size:3.8rem}}
 @media(prefers-reduced-motion:reduce){.kp-inner-page .kp-gift-card{transition:none}.kp-inner-page .kp-gift-card:hover{transform:none}}
+
+/* Patch mobile v7 — menu unificado e acabamento do casal no hero */
+.wedding-home .drawer-backdrop{
+  z-index:100;
+  background:rgba(39,48,33,.48);
+  backdrop-filter:blur(4px);
+}
+.wedding-home .site-drawer.kp-drawer{
+  z-index:110;
+  width:min(88vw,380px);
+  padding:calc(30px + env(safe-area-inset-top)) 25px calc(30px + env(safe-area-inset-bottom));
+  background:linear-gradient(160deg,#fffdf7 0%,#f6f2e7 58%,#ecebdc 100%);
+  border-left:1px solid rgba(93,109,74,.18);
+  box-shadow:-18px 0 65px rgba(33,43,27,.2);
+  gap:30px;
+  font-family:Inter,system-ui,sans-serif;
+  overflow-y:auto;
+}
+.wedding-home .kp-drawer .site-drawer-head{
+  padding-bottom:20px;
+  border-bottom:1px solid rgba(96,108,74,.2);
+}
+.wedding-home .kp-drawer .site-drawer-head strong{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:2.7rem;
+  font-style:italic;
+  font-weight:600;
+  color:#58674b;
+}
+.wedding-home .kp-drawer .drawer-close{
+  display:inline-flex;
+  width:43px;
+  height:43px;
+  min-width:43px;
+  border:1px solid rgba(93,109,74,.22);
+  border-radius:50%;
+  background:#f1efdf;
+  color:#536448;
+  box-shadow:none;
+  cursor:pointer;
+}
+.wedding-home .kp-drawer .site-drawer-nav{gap:4px}
+.wedding-home .kp-drawer .site-drawer-nav a{
+  display:flex;
+  align-items:center;
+  padding:17px 10px;
+  border:0;
+  border-bottom:1px solid rgba(100,110,79,.13);
+  border-radius:0;
+  background:transparent;
+  font-family:Inter,system-ui,sans-serif;
+  font-size:.78rem;
+  font-weight:600;
+  letter-spacing:.095em;
+  text-transform:uppercase;
+  color:#495641;
+  transition:color .2s ease,padding-left .2s ease,background .2s ease;
+}
+.wedding-home .kp-drawer .site-drawer-nav a:hover,
+.wedding-home .kp-drawer .site-drawer-nav a:focus-visible{
+  color:#788460;
+  padding-left:17px;
+  background:rgba(116,131,92,.07);
+}
+.wedding-home.menu-open{overflow:hidden}
+/* O parallax continua nas plantas e no campo; o casal permanece assentado. */
+.wedding-home .kp-home-couple{
+  position:relative;
+  left:12px;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 76%,rgba(0,0,0,.95) 82%,rgba(0,0,0,.5) 91%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 76%,rgba(0,0,0,.95) 82%,rgba(0,0,0,.5) 91%,transparent 100%);
+}
+@media(max-width:760px){
+  .wedding-home .kp-home-couple{left:10px}
+  .wedding-home .site-drawer.kp-drawer{width:min(88vw,360px)}
+}
+@media(max-width:560px){
+  .wedding-home .kp-home-couple{left:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  .wedding-home .kp-drawer .site-drawer-nav a{transition:none}
+}
