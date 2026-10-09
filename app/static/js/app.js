@@ -168,6 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
     sanitizeDigits();
   });
 
+  const adminMenu = document.querySelector('[data-admin-menu-toggle]');
+  const adminSidebar = document.querySelector('.admin-sidebar');
+  adminMenu?.addEventListener('click', () => {
+    const open = adminSidebar.classList.toggle('is-open');
+    adminMenu.setAttribute('aria-expanded', String(open));
+  });
+
   const homeHeader = document.querySelector('.kp-header-home');
   if (homeHeader) {
     const syncHeader = () => {
@@ -188,11 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
       parallaxItems.forEach((item) => {
         const factor = Number(item.dataset.parallax || 0.1);
         const intensity = 1.85;
-        // O casal começa 80px abaixo do contador e sobe no máximo 68px.
-        // Assim o movimento é perceptível sem atravessar a contagem.
-        const offset = item.classList.contains('kp-home-couple')
-          ? -Math.min(68, scrolled * 0.30)
-          : scrolled * factor * intensity;
+        const offset = scrolled * factor * intensity;
         const existing = item.dataset.baseTransform || '';
         item.style.transform = `${existing} translate3d(0, ${offset}px, 0)`;
       });

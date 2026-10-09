@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% block title %}Seu carinho | Kemily & Pedro{% endblock %}
 {% block body_class %}wedding-home kp-inner-page{% endblock %}
 {% block content %}
 <header class="kp-header kp-header-home">
@@ -18,13 +19,13 @@
 <div class="page-shell container narrow">
   <div class="section-card centered">
     {% if status == 'success' %}
-      <h1>Pagamento aprovado 💖</h1>
+      <h2>Pagamento aprovado <i class="fa-regular fa-heart" aria-hidden="true"></i></h2>
       <p>Muito obrigado pelo presente e pelo carinho com o casal.</p>
     {% elif status == 'pending' %}
-      <h1>Pagamento pendente</h1>
-      <p>Recebemos sua intenção de presente. Assim que o pagamento confirmar, ele aparecerá no admin.</p>
+      <h2>Pagamento pendente</h2>
+      <p>Seu presente está aguardando a confirmação do pagamento. Obrigado pelo carinho!</p>
     {% else %}
-      <h1>Pagamento não concluído</h1>
+      <h2>Pagamento não concluído</h2>
       <p>Você pode tentar novamente quando quiser.</p>
     {% endif %}
     <a class="btn btn-primary btn-full" href="{{ url_for('public.home') }}">Voltar para o site</a>

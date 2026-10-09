@@ -1,0 +1,225 @@
+/* Shared Kemily & Pedro identity, including the administrative screens. */
+:root {
+  --kp-brand: #7e7746;
+  --kp-brand-dark: #5d5937;
+  --kp-surface: #fffdf7;
+  --kp-canvas: #f3eee3;
+  --kp-soft: #ede8d9;
+  --kp-text: #635b43;
+  --kp-muted: #756f59;
+  --kp-line: #ded9c9;
+}
+.admin-body, .kp-inner-page {
+  --primary: var(--kp-brand-dark);
+  --secondary: var(--kp-soft);
+  --accent: var(--kp-brand);
+  color: var(--kp-text);
+}
+
+/* The faces sit left of the image midpoint because of the dress train.
+   Keep the photo anchored below the hero edge instead of lifting it on scroll. */
+.wedding-home .kp-home-couple {
+  inset: auto;
+  top: clamp(28px, 4vw, 56px);
+  transform: translateX(12%);
+}
+.wedding-home .kp-home-location {
+  align-items: center;
+  justify-content: center;
+}
+.wedding-home .kp-home-location-church { background-image: url('/static/images/kemily-pedro/venue-church-clean.webp'); }
+.wedding-home .kp-home-location-party { background-image: url('/static/images/kemily-pedro/venue-party-clean.webp'); }
+.wedding-home .kp-home-location-panel {
+  margin-inline: auto;
+  text-align: center;
+}
+.wedding-home .kp-home-location-panel a { justify-content: center; }
+@media (max-width: 760px) {
+  .wedding-home .kp-home-script {
+    font-size: clamp(3.35rem, 10.5vw, 4.1rem);
+    line-height: 1.04;
+    letter-spacing: -.025em;
+    text-wrap: balance;
+  }
+}
+
+/* Public forms and checkout still used the old pink component styles. */
+.kp-inner-page .kp-inner-hero h1,
+.kp-inner-page .kp-gift-intro h2,
+.kp-inner-page .kp-gift-info h3,
+.kp-inner-page .kp-gift-bottom strong,
+.kp-inner-page .kp-form-aside h2,
+.kp-inner-page .kp-form-panel-head h2,
+.kp-inner-page .kp-guest-feed > h2 { color: var(--kp-brand-dark); }
+.kp-inner-page .kp-inner-eyebrow,
+.kp-inner-page .kp-inner-kicker,
+.kp-inner-page .kp-elegant-form label { color: var(--kp-brand); }
+.kp-inner-page .kp-gift-buy { background: var(--kp-brand); }
+.kp-inner-page .kp-gift-buy:hover { background: var(--kp-brand-dark); }
+.kp-inner-page .kp-checkout-wrap .page-shell { min-height: 0; }
+.kp-inner-page .kp-checkout-wrap .section-card,
+.kp-inner-page .kp-form-panel {
+  background: var(--kp-surface);
+  border: 1px solid var(--kp-line);
+  border-radius: 16px;
+  box-shadow: 0 12px 34px #5d59370c;
+}
+.kp-inner-page .kp-checkout-wrap .section-card { padding: clamp(22px, 4vw, 42px); }
+.kp-inner-page .kp-checkout-wrap h1,
+.kp-inner-page .kp-checkout-wrap h2 {
+  font: italic 600 clamp(2rem, 4vw, 2.7rem)/1.1 'Cormorant Garamond', Georgia, serif;
+  color: var(--kp-brand-dark);
+}
+.kp-inner-page .kp-checkout-wrap .section-title span { color: var(--kp-muted); }
+.kp-inner-page .checkout-price {
+  font: 600 1.9rem/1.2 Inter, sans-serif;
+  color: var(--kp-brand-dark);
+  margin: 20px 0;
+}
+.kp-inner-page .checkout-helper { color: var(--kp-muted); line-height: 1.7; }
+.kp-inner-page .stack-form label { color: var(--kp-text); font-size: .85rem; }
+.kp-inner-page .stack-form input:not([type=checkbox]),
+.kp-inner-page .stack-form textarea,
+.kp-inner-page .kp-elegant-form input,
+.kp-inner-page .kp-elegant-form select,
+.kp-inner-page .kp-elegant-form textarea {
+  border: 1px solid var(--kp-line);
+  border-radius: 8px;
+  background: #faf8f1;
+  color: var(--kp-text);
+  font: 400 1rem/1.5 Inter, sans-serif;
+}
+.kp-inner-page .btn { min-height: 48px; border-radius: 8px; font: 600 .85rem/1.4 Inter, sans-serif; }
+.kp-inner-page .kp-checkout-wrap .btn-primary { background: var(--kp-brand); box-shadow: none; color: #fff; }
+.kp-inner-page .btn-soft { background: var(--kp-soft); border: 1px solid var(--kp-line); color: var(--kp-brand-dark); }
+.kp-inner-page .checkline { font-weight: 400; line-height: 1.5; }
+.kp-inner-page .checkline input { width: 18px; height: 18px; flex: none; accent-color: var(--kp-brand); }
+.kp-inner-page .back-link { color: var(--kp-brand-dark); font: 500 .85rem Inter, sans-serif; }
+.kp-inner-page .btn-primary:hover { background: var(--kp-brand-dark); }
+
+/* Administrative layout: warm paper, olive accents and the home typefaces. */
+.admin-body { background: var(--kp-canvas); font-family: Inter, sans-serif; }
+.admin-body .admin-layout { grid-template-columns: 264px minmax(0, 1fr); }
+.admin-body .admin-main { min-width: 0; align-content: start; padding: clamp(20px, 3vw, 44px); gap: 24px; }
+.admin-body .admin-main > * { min-width: 0; }
+.admin-body .admin-v2 .admin-sidebar {
+  background: linear-gradient(180deg, #62603e, #48492f);
+  padding: 26px 16px;
+  overflow-y: auto;
+  gap: 20px;
+}
+.admin-body .admin-brand { padding-bottom: 24px; border-color: #ffffff24; }
+.admin-body .admin-brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #f3eee3;
+  color: var(--kp-brand-dark);
+  font: italic 600 1.25rem 'Cormorant Garamond', serif;
+}
+.admin-body .admin-brand-mark span { color: var(--kp-brand); margin: 0 2px; }
+.admin-body .admin-brand h2 { color: #fffdf7; font-size: 1.45rem; }
+.admin-body .admin-brand p { color: #e0ddc9; font-size: .72rem; margin-top: 5px; }
+.admin-body .admin-nav-label { color: #d7d4bd; font-size: .65rem; }
+.admin-body .admin-sidebar nav { gap: 5px; }
+.admin-body .admin-sidebar nav a { color: #f4f0df; padding: 11px 14px; border-radius: 8px; font-size: .85rem; }
+.admin-body .admin-sidebar nav a:hover,
+.admin-body .admin-sidebar nav a.is-active { background: #f3eee3; color: #48492f; }
+.admin-body .admin-logout { color: #e0ddc9; border-color: #ffffff24; font-size: .8rem; }
+.admin-menu-toggle { display: none; }
+.admin-body .admin-header h1 { font-size: clamp(2.2rem, 3.5vw, 3rem); color: var(--kp-brand-dark); font-style: italic; }
+.admin-body .admin-header p, .admin-body .admin-helper-text,
+.admin-body .admin-helper-inline, .admin-body .empty-admin-state,
+.admin-body .workflow-steps small, .admin-body .connection-info span,
+.admin-body .placeholder-box span, .admin-body .admin-message-head small,
+.admin-body .admin-gift-title-row p { color: var(--kp-muted); }
+.admin-body .admin-kicker { color: var(--kp-brand); }
+.admin-body .section-card, .admin-body .stat-card,
+.admin-body .workflow-steps a, .admin-body .campaign-card,
+.admin-body .admin-gift-card, .admin-body .admin-message-card {
+  background: var(--kp-surface);
+  border: 1px solid var(--kp-line);
+  border-radius: 14px;
+  box-shadow: 0 6px 24px #5d593708;
+}
+.admin-body .section-card { padding: clamp(18px, 2.5vw, 28px); }
+.admin-body .stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.admin-body .stat-card { min-width: 0; padding: 20px; }
+.admin-body .stat-card span { color: var(--kp-muted); font-size: .8rem; }
+.admin-body .stat-card strong { overflow-wrap: anywhere; font-size: clamp(1.7rem, 2.5vw, 2.2rem); line-height: 1.15; }
+.admin-body .btn { min-height: 44px; border-radius: 8px; box-shadow: none; font: 600 .82rem/1.4 Inter, sans-serif; }
+.admin-body .btn-primary { background: var(--kp-brand); color: #fff; }
+.admin-body .btn-primary:hover { background: var(--kp-brand-dark); }
+.admin-body .btn-soft, .admin-body .btn-secondary { background: var(--kp-soft); border: 1px solid var(--kp-line); color: var(--kp-brand-dark); }
+.admin-body .btn-danger, .admin-body .btn-danger-outline { color: #a13e37; background: #fbefeb; border: 1px solid #dfc0b6; }
+.admin-body .stack-form input, .admin-body .stack-form textarea,
+.admin-body .stack-form select {
+  background: #faf8f1;
+  border: 1px solid var(--kp-line);
+  border-radius: 8px;
+  color: var(--kp-text);
+  min-width: 0;
+}
+.admin-body .stack-form label, .admin-body .contacts-label { color: var(--kp-text); }
+.admin-body .stack-form input[type=checkbox] { accent-color: var(--kp-brand); }
+.admin-body .stack-form input[type=color] { height: 52px; padding: 6px; }
+.admin-body .gift-config-box, .admin-body .integration-box,
+.admin-body .placeholder-box, .admin-body .campaign-message,
+.admin-body .campaign-metrics span { background: #f5f2e8; border-color: var(--kp-line); color: var(--kp-text); border-radius: 10px; }
+.admin-body .contacts-form-card.is-editing { border-color: var(--kp-brand); box-shadow: 0 0 0 2px #7e77461a; }
+.admin-body .contacts-helper { color: var(--kp-muted); }
+.admin-body .table-wrap { max-width: 100%; border-radius: 8px; }
+.admin-body .table-wrap th { background: #f2efe4; color: var(--kp-brand-dark); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+.admin-body .table-wrap td { color: var(--kp-text); font-size: .85rem; line-height: 1.6; }
+.admin-body .table-wrap th, .admin-body .table-wrap td { border-color: var(--kp-line); }
+.admin-body .tag-neutral { background: var(--kp-soft); color: var(--kp-text); border-color: var(--kp-line); }
+.admin-body .connection-info div { border-color: var(--kp-line); flex-wrap: wrap; overflow-wrap: anywhere; }
+.admin-body .workflow-steps a { min-width: 0; }
+.admin-body .workflow-steps b { flex: 0 0 34px; }
+.admin-body .admin-card-actions form { max-width: 100%; }
+.admin-body .admin-card-actions .btn { white-space: normal; }
+.admin-body .admin-gift-title-row { flex-wrap: wrap; }
+.admin-body .payload-preview { color: var(--kp-muted); }
+.admin-body .admin-main h2 { font-family: 'Cormorant Garamond', Georgia, serif; color: var(--kp-brand-dark); }
+.admin-body .admin-main h3 { color: var(--kp-brand-dark); }
+
+.admin-login-page .page-shell { display: grid; place-items: center; padding: 48px 20px; min-height: 100svh; }
+.admin-login-page {
+  background: url('/static/images/kemily-pedro/decor/leaves-left.png') left top / min(40vw, 400px) auto no-repeat,
+    url('/static/images/kemily-pedro/decor/leaves-right.png') right bottom / min(40vw, 400px) auto no-repeat, var(--kp-canvas);
+}
+.admin-login-page .section-card { width: min(100%, 440px); padding: 36px; }
+.admin-login-monogram { color: var(--kp-brand-dark); font: italic 600 3rem 'Cormorant Garamond', serif; margin-bottom: 16px; }
+.admin-login-page .hero-pill { background: var(--kp-soft); color: var(--kp-brand-dark); border-color: var(--kp-line); }
+.admin-login-page h1 { color: var(--kp-brand-dark); font: italic 600 2.8rem 'Cormorant Garamond', serif; margin: 20px 0; }
+.admin-login-page .stack-form { text-align: left; }
+.admin-login-page .back-link { margin: 24px 0 0; font-size: .8rem; }
+
+:is(.admin-body, .kp-inner-page) :is(input, select, textarea, button, a):focus-visible {
+  outline: 2px solid var(--kp-brand);
+  outline-offset: 3px;
+}
+@media (max-width: 1100px) {
+  .admin-body .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .admin-body .admin-layout { grid-template-columns: minmax(0, 1fr); }
+  .admin-body .admin-v2 .admin-sidebar { position: relative; height: auto; padding: 18px 20px; gap: 12px; overflow: visible; }
+  .admin-body .admin-brand { padding: 0 0 14px; }
+  .admin-menu-toggle { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 44px; padding: 10px 14px; border: 1px solid #ffffff40; border-radius: 8px; background: transparent; color: #fffdf7; font: 500 .85rem Inter, sans-serif; cursor: pointer; }
+  .admin-body .admin-sidebar nav { display: none; }
+  .admin-body .admin-sidebar.is-open nav { display: grid; }
+  .admin-body .admin-logout { margin: 0; padding: 10px 14px !important; border: 0; }
+  .admin-body .admin-main { padding: 24px 16px; gap: 18px; }
+  .admin-body .whatsapp-connect-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-body .flow-warning { display: grid; }
+}
+@media (max-width: 560px) {
+  .admin-body .stat-card { padding: 16px 12px; }
+  .admin-body .admin-header-row { display: grid; }
+  .admin-login-page .section-card { padding: 28px 22px; }
+  .admin-body .workflow-steps { grid-template-columns: minmax(0, 1fr); }
+}

@@ -1,23 +1,28 @@
 {% extends 'base.html' %}
+{% block title %}Painel | Kemily & Pedro{% endblock %}
 {% block body_class %}admin-body{% endblock %}
 {% block content %}
+{% macro admin_link(endpoint, label) -%}
+<a class="{% if request.endpoint == endpoint %}is-active{% endif %}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %} href="{{ url_for(endpoint) }}">{{ label }}</a>
+{%- endmacro %}
 <div class="admin-layout admin-v2">
   <aside class="admin-sidebar">
     <div class="admin-brand"><span class="admin-brand-mark">K<span>&</span>P</span><div><h2>Kemily & Pedro</h2><p>Gestão do casamento</p></div></div>
-    <nav>
+    <button type="button" class="admin-menu-toggle" data-admin-menu-toggle aria-controls="admin-navigation" aria-expanded="false">Menu do painel <i class="fa-solid fa-bars" aria-hidden="true"></i></button>
+    <nav id="admin-navigation" aria-label="Navegação do painel">
       <span class="admin-nav-label">Visão geral</span>
-      <a class="{% if request.endpoint == 'admin.dashboard' %}is-active{% endif %}" href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+      {{ admin_link('admin.dashboard', 'Dashboard') }}
       <span class="admin-nav-label">Convidados</span>
-      <a class="{% if request.endpoint == 'admin.contacts' %}is-active{% endif %}" href="{{ url_for('admin.contacts') }}">Contatos</a>
-      <a href="{{ url_for('admin.manage_rsvps') }}">Confirmações</a>
-      <a href="{{ url_for('admin.manage_guestbook') }}">Mural</a>
+      {{ admin_link('admin.contacts', 'Contatos') }}
+      {{ admin_link('admin.manage_rsvps', 'Confirmações') }}
+      {{ admin_link('admin.manage_guestbook', 'Mural') }}
       <span class="admin-nav-label">WhatsApp</span>
-      <a class="{% if request.endpoint == 'admin.whatsapp_connection' %}is-active{% endif %}" href="{{ url_for('admin.whatsapp_connection') }}">Conexão WhatsApp</a>
-      <a class="{% if request.endpoint == 'admin.campaigns' %}is-active{% endif %}" href="{{ url_for('admin.campaigns') }}">Campanhas</a>
+      {{ admin_link('admin.whatsapp_connection', 'Conexão WhatsApp') }}
+      {{ admin_link('admin.campaigns', 'Campanhas') }}
       <span class="admin-nav-label">Site e presentes</span>
-      <a href="{{ url_for('admin.manage_gifts') }}">Presentes</a>
-      <a href="{{ url_for('admin.purchases') }}">Compras</a>
-      <a href="{{ url_for('admin.settings') }}">Configurações</a>
+      {{ admin_link('admin.manage_gifts', 'Presentes') }}
+      {{ admin_link('admin.purchases', 'Compras') }}
+      {{ admin_link('admin.settings', 'Configurações') }}
     </nav>
     <a class="admin-logout" href="{{ url_for('admin.logout') }}">Sair do painel</a>
   </aside>

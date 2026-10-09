@@ -1,15 +1,20 @@
 {% extends 'base.html' %}
 {% block title %}Login do admin{% endblock %}
+{% block body_class %}admin-body admin-login-page{% endblock %}
 {% block content %}
 <div class="page-shell container narrow">
   <div class="section-card centered">
+    <div class="admin-login-monogram" aria-label="Kemily e Pedro">K + P</div>
     <span class="hero-pill">Painel administrativo</span>
     <h1>Entrar</h1>
     <form class="stack-form" method="post">
-      <input type="email" name="email" placeholder="E-mail" required>
-      <input type="password" name="password" placeholder="Senha" required>
+      <label for="admin-email">E-mail</label>
+      <input id="admin-email" type="email" name="email" autocomplete="username" placeholder="Seu e-mail" required>
+      <label for="admin-password">Senha</label>
+      <input id="admin-password" type="password" name="password" autocomplete="current-password" placeholder="Sua senha" required>
       <button class="btn btn-primary btn-full">Acessar painel</button>
     </form>
+    <a href="{{ url_for('public.home') }}" class="back-link">Voltar ao site do casal</a>
   </div>
 </div>
 {% endblock %}
