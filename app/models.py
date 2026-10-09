@@ -104,6 +104,12 @@ class GiftItem(TimestampMixin, db.Model):
         return self.active and not self.is_sold_out
 
 
+class GiftCatalogRelease(db.Model):
+    __tablename__ = 'gift_catalog_release'
+    key = db.Column(db.String(80), primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 class GiftPurchase(TimestampMixin, db.Model):
     __tablename__ = 'gift_purchase'
     id = db.Column(db.Integer, primary_key=True)

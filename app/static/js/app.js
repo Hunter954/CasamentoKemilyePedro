@@ -48,16 +48,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const giftSort = document.getElementById('kp-gift-sort');
   const giftGrid = document.getElementById('kp-gift-grid');
-  giftSort?.addEventListener('change', () => {
-    if (!giftGrid) return;
+  if (giftGrid) {
     const cards = Array.from(giftGrid.querySelectorAll('.kp-gift-card'));
-    cards.sort((a, b) => giftSort.value === 'name'
-      ? a.dataset.name.localeCompare(b.dataset.name, 'pt-BR')
-      : giftSort.value === 'desc'
-        ? Number(b.dataset.price) - Number(a.dataset.price)
-        : Number(a.dataset.price) - Number(b.dataset.price));
-    cards.forEach(card => giftGrid.appendChild(card));
-  });
+    const search = document.getElementById('kp-gift-search');
+    const budget = document.getElementById('kp-gift-budget');
+    const count = document.getElementById('kp-gift-count');
+    const empty = document.getElementById('kp-gift-no-results');
+    const normalize = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
+
+    const updateGifts = () => {
+      const query = normalize(search?.value);
+      const maxPrice = !budget || budget.value === 'all' ? Infinity : Number(budget.value);
+      const order = giftSort?.value || 'default';
+      const sorted = [...cards].sort((a, b) => order === 'name'
+        ? a.dataset.name.localeCompare(b.dataset.name, 'pt-BR')
+        : order === 'desc'
+          ? Number(b.dataset.price) - Number(a.dataset.price)
+          : Number(a.dataset.price) - Number(b.dataset.price));
+      let visible = 0;
+      sorted.forEach((card) => {
+        card.hidden = !normalize(card.dataset.name).includes(query) || Number(card.dataset.price) > maxPrice;
+        if (!card.hidden) visible += 1;
+        giftGrid.appendChild(card);
+      });
+      if (count) count.textContent = visible + (visible === 1 ? ' presente' : ' presentes') + (visible !== cards.length ? ' de ' + cards.length : '');
+      if (empty) empty.hidden = cards.length === 0 || visible > 0;
+    };
+
+    search?.addEventListener('input', updateGifts);
+    budget?.addEventListener('change', updateGifts);
+    giftSort?.addEventListener('change', updateGifts);
+    document.getElementById('kp-gift-reset')?.addEventListener('click', () => {
+      if (search) search.value = '';
+      if (budget) budget.value = 'all';
+      if (giftSort) giftSort.value = 'default';
+      updateGifts();
+      search?.focus();
+    });
+
+    giftGrid.querySelectorAll('.kp-gift-photo img').forEach((img) => {
+      const showFallback = () => {
+        img.hidden = true;
+        const fallback = img.parentElement.querySelector('.kp-gift-photo-fallback');
+        if (fallback) fallback.hidden = false;
+      };
+      img.addEventListener('error', showFallback, { once: true });
+      if (img.complete && img.naturalWidth === 0) showFallback();
+    });
+    updateGifts();
+  }
 
   const body = document.body;
   const drawer = document.getElementById('site-drawer');

@@ -30,3 +30,13 @@ Variáveis principais:
 - `WHATSAPP_SEND_DELAY` — intervalo entre disparos, padrão `1.2` segundo
 
 A integração antiga da Z-API pode permanecer com colunas/rotas legadas no banco por compatibilidade, mas não é usada pelo painel nem pelo disparo atual.
+
+## Lista de presentes
+
+Cards responsivos com fotos quadradas, preço em destaque, busca, filtro por valor e ordenação. Fotografias locais em `app/static/images/gifts`; uploads e URLs do painel continuam funcionando. Falhas de imagem exibem uma composição alternativa.
+
+O catálogo de `app/gift_catalog.py` mantém seis opções iniciais para bancos vazios e acrescenta 12 presentes (R$ 49,90 a R$ 899,90) uma única vez. A tabela `gift_catalog_release` registra a aplicação. Presentes existentes, preços, disponibilidade e compras são preservados. Presentes excluídos ou desativados depois da atualização não são recriados nos próximos reinícios. Revise nomes, valores e imagens pelo painel administrativo.
+
+Validação: `python -m unittest discover -s tests -v` (SQLite em memória, sem pagamentos ou envio de mensagens).
+
+Interações JavaScript: `node tests/test_gift_filters.mjs`.

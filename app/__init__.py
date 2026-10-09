@@ -179,23 +179,9 @@ def create_app():
         db.create_all()
         _sync_schema(app)
 
-        # Catálogo de demonstração: cadastra exemplos somente quando a tabela está vazia.
-        # Presentes reais já existentes não são modificados.
-        from .models import GiftItem
-        if GiftItem.query.count() == 0:
-            examples = [
-                ('Café da manhã a dois', 'Um despertar especial para começarmos nossa nova vida juntos.', 89.90, 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=900&auto=format&fit=crop&q=80'),
-                ('Jantar romântico', 'Uma noite especial, cheia de boas conversas e novas memórias.', 189.90, 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&auto=format&fit=crop&q=80'),
-                ('Kit para nosso novo lar', 'Um carinho para deixar nossa casinha ainda mais acolhedora.', 149.90, 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=900&auto=format&fit=crop&q=80'),
-                ('Passeio na lua de mel', 'Uma experiência inesquecível para nossa primeira viagem de casados.', 259.90, 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=900&auto=format&fit=crop&q=80'),
-                ('Noite de cinema', 'Pipoca, filme e momentos divertidos para viver lado a lado.', 69.90, 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=900&auto=format&fit=crop&q=80'),
-                ('Brinde aos recém-casados', 'Um brinde ao amor e a todos os nossos próximos capítulos.', 119.90, 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=900&auto=format&fit=crop&q=80'),
-            ]
-            db.session.add_all([GiftItem(title=title, description=description,
-                                         price=price, image_url=image, active=True,
-                                         allow_multiple_purchases=True)
-                                for title, description, price, image in examples])
-            db.session.commit()
+        # Apply this additive catalog release once, including on existing databases.
+        from .gift_catalog import seed_gift_catalog
+        seed_gift_catalog()
 
         # Mantém o acesso administrativo sincronizado com as variáveis do Railway.
         # Antes, ADMIN_EMAIL/ADMIN_PASSWORD só eram usados pelo seed na primeira criação
