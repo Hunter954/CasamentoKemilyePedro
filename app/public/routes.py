@@ -172,8 +172,7 @@ def gift_checkout(gift_id):
         email = request.form.get('buyer_email', '').strip()
         phone = format_phone(request.form.get('buyer_phone', '').strip())
         message = request.form.get('message', '').strip()
-        payment_method = request.form.get('payment_method', 'auto')
-        if not name or len(name) > 180 or not email or '@' not in email or len(email) > 120 or not phone or len(phone) > 40 or len(message) > 3000 or payment_method not in ('auto', 'pix'):
+        if not name or len(name) > 180 or not email or '@' not in email or len(email) > 120 or not phone or len(phone) > 40 or len(message) > 3000:
             flash('Confira seus dados. O recado deve ter até 3.000 caracteres.', 'danger')
             return redirect(url_for('public.gift_checkout', gift_id=gift.id))
         purchase = GiftPurchase(
@@ -196,7 +195,6 @@ def gift_checkout(gift_id):
             pending_url=url_for('public.checkout_result', status='pending', _external=True),
             failure_url=url_for('public.checkout_result', status='failure', _external=True),
             notification_url=url_for('api.mercado_pago_webhook', _external=True),
-            payment_method=payment_method,
         )
 
         if pref.get('reference'):

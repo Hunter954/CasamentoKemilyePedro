@@ -233,13 +233,6 @@
 .kp-inner-page .payment-result-card h2 { margin: 10px 0; }
 .kp-inner-page .payment-result-card p { margin: 0; line-height: 1.8; }
 .kp-inner-page .payment-status-note { color: var(--kp-muted); font-size: .85rem; }
-.checkout-payment-options { display: grid; gap: 12px; border: 0; padding: 0; margin: 5px 0; min-width: 0; }
-.checkout-payment-options legend { font-weight: 600; color: var(--kp-brand-dark); padding: 0 0 14px; }
-.checkout-payment-options .checkout-payment-option { display: flex; align-items: center; gap: 15px; border: 1px solid var(--kp-line); border-radius: 12px; padding: 18px; background: var(--kp-surface); cursor: pointer; }
-.checkout-payment-option:has(input:checked) { border-color: var(--kp-brand); background: var(--kp-soft); }
-.checkout-payment-options input[type=radio] { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--kp-brand); }
-.checkout-payment-option > span { display: grid; gap: 8px; }
-.checkout-payment-option small { font-weight: 400; color: var(--kp-muted); line-height: 1.6; }
 @media(max-width:960px) { .kp-inner-page .kp-mural-card { flex-basis: calc((100% - 24px)/2); } }
 @media(max-width:600px) { .kp-inner-page .kp-mural-card { flex-basis: 100%; padding: 28px 22px; } }
 .admin-body .ceremony-editor-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }

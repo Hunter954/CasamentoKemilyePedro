@@ -46,7 +46,7 @@ Interações JavaScript: `node tests/test_gift_filters.mjs`.
 
 O retorno do checkout e as notificações consultam o pagamento no Mercado Pago pelo token do servidor. A aprovação exige referência da compra, valor e moeda correspondentes; parâmetros da URL não aprovam compras. Boletos pendentes mostram **Aguardando pagamento** e permitem atualizar o status. Falhas temporárias nas notificações retornam 503 para permitir nova tentativa.
 
-O checkout permite escolher Pix ou outros meios, sem excluir cartão ou boleto. Para o Pix aparecer no Checkout Pro, cadastre uma chave Pix **na conta Mercado Pago que recebe os presentes**: Área Pix → Minhas chaves → Cadastrar chave. A seleção no site não substitui essa configuração da conta. [Documentação do Mercado Pago](https://www.mercadopago.com.br/developers/pt/docs/woocommerce/payments-configuration/checkout-pro).
+A escolha de Pix, cartão ou boleto acontece diretamente no checkout do Mercado Pago, sem seletor intermediário no site e sem exclusão de meios de pagamento na preferência. A disponibilidade do Pix depende da chave cadastrada na conta recebedora. [Documentação do Mercado Pago](https://www.mercadopago.com.br/developers/pt/docs/woocommerce/payments-configuration/checkout-pro).
 
 O mural público permite somente leitura. Novos recados vêm de respostas ao RSVP com código válido ou de presentes com pagamento aprovado e verificado. A configuração de moderação do admin continua sendo respeitada. A origem de cada recado impede duplicação por notificações repetidas e evita restaurar recados excluídos pelo admin. Na atualização, respostas antigas confirmadas são importadas uma única vez; presentes antigos precisam de confirmação verificada do pagamento.
 

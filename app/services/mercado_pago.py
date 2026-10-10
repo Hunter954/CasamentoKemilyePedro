@@ -26,7 +26,7 @@ class MercadoPagoService:
         return bool(cls.get_access_token())
 
     @classmethod
-    def create_preference(cls, purchase, gift_title, success_url, pending_url, failure_url, notification_url, payment_method='auto'):
+    def create_preference(cls, purchase, gift_title, success_url, pending_url, failure_url, notification_url):
         if not cls.is_enabled():
             return {
                 'enabled': False,
@@ -60,8 +60,6 @@ class MercadoPagoService:
                 'excluded_payment_types': [],
             },
         }
-        if payment_method == 'pix':
-            payload['payment_methods']['default_payment_method_id'] = 'pix'
         headers = {
             'Authorization': f"Bearer {cls.get_access_token()}",
             'Content-Type': 'application/json',

@@ -161,21 +161,23 @@ class PaymentAndGuestbookTests(unittest.TestCase):
         self.assertNotIn('DEIXAR MEU RECADO',html)
         self.assertEqual(self.client.post('/mural',data={'author_name':'Fake','message':'Fake'}).status_code,405)
 
-    def test_pix_preference_selects_pix_without_excluding_other_methods(self):
+    def test_preference_leaves_payment_choice_to_mercado_pago(self):
         response=Mock();response.json.return_value={'id':'pref-test','init_point':'https://www.mercadopago.com.br/checkout/test'}
         with patch('app.services.mercado_pago.requests.post',return_value=response) as post:
-            result=MercadoPagoService.create_preference(self.purchase,'Jantar','https://site.test/success','https://site.test/pending','https://site.test/failure','https://site.test/webhook',payment_method='pix')
+            result=MercadoPagoService.create_preference(self.purchase,'Jantar','https://site.test/success','https://site.test/pending','https://site.test/failure','https://site.test/webhook')
         payload=post.call_args.kwargs['json']
-        self.assertEqual(payload['payment_methods']['default_payment_method_id'],'pix')
+        self.assertNotIn('default_payment_method_id',payload['payment_methods'])
+        self.assertEqual(payload['payment_methods']['excluded_payment_methods'],[])
         self.assertEqual(payload['payment_methods']['excluded_payment_types'],[])
         self.assertEqual(payload['external_reference'],str(self.purchase.id))
         self.assertTrue(result['enabled'])
 
-    def test_checkout_passes_pix_and_unpaid_message_does_not_enter_wall(self):
+    def test_checkout_redirects_without_selector_and_unpaid_message_does_not_enter_wall(self):
         with patch.object(MercadoPagoService,'create_preference',return_value={'enabled':True,'sandbox_url':'https://www.mercadopago.com.br/checkout/test','reference':'pref-test'}) as create:
-            response=self.client.post(f'/presentes/{self.gift.id}/checkout',data={'buyer_name':'Maria','buyer_email':'maria@example.test','buyer_phone':'11999991234','message':'Outro recado','payment_method':'pix'})
+            response=self.client.post(f'/presentes/{self.gift.id}/checkout',data={'buyer_name':'Maria','buyer_email':'maria@example.test','buyer_phone':'11999991234','message':'Outro recado'})
         self.assertEqual(response.status_code,302)
-        self.assertEqual(create.call_args.kwargs['payment_method'],'pix')
+        self.assertEqual(response.location,'https://www.mercadopago.com.br/checkout/test')
+        self.assertNotIn('payment_method',create.call_args.kwargs)
         self.assertEqual(GuestbookMessage.query.count(),0)
 
     def test_invalid_payment_id_cannot_change_api_url_or_send_request(self):
