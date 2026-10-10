@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify, current_app
 from app import db
 from app.models import GiftPurchase, WhatsAppDispatch, WhatsAppWebhookLog
 from app.services.mercado_pago import MercadoPagoService
+from app.services.payment_status import apply_verified_payment
 from app.services.whatsapp import normalize_whatsapp_phone, serialize_payload, extract_message_id
 
 api_bp = Blueprint('api', __name__)
@@ -38,35 +39,27 @@ def whatsapp_contact_import():
 @api_bp.route('/mercado-pago/webhook', methods=['POST'])
 def mercado_pago_webhook():
     data = request.get_json(silent=True) or {}
-    payment_id = None
-    external_reference = request.args.get('external_reference')
-    payment_status = None
-
-    if data.get('data') and isinstance(data['data'], dict):
-        payment_id = data['data'].get('id')
-        external_reference = external_reference or data['data'].get('external_reference')
-
-    payment_id = payment_id or data.get('id') or request.args.get('data.id') or request.args.get('id')
-
-    if payment_id:
-        try:
-            payment_data = MercadoPagoService.fetch_payment(payment_id)
-            external_reference = external_reference or str(payment_data.get('external_reference') or '')
-            payment_status = payment_data.get('status')
-        except Exception:
-            payment_status = None
-
-    if external_reference and str(external_reference).isdigit():
-        purchase = GiftPurchase.query.get(int(external_reference))
+    if not isinstance(data, dict):
+        return jsonify({'ok': False}), 400
+    event_type = data.get('type') or request.args.get('topic') or request.args.get('type')
+    if event_type and event_type != 'payment':
+        return jsonify({'ok': True, 'ignored': True})
+    nested = data.get('data') if isinstance(data.get('data'), dict) else {}
+    payment_id = str(nested.get('id') or request.args.get('data.id') or request.args.get('id') or data.get('id') or '')
+    if not payment_id.isascii() or not payment_id.isdigit() or len(payment_id) > 30:
+        return jsonify({'ok': True, 'ignored': True})
+    try:
+        payment = MercadoPagoService.fetch_payment(payment_id)
+        if not payment or str(payment.get('id') or '') != payment_id:
+            return jsonify({'ok': False, 'retry': True}), 503
+        purchase = apply_verified_payment(payment)
         if purchase:
-            purchase.mercado_pago_payment_id = str(payment_id or purchase.mercado_pago_payment_id or '')
-            if payment_status == 'approved' or not payment_id:
-                purchase.status = 'approved'
-            elif payment_status:
-                purchase.status = payment_status
             db.session.commit()
-
-    return jsonify({'ok': True})
+        return jsonify({'ok': True, 'matched': purchase is not None})
+    except Exception:
+        db.session.rollback()
+        current_app.logger.warning('Falha ao consultar ou registrar pagamento %s; notificação pode ser repetida', payment_id)
+        return jsonify({'ok': False, 'retry': True}), 503
 
 
 def _payload():

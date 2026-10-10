@@ -18,6 +18,22 @@ migrate = Migrate()
 def _sync_schema(app):
     inspector = inspect(db.engine)
 
+    for table in ('rsvp', 'gift_purchase'):
+        if inspector.has_table(table):
+            columns = {column['name'] for column in inspector.get_columns(table)}
+            if 'guestbook_synced' not in columns:
+                db.session.execute(text(f'ALTER TABLE {table} ADD COLUMN guestbook_synced BOOLEAN NOT NULL DEFAULT FALSE'))
+            if table == 'gift_purchase' and 'payment_verified' not in columns:
+                db.session.execute(text('ALTER TABLE gift_purchase ADD COLUMN payment_verified BOOLEAN NOT NULL DEFAULT FALSE'))
+    db.session.commit()
+
+    if inspector.has_table('guestbook_message'):
+        columns = {column['name'] for column in inspector.get_columns('guestbook_message')}
+        if 'source_key' not in columns:
+            db.session.execute(text('ALTER TABLE guestbook_message ADD COLUMN source_key VARCHAR(80)'))
+        db.session.execute(text('CREATE UNIQUE INDEX IF NOT EXISTS ix_guestbook_source_key ON guestbook_message (source_key)'))
+        db.session.commit()
+
     if inspector.has_table('whatsapp_campaign'):
         columns = {column['name'] for column in inspector.get_columns('whatsapp_campaign')}
         if 'queue_paused' not in columns:
@@ -218,6 +234,9 @@ def create_app():
 
         from .services.site_content import seed_site_content
         seed_site_content()
+
+        from .services.guestbook import import_existing_messages
+        import_existing_messages()
 
         # Mantém o acesso administrativo sincronizado com as variáveis do Railway.
         # Antes, ADMIN_EMAIL/ADMIN_PASSWORD só eram usados pelo seed na primeira criação

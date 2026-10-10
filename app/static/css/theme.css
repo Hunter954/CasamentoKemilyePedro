@@ -217,6 +217,31 @@
 .kp-inner-page .kp-home-message-card p { white-space: pre-line; overflow-wrap: anywhere; }
 .kp-inner-page .kp-mural-pagination { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 25px; }
 .kp-inner-page .kp-mural-pagination a { color: var(--kp-brand-dark); }
+.kp-inner-page .kp-mural-section { max-width: 1240px; margin-inline: auto; }
+.kp-inner-page .kp-mural-intro p { max-width: 580px; margin: 0 auto; line-height: 1.7; }
+.kp-inner-page .kp-mural-count { padding: 9px 18px; border: 1px solid var(--kp-line); background: var(--kp-soft); border-radius: 30px; color: var(--kp-brand-dark); font: 500 .75rem Inter,sans-serif; }
+.kp-inner-page .kp-mural-grid { display: flex; justify-content: center; align-items: stretch; flex-wrap: wrap; gap: 24px; }
+.kp-inner-page .kp-mural-card { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 0 1 calc((100% - 48px)/3); min-width: 0; padding: 32px 26px; border: 1px solid var(--kp-line); border-radius: 18px; background: var(--kp-surface); box-shadow: 0 12px 30px #635b4308; }
+.kp-inner-page .kp-mural-heart { color: var(--kp-brand); font-size: 1.4rem; margin-bottom: 18px; }
+.kp-inner-page .kp-mural-card > p { white-space: pre-line; overflow-wrap: anywhere; line-height: 1.8; margin: 0 0 25px; font-size: 1.05rem; }
+.kp-inner-page .kp-mural-card-signature { width: 100%; border-top: 1px solid var(--kp-line); padding-top: 18px; margin-top: auto; }
+.kp-inner-page .kp-mural-card h3 { margin: 0 0 7px; overflow-wrap: anywhere; color: var(--kp-brand-dark); font: 600 1.4rem 'Cormorant Garamond',serif; }
+.kp-inner-page .kp-mural-card small { color: var(--kp-muted); font-size: .75rem; }
+.kp-inner-page .kp-mural-empty { width: 100%; max-width: 660px; text-align: center; padding: 45px 25px; border: 1px solid var(--kp-line); border-radius: 18px; background: var(--kp-surface); }
+.kp-inner-page .kp-mural-empty > i { color: var(--kp-brand); font-size: 2rem; }
+.kp-inner-page .payment-result-card { display: grid; gap: 20px; text-align: center; }
+.kp-inner-page .payment-result-card h2 { margin: 10px 0; }
+.kp-inner-page .payment-result-card p { margin: 0; line-height: 1.8; }
+.kp-inner-page .payment-status-note { color: var(--kp-muted); font-size: .85rem; }
+.checkout-payment-options { display: grid; gap: 12px; border: 0; padding: 0; margin: 5px 0; min-width: 0; }
+.checkout-payment-options legend { font-weight: 600; color: var(--kp-brand-dark); padding: 0 0 14px; }
+.checkout-payment-options .checkout-payment-option { display: flex; align-items: center; gap: 15px; border: 1px solid var(--kp-line); border-radius: 12px; padding: 18px; background: var(--kp-surface); cursor: pointer; }
+.checkout-payment-option:has(input:checked) { border-color: var(--kp-brand); background: var(--kp-soft); }
+.checkout-payment-options input[type=radio] { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--kp-brand); }
+.checkout-payment-option > span { display: grid; gap: 8px; }
+.checkout-payment-option small { font-weight: 400; color: var(--kp-muted); line-height: 1.6; }
+@media(max-width:960px) { .kp-inner-page .kp-mural-card { flex-basis: calc((100% - 24px)/2); } }
+@media(max-width:600px) { .kp-inner-page .kp-mural-card { flex-basis: 100%; padding: 28px 22px; } }
 .admin-body .ceremony-editor-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
 .admin-body .ceremony-editor-grid form { margin: 0; }
 .ceremony-editor-icon { font-size: 1.6rem; color: var(--kp-brand); }

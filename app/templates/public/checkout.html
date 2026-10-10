@@ -24,16 +24,18 @@
     <p class="checkout-helper">Preencha seus dados para seguir para o checkout do Mercado Pago.</p>
     <form class="stack-form" method="post">
       <label for="buyer-name">Seu nome</label>
-      <input id="buyer-name" name="buyer_name" autocomplete="name" placeholder="Nome e sobrenome" required>
+      <input id="buyer-name" name="buyer_name" maxlength="180" autocomplete="name" placeholder="Nome e sobrenome" required>
       <label for="buyer-email">Seu e-mail</label>
-      <input id="buyer-email" name="buyer_email" type="email" autocomplete="email" placeholder="Seu e-mail" required>
+      <input id="buyer-email" name="buyer_email" maxlength="120" type="email" autocomplete="email" placeholder="Seu e-mail" required>
       <label for="buyer-phone">Seu telefone</label>
       <input id="buyer-phone" name="buyer_phone" autocomplete="tel-national" placeholder="(45) 99999-9999" inputmode="tel" data-phone-mask required>
       <label class="checkline"><input type="checkbox" name="confirmed_presence"> Eu também confirmei presença</label>
-      <label for="gift-message">Um recado para o casal</label>
-      <textarea name="message" id="gift-message" placeholder="Deixe uma mensagem para o casal">{{ initial_message }}</textarea>
+      <label for="gift-message">Um recado para o casal (opcional)</label>
+      <textarea name="message" id="gift-message" maxlength="3000" placeholder="Deixe uma mensagem para o casal">{{ initial_message }}</textarea>
       <button type="button" class="btn btn-soft btn-full" id="generate-message-btn">Gerar outra mensagem carinhosa</button>
-      <button class="btn btn-primary btn-full">Ir para o pagamento no Mercado Pago</button>
+      <p class="checkout-helper">Seu recado poderá aparecer no mural após a aprovação do pagamento e a moderação do casal.</p>
+      <fieldset class="checkout-payment-options"><legend>Como deseja pagar?</legend><label class="checkout-payment-option"><input type="radio" name="payment_method" value="pix"><span><strong><i class="fa-brands fa-pix" aria-hidden="true"></i> Pix</strong><small>Continuar com Pix no Mercado Pago.</small></span></label><label class="checkout-payment-option"><input type="radio" name="payment_method" value="auto" checked><span><strong><i class="fa-regular fa-credit-card" aria-hidden="true"></i> Cartão, boleto ou outros meios</strong><small>Escolha no checkout seguro do Mercado Pago.</small></span></label></fieldset>
+      <button class="btn btn-primary btn-full">Continuar para o pagamento</button>
     </form>
   </div>
 </div>

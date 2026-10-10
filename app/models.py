@@ -87,6 +87,7 @@ class RSVP(TimestampMixin, db.Model):
     contact_id = db.Column(db.Integer, db.ForeignKey('contact_lead.id'), nullable=True)
     confirmation_code = db.Column(db.String(20), default='', index=True)
     confirmed_at = db.Column(db.DateTime, nullable=True)
+    guestbook_synced = db.Column(db.Boolean, nullable=False, default=False)
     contact = db.relationship('ContactLead', backref='rsvps')
 
 
@@ -96,6 +97,7 @@ class GuestbookMessage(TimestampMixin, db.Model):
     author_name = db.Column(db.String(120), nullable=False)
     message = db.Column(db.Text, nullable=False)
     approved = db.Column(db.Boolean, default=False)
+    source_key = db.Column(db.String(80), nullable=True, unique=True)
 
 
 class GiftItem(TimestampMixin, db.Model):
@@ -141,6 +143,8 @@ class GiftPurchase(TimestampMixin, db.Model):
     status = db.Column(db.String(30), default='pending')
     mercado_pago_preference_id = db.Column(db.String(120), default='')
     mercado_pago_payment_id = db.Column(db.String(120), default='')
+    guestbook_synced = db.Column(db.Boolean, nullable=False, default=False)
+    payment_verified = db.Column(db.Boolean, nullable=False, default=False)
 
 
 class ContactLead(TimestampMixin, db.Model):

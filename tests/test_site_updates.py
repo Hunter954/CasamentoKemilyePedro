@@ -99,12 +99,13 @@ class SiteUpdateTests(unittest.TestCase):
         self.client.post('/rsvp', data={'confirmation_code':'123456','attendance':'no','guests_count':'garbage'})
         self.assertEqual((RSVP.query.one().attendance,RSVP.query.one().guests_count),('no',0))
 
-    def test_guestbook_only_publishes_approved_and_validates_limits(self):
-        self.client.post('/mural', data={'author_name':'Maria','message':'Que sejam felizes'})
-        self.assertEqual(GuestbookMessage.query.count(),1)
-        self.assertNotIn('Que sejam felizes',self.client.get('/mural').get_data(as_text=True))
-        self.client.post('/mural', data={'author_name':'x'*121,'message':'Recado'})
-        self.assertEqual(GuestbookMessage.query.count(),1)
+    def test_guestbook_rejects_public_post_and_only_displays_approved(self):
+        response = self.client.post('/mural', data={'author_name':'Maria','message':'Que sejam felizes'})
+        self.assertEqual(response.status_code,405)
+        self.assertEqual(GuestbookMessage.query.count(),0)
+        db.session.add(GuestbookMessage(author_name='Maria',message='Recado pendente',approved=False))
+        db.session.commit()
+        self.assertNotIn('Recado pendente',self.client.get('/mural').get_data(as_text=True))
 
     def test_gift_decimal_price_and_invalid_values(self):
         self.post('/admin/presentes',title='Jantar',price='189.90',active='on',allow_multiple_purchases='on')

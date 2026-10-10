@@ -1,11 +1,13 @@
 from datetime import datetime
 from urllib.parse import quote_plus
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from app import db
 from app.models import SiteSettings, GuestbookMessage, RSVP, GiftItem, GiftPurchase, ContactLead, Ceremony, FAQ
 from app.services.message_ai import generate_loving_message
 from app.services.mercado_pago import MercadoPagoService
 from app.services.whatsapp import normalize_whatsapp_phone
+from app.services.guestbook import attach_message
+from app.services.payment_status import apply_verified_payment
 from app.utils import format_phone
 
 public_bp = Blueprint('public', __name__)
@@ -87,7 +89,7 @@ def rsvp():
             flash('Digite o código que você recebeu no WhatsApp.', 'danger')
             return redirect(url_for('public.rsvp'))
 
-        contact = ContactLead.query.filter_by(confirmation_code=code).first()
+        contact = ContactLead.query.filter_by(confirmation_code=code).with_for_update().first()
         if not contact:
             flash('Código não encontrado. Confira o número enviado no WhatsApp e tente novamente.', 'danger')
             return redirect(url_for('public.rsvp'))
@@ -109,6 +111,9 @@ def rsvp():
             flash('Informe uma quantidade de 1 a 10 pessoas.', 'danger')
             return redirect(url_for('public.rsvp'))
         message = request.form.get('message', '').strip()
+        if len(message) > 3000:
+            flash('O recado deve ter até 3.000 caracteres.', 'danger')
+            return redirect(url_for('public.rsvp'))
 
         if existing:
             existing.guest_name = contact.name
@@ -133,33 +138,16 @@ def rsvp():
             )
             db.session.add(existing)
 
+        db.session.flush()
+        attach_message(existing, 'rsvp')
         db.session.commit()
         flash(f'Presença registrada com sucesso para {contact.name}. Obrigado!', 'success')
         return redirect(url_for('public.rsvp'))
     return render_template('public/rsvp.html')
 
 
-@public_bp.route('/mural', methods=['GET', 'POST'])
+@public_bp.route('/mural')
 def guestbook():
-    settings = SiteSettings.query.first()
-    if request.method == 'POST':
-        if settings and not settings.allow_guestbook:
-            flash('O mural está temporariamente desativado.', 'warning')
-            return redirect(url_for('public.guestbook'))
-        author = request.form.get('author_name', '').strip()
-        content = request.form.get('message', '').strip()
-        if not author or len(author) > 120 or not content or len(content) > 3000:
-            flash('Informe seu nome (até 120 caracteres) e um recado (até 3.000 caracteres).', 'danger')
-            return redirect(url_for('public.guestbook'))
-        message = GuestbookMessage(
-            author_name=author,
-            message=content,
-            approved=not (settings.require_guestbook_approval if settings else True),
-        )
-        db.session.add(message)
-        db.session.commit()
-        flash('Recado enviado! Ele aparecerá após aprovação.' if (settings.require_guestbook_approval if settings else True) else 'Recado publicado com sucesso!', 'success')
-        return redirect(url_for('public.guestbook'))
     pagination = GuestbookMessage.query.filter_by(approved=True).order_by(GuestbookMessage.created_at.desc()).paginate(page=request.args.get('page', 1, type=int), per_page=24, error_out=False)
     return render_template('public/guestbook.html', messages=_guestbook_cards(pagination.items), pagination=pagination)
 
@@ -180,6 +168,14 @@ def gift_checkout(gift_id):
         return redirect(url_for('public.gifts'))
 
     if request.method == 'POST':
+        name = request.form.get('buyer_name', '').strip()
+        email = request.form.get('buyer_email', '').strip()
+        phone = format_phone(request.form.get('buyer_phone', '').strip())
+        message = request.form.get('message', '').strip()
+        payment_method = request.form.get('payment_method', 'auto')
+        if not name or len(name) > 180 or not email or '@' not in email or len(email) > 120 or not phone or len(phone) > 40 or len(message) > 3000 or payment_method not in ('auto', 'pix'):
+            flash('Confira seus dados. O recado deve ter até 3.000 caracteres.', 'danger')
+            return redirect(url_for('public.gift_checkout', gift_id=gift.id))
         purchase = GiftPurchase(
             gift_id=gift.id,
             buyer_name=request.form.get('buyer_name', '').strip(),
@@ -200,6 +196,7 @@ def gift_checkout(gift_id):
             pending_url=url_for('public.checkout_result', status='pending', _external=True),
             failure_url=url_for('public.checkout_result', status='failure', _external=True),
             notification_url=url_for('api.mercado_pago_webhook', _external=True),
+            payment_method=payment_method,
         )
 
         if pref.get('reference'):
@@ -218,7 +215,30 @@ def gift_checkout(gift_id):
 
 @public_bp.route('/checkout/<status>')
 def checkout_result(status):
-    return render_template('public/checkout_result.html', status=status)
+    payment_id = request.args.get('payment_id') or request.args.get('collection_id')
+    reported_status = request.args.get('status') or request.args.get('collection_status')
+    resolved = 'pending'
+    verified = False
+    payment_method = ''
+    if payment_id:
+        try:
+            payment = MercadoPagoService.fetch_payment(payment_id)
+            # Query parameters never approve a purchase or select its reference.
+            if str(payment.get('id') or '') == str(payment_id):
+                purchase = apply_verified_payment(payment)
+                if purchase:
+                    db.session.commit()
+                    verified = True
+                    payment_method = payment.get('payment_method_id', '')
+                    resolved = 'success' if purchase.status == 'approved' else ('pending' if purchase.status in ('pending','in_process','authorized','in_mediation') else 'failure')
+        except Exception:
+            db.session.rollback()
+            current_app.logger.warning('Não foi possível verificar retorno do pagamento %s', str(payment_id)[:30])
+    # A failed return can show a retry message, but a success path alone proves nothing.
+    if not verified and (status == 'failure' or reported_status in ('rejected','cancelled','refunded','charged_back')):
+        resolved = 'failure'
+    boleto = payment_method in ('bolbradesco','pec','boleto') or (not verified and request.args.get('payment_type') == 'ticket')
+    return render_template('public/checkout_result.html', status=resolved, verified=verified, boleto=boleto)
 
 
 @public_bp.route('/gerar-mensagem')

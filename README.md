@@ -42,6 +42,16 @@ Validação: `python -m unittest discover -s tests -v` (SQLite em memória, sem 
 
 Interações JavaScript: `node tests/test_gift_filters.mjs`.
 
+## Pagamentos e mural
+
+O retorno do checkout e as notificações consultam o pagamento no Mercado Pago pelo token do servidor. A aprovação exige referência da compra, valor e moeda correspondentes; parâmetros da URL não aprovam compras. Boletos pendentes mostram **Aguardando pagamento** e permitem atualizar o status. Falhas temporárias nas notificações retornam 503 para permitir nova tentativa.
+
+O checkout permite escolher Pix ou outros meios, sem excluir cartão ou boleto. Para o Pix aparecer no Checkout Pro, cadastre uma chave Pix **na conta Mercado Pago que recebe os presentes**: Área Pix → Minhas chaves → Cadastrar chave. A seleção no site não substitui essa configuração da conta. [Documentação do Mercado Pago](https://www.mercadopago.com.br/developers/pt/docs/woocommerce/payments-configuration/checkout-pro).
+
+O mural público permite somente leitura. Novos recados vêm de respostas ao RSVP com código válido ou de presentes com pagamento aprovado e verificado. A configuração de moderação do admin continua sendo respeitada. A origem de cada recado impede duplicação por notificações repetidas e evita restaurar recados excluídos pelo admin. Na atualização, respostas antigas confirmadas são importadas uma única vez; presentes antigos precisam de confirmação verificada do pagamento.
+
+Os testes de pagamento usam respostas simuladas do provedor, sem cobranças reais. Validação completa: `python -m unittest discover -s tests -v`.
+
 ## Cerimônias e perguntas frequentes
 
 As áreas **Cerimônias e locais** e **Perguntas frequentes** no admin controlam a localização e as respostas na home. Os dois momentos têm data, horário, foto, endereço e rota independentes. O horário da recepção começa em branco, com “Horário a definir”, até ser informado pelos noivos. A cerimônia religiosa preserva dados existentes das configurações e atualiza os campos usados nos convites e na contagem regressiva. As perguntas podem ser criadas, editadas, ordenadas, ocultadas e excluídas; o cadastro inicial acontece uma única vez.

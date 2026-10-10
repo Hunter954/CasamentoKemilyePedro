@@ -17,13 +17,15 @@
  <nav class="site-drawer-nav" aria-label="Menu mobile"><a data-menu-close href="{{ url_for('public.home') }}#inicio">Início</a><a data-menu-close href="{{ url_for('public.home') }}#locais">Localização</a><a data-menu-close href="{{ url_for('public.guestbook') }}">Mural de Recados</a><a data-menu-close href="{{ url_for('public.rsvp') }}">Confirmar Presença</a><a data-menu-close href="{{ url_for('public.gifts') }}">Lista de Presentes</a><a data-menu-close href="{{ url_for('public.home') }}#faq">Dúvidas Frequentes</a></nav>
 </aside><main class="kp-page kp-inner-main"><section class="kp-inner-hero"><div class="kp-inner-decor kp-inner-decor-left" data-parallax="0.12" aria-hidden="true"></div><div class="kp-inner-decor kp-inner-decor-right" data-parallax="0.17" aria-hidden="true"></div><div class="kp-inner-hero-text"><span class="kp-inner-eyebrow">KEMILY <i class="fa-regular fa-heart"></i> PEDRO</span><h1>Obrigado pelo carinho</h1><div class="kp-home-divider"><span></span><i class="fa-regular fa-heart"></i><span></span></div><p>Sua presença e seu afeto fazem toda a diferença.</p></div></section><section class="kp-inner-content kp-checkout-section"><div class="kp-checkout-wrap">
 <div class="page-shell container narrow">
-  <div class="section-card centered">
+  <div class="section-card centered payment-result-card">
     {% if status == 'success' %}
       <h2>Pagamento aprovado <i class="fa-regular fa-heart" aria-hidden="true"></i></h2>
       <p>Muito obrigado pelo presente e pelo carinho com o casal.</p>
     {% elif status == 'pending' %}
-      <h2>Pagamento pendente</h2>
-      <p>Seu presente está aguardando a confirmação do pagamento. Obrigado pelo carinho!</p>
+      <h2>Aguardando pagamento <i class="fa-regular fa-clock" aria-hidden="true"></i></h2>
+      {% if boleto %}<p>Seu boleto foi gerado. O presente será confirmado quando o Mercado Pago informar a aprovação do pagamento.</p>{% else %}<p>A confirmação do pagamento ainda está pendente. O presente será confirmado após a aprovação pelo Mercado Pago.</p>{% endif %}
+      <p class="payment-status-note">{% if not verified %}Ainda não foi possível consultar a confirmação do pagamento. Tente atualizar o status em alguns instantes.{% else %}Você pode voltar aqui para acompanhar a confirmação do seu presente.{% endif %}</p>
+      <a class="btn btn-soft btn-full" href="{{ request.url }}">Atualizar status do pagamento</a>
     {% else %}
       <h2>Pagamento não concluído</h2>
       <p>Você pode tentar novamente quando quiser.</p>

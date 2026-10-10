@@ -26,7 +26,7 @@ class MercadoPagoService:
         return bool(cls.get_access_token())
 
     @classmethod
-    def create_preference(cls, purchase, gift_title, success_url, pending_url, failure_url, notification_url):
+    def create_preference(cls, purchase, gift_title, success_url, pending_url, failure_url, notification_url, payment_method='auto'):
         if not cls.is_enabled():
             return {
                 'enabled': False,
@@ -55,7 +55,13 @@ class MercadoPagoService:
             'auto_return': 'approved',
             'external_reference': str(purchase.id),
             'notification_url': notification_url,
+            'payment_methods': {
+                'excluded_payment_methods': [],
+                'excluded_payment_types': [],
+            },
         }
+        if payment_method == 'pix':
+            payload['payment_methods']['default_payment_method_id'] = 'pix'
         headers = {
             'Authorization': f"Bearer {cls.get_access_token()}",
             'Content-Type': 'application/json',
@@ -96,7 +102,8 @@ class MercadoPagoService:
 
     @classmethod
     def fetch_payment(cls, payment_id):
-        if not payment_id or not cls.is_enabled():
+        payment_id = str(payment_id or '')
+        if not payment_id.isascii() or not payment_id.isdigit() or len(payment_id) > 30 or not cls.is_enabled():
             return {}
         headers = {'Authorization': f"Bearer {cls.get_access_token()}"}
         response = requests.get(cls.PAYMENTS_API_URL.format(payment_id=payment_id), headers=headers, timeout=20)

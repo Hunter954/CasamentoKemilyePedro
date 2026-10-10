@@ -61,6 +61,7 @@
       <label>Access Token<textarea name="mercado_pago_access_token" placeholder="APP_USR-...">{{ settings.mercado_pago_access_token or '' }}</textarea></label>
       <label>Public Key<input name="mercado_pago_public_key" placeholder="APP_USR-..." value="{{ settings.mercado_pago_public_key or '' }}"></label>
     </div>
+    <p class="admin-helper-text"><strong>Pix:</strong> cadastre uma chave Pix na conta Mercado Pago que recebe os presentes. O site mantém esse meio habilitado e pode selecioná-lo como preferência, mas sua disponibilidade depende da conta recebedora. <a href="https://www.mercadopago.com.br/developers/pt/docs/woocommerce/payments-configuration/checkout-pro" target="_blank" rel="noopener">Requisito do Mercado Pago ↗</a></p>
     <p class="admin-helper-text">Com essa configuração preenchida, o checkout passa a criar a preferência real do Mercado Pago direto pelo painel admin, sem depender de variável manual no Railway.</p>
   </div>
 
