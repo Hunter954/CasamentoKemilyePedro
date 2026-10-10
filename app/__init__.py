@@ -18,6 +18,18 @@ migrate = Migrate()
 def _sync_schema(app):
     inspector = inspect(db.engine)
 
+    if inspector.has_table('admin_user'):
+        user_columns = {column['name'] for column in inspector.get_columns('admin_user')}
+        for name, definition in {
+            'role': "VARCHAR(20) NOT NULL DEFAULT 'admin'",
+            'enabled': 'BOOLEAN NOT NULL DEFAULT TRUE',
+            'session_version': 'INTEGER NOT NULL DEFAULT 1',
+            'is_primary': 'BOOLEAN NOT NULL DEFAULT FALSE',
+        }.items():
+            if name not in user_columns:
+                db.session.execute(text(f'ALTER TABLE admin_user ADD COLUMN {name} {definition}'))
+        db.session.commit()
+
     if inspector.has_table('gift_item'):
         gift_columns = {column['name'] for column in inspector.get_columns('gift_item')}
         if 'allow_multiple_purchases' not in gift_columns:
@@ -144,14 +156,25 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return AdminUser.query.get(int(user_id))
+        try:
+            parts = str(user_id).split(':', 1)
+            user = db.session.get(AdminUser, int(parts[0]))
+            # Existing signed sessions stay valid until the first credential change.
+            version = int(parts[1]) if len(parts) == 2 else 1
+        except (TypeError, ValueError):
+            return None
+        if user and user.is_active and user.session_version == version:
+            return user
+        return None
 
     from .public.routes import public_bp
     from .admin.routes import admin_bp
+    from .admin.users import users_bp
     from .api.routes import api_bp
 
     app.register_blueprint(public_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(users_bp, url_prefix='/admin/usuarios')
     app.register_blueprint(api_bp, url_prefix='/api')
 
     app.jinja_env.filters['currency_br'] = format_currency
@@ -190,18 +213,24 @@ def create_app():
         env_admin_password = os.getenv('ADMIN_PASSWORD')
         if env_admin_email and env_admin_password:
             normalized_email = env_admin_email.strip().lower()
-            admin_user = AdminUser.query.filter(db.func.lower(AdminUser.email) == normalized_email).first()
+            admin_user = AdminUser.query.filter_by(is_primary=True).order_by(AdminUser.id).first()
+            if admin_user is None:
+                admin_user = AdminUser.query.filter(db.func.lower(AdminUser.email) == normalized_email).first()
 
             if admin_user is None:
                 # Se já existe um único admin criado por uma configuração antiga, reutiliza-o
                 # para não deixar uma conta órfã ao trocar o e-mail nas variáveis.
-                admin_user = AdminUser.query.order_by(AdminUser.id.asc()).first()
+                if AdminUser.query.count() == 1:
+                    admin_user = AdminUser.query.first()
 
             if admin_user is None:
                 admin_user = AdminUser(name='Administrador', email=normalized_email)
                 db.session.add(admin_user)
             else:
                 admin_user.email = normalized_email
+            admin_user.is_primary = True
+            admin_user.role = 'admin'
+            admin_user.enabled = True
 
             # A variável de ambiente é a fonte de verdade para a senha administrativa.
             # Atualizar o hash no boot garante que uma alteração no Railway passe a valer

@@ -23,6 +23,10 @@
       {{ admin_link('admin.manage_gifts', 'Presentes') }}
       {{ admin_link('admin.purchases', 'Compras') }}
       {{ admin_link('admin.settings', 'Configurações') }}
+      {% if current_user.can_manage_users %}
+      <span class="admin-nav-label">Acessos</span>
+      {{ admin_link('admin_users.index', 'Usuários') }}
+      {% endif %}
     </nav>
     <a class="admin-logout" href="{{ url_for('admin.logout') }}">Sair do painel</a>
   </aside>

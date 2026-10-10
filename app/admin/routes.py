@@ -62,7 +62,7 @@ def login():
         # Não aplicar strip na senha: espaços podem fazer parte legitimamente dela.
         password = request.form.get('password', '')
         user = AdminUser.query.filter(db.func.lower(AdminUser.email) == email).first()
-        if user and user.check_password(password):
+        if user and user.is_active and user.check_password(password):
             login_user(user)
             return redirect(url_for('admin.dashboard'))
         flash('Credenciais inválidas.', 'danger')
