@@ -2,14 +2,12 @@ import json
 import random
 import re
 import time
-from datetime import datetime
-from typing import Iterable
 
 import requests
 from flask import current_app
 
 from app import db
-from app.models import ContactLead, SiteSettings, WhatsAppDispatch
+from app.models import ContactLead, SiteSettings
 from app.utils import to_public_media_url
 
 
@@ -237,63 +235,3 @@ def extract_message_id(data) -> str:
         if value is not None and str(value).strip():
             return str(value).strip()
     return ''
-
-
-def send_campaign_messages(campaign, contacts: Iterable, tag_filter: str | None = None, send_scope: str = 'unsent', settings=None, site_url: str = '', batch_size: int | None = None, max_caption_length: int = 1024):
-    status = get_instance_status()
-    if not status.get('connected'):
-        raise WhatsAppConfigError('WhatsApp desconectado. Abra “Conexão WhatsApp” no painel e leia o QR Code primeiro.')
-
-    results, processed = [], 0
-    settings = settings or _settings()
-    image_url = to_public_media_url(getattr(campaign, 'image_path', '') or '', site_url=site_url)
-    try:
-        batch_size = max(1, min(int(batch_size), 50)) if batch_size is not None else None
-    except (TypeError, ValueError):
-        batch_size = None
-    delay = max(0.8, min(float(current_app.config.get('WHATSAPP_SEND_DELAY', 1.2)), 10.0))
-
-    for contact in contacts:
-        if tag_filter and tag_filter != 'todos' and (contact.tag or '').strip().lower() != tag_filter.strip().lower():
-            results.append({'contact': contact, 'status': 'skipped', 'reason': 'tag'}); continue
-        existing = WhatsAppDispatch.query.filter_by(campaign_id=campaign.id, contact_id=contact.id).first()
-        if send_scope == 'unsent' and existing:
-            results.append({'contact': contact, 'status': 'skipped', 'reason': 'already_processed'}); continue
-        if send_scope == 'errors' and (not existing or existing.status != 'error'):
-            results.append({'contact': contact, 'status': 'skipped', 'reason': 'not_error'}); continue
-        if send_scope == 'all' and existing and existing.status in {'sent','delivered','read'}:
-            results.append({'contact': contact, 'status': 'skipped', 'reason': 'already_sent'}); continue
-        if not existing:
-            existing = WhatsAppDispatch(campaign_id=campaign.id, contact_id=contact.id)
-            db.session.add(existing)
-
-        existing.phone_sent = normalize_whatsapp_phone(contact.phone)
-        message = render_campaign_message(campaign.message, contact, settings, site_url)
-        try:
-            if image_url and len(message) <= max_caption_length:
-                response = _post_send_image(contact.phone, image_url, message)
-                mode = 'image_with_caption'
-            elif image_url:
-                image_response = _post_send_image(contact.phone, image_url, '')
-                response = _post_send_text(contact.phone, message)
-                response['image_response'] = image_response.get('response')
-                mode = 'image_then_text'
-            else:
-                response = _post_send_text(contact.phone, message)
-                mode = 'text_only'
-            existing.status = 'sent'
-            existing.sent_at = datetime.utcnow()
-            existing.provider_message_id = response.get('message_id', '')
-            existing.response_body = serialize_payload({'provider': 'baileys', 'mode': mode, 'response': response.get('response')})
-            existing.error_message = ''
-            results.append({'contact': contact, 'status': 'sent'})
-            processed += 1
-            db.session.commit()
-            if batch_size is not None and processed >= batch_size:
-                break
-            time.sleep(delay)
-        except Exception as exc:
-            existing.status = 'error'; existing.error_message = str(exc); existing.response_body = ''
-            db.session.commit()
-            results.append({'contact': contact, 'status': 'error', 'reason': str(exc)})
-    return results

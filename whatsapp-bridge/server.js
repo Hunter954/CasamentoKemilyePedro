@@ -15,4 +15,4 @@ const server=http.createServer(async(req,res)=>{try{
   if(req.method==='POST'&&req.url==='/send-image'){const b=await body(req); const r=await bot.sendImage(b.phone,b.image,b.caption); return json(res,200,{ok:true,messageId:r.id,result:r});}
   return json(res,404,{ok:false,error:'not found'});
 }catch(e){return json(res,500,{ok:false,error:e.message});}});
-server.listen(PORT,HOST,()=>{console.log(`[WhatsApp bridge] ${HOST}:${PORT}`); startContactWorker(); if(String(process.env.WA_DISABLE_AUTO_START||'false')!=='true') setTimeout(()=>bot.start(false).catch(e=>console.error('[WhatsApp]',e.message)),2500);});
+server.listen(PORT,HOST,()=>{console.log(`[WhatsApp bridge] ${HOST}:${PORT}`); startContactWorker(); require('./campaign-worker').startCampaignWorker(); if(String(process.env.WA_DISABLE_AUTO_START||'false')!=='true') setTimeout(()=>bot.start(false).catch(e=>console.error('[WhatsApp]',e.message)),2500);});

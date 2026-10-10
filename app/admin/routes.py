@@ -1,5 +1,9 @@
 import hmac
 import secrets
+import math
+from datetime import timedelta
+from app.admin.security import check_panel_csrf
+from app.services.campaign_queue import queue_campaign, queue_lock, queue_overview, delivery_settings, QueueBusy
 from datetime import datetime
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify, abort
@@ -20,7 +24,6 @@ from app.models import (
 )
 from app.utils import save_upload, parse_datetime, format_phone, normalize_phone_digits
 from app.services.whatsapp import (
-    send_campaign_messages,
     send_test_message,
     WhatsAppConfigError,
     get_or_create_contact_code,
@@ -46,6 +49,17 @@ def _to_float(value):
         return float(value or 0)
     except (TypeError, ValueError):
         return 0.0
+
+
+def _gift_price(raw):
+    try:
+        value = str(raw or '').strip()
+        if ',' in value:
+            value = value.replace('.', '').replace(',', '.')
+        price = float(value)
+        return round(price, 2) if math.isfinite(price) and 0 < price <= 1000000 else None
+    except (TypeError, ValueError):
+        return None
 
 
 def _tag_options():
@@ -107,12 +121,6 @@ def settings():
         settings.couple_names = request.form.get('couple_names', '')
         settings.hero_phrase = request.form.get('hero_phrase', '')
         settings.wedding_date = parse_datetime(request.form.get('wedding_date', ''))
-        settings.wedding_location_name = request.form.get('wedding_location_name', '')
-        settings.wedding_address = request.form.get('wedding_address', '')
-        settings.wedding_city = request.form.get('wedding_city', '')
-        settings.wedding_time = request.form.get('wedding_time', '')
-        settings.map_embed_url = request.form.get('map_embed_url', '')
-        settings.route_url = request.form.get('route_url', '')
         settings.gift_banner_title = request.form.get('gift_banner_title', '')
         settings.gift_button_label = request.form.get('gift_button_label', '')
         settings.final_message = request.form.get('final_message', '')
@@ -159,12 +167,18 @@ def manage_gifts():
     edit_gift = GiftItem.query.get(edit_id) if edit_id else None
 
     if request.method == 'POST':
+        check_panel_csrf()
+        title = request.form.get('title', '').strip()
+        price = _gift_price(request.form.get('price', ''))
+        if not title or len(title) > 180 or price is None:
+            flash('Informe um título e um valor positivo válido.', 'danger')
+            return redirect(url_for('admin.manage_gifts'))
         image_upload = request.files.get('image')
         image_path = save_upload(image_upload) if image_upload and image_upload.filename else ''
         item = GiftItem(
             title=request.form.get('title', '').strip(),
             description=request.form.get('description', '').strip(),
-            price=_to_float((request.form.get('price', '') or '').replace('.', '').replace(',', '.')),
+            price=price,
             image_url=image_path,
             active=request.form.get('active') == 'on',
             allow_multiple_purchases=request.form.get('allow_multiple_purchases') == 'on',
@@ -181,6 +195,7 @@ def manage_gifts():
 @admin_bp.route('/presentes/<int:gift_id>/toggle', methods=['POST'])
 @login_required
 def toggle_gift(gift_id):
+    check_panel_csrf()
     gift = GiftItem.query.get_or_404(gift_id)
     gift.active = not gift.active
     db.session.commit()
@@ -191,10 +206,16 @@ def toggle_gift(gift_id):
 @admin_bp.route('/presentes/<int:gift_id>/editar', methods=['POST'])
 @login_required
 def edit_gift(gift_id):
+    check_panel_csrf()
     gift = GiftItem.query.get_or_404(gift_id)
-    gift.title = request.form.get('title', gift.title)
+    title = request.form.get('title', '').strip()
+    price = _gift_price(request.form.get('price', ''))
+    if not title or len(title) > 180 or price is None:
+        flash('Informe um título e um valor positivo válido.', 'danger')
+        return redirect(url_for('admin.manage_gifts', edit=gift_id))
+    gift.title = title
     gift.description = request.form.get('description', gift.description)
-    gift.price = _to_float((request.form.get('price', gift.price) or '').replace('.', '').replace(',', '.'))
+    gift.price = price
     gift.active = request.form.get('active') == 'on'
     gift.allow_multiple_purchases = request.form.get('allow_multiple_purchases') == 'on'
     image_upload = request.files.get('image')
@@ -208,6 +229,7 @@ def edit_gift(gift_id):
 @admin_bp.route('/presentes/<int:gift_id>/excluir', methods=['POST'])
 @login_required
 def delete_gift(gift_id):
+    check_panel_csrf()
     gift = GiftItem.query.get_or_404(gift_id)
     db.session.delete(gift)
     db.session.commit()
@@ -432,15 +454,21 @@ def regenerate_contact_code(contact_id):
 @login_required
 def delete_contact(contact_id):
     _check_contacts_csrf()
-    with contact_write_lock():
-        contact = ContactLead.query.get_or_404(contact_id)
-        for rsvp in list(contact.rsvps):
-            db.session.delete(rsvp)
-        for dispatch in list(contact.dispatches):
-            db.session.delete(dispatch)
-        db.session.delete(contact)
-        db.session.commit()
-    flash('Contato excluído com sucesso.', 'success')
+    try:
+        with queue_lock(), contact_write_lock():
+            contact = db.get_or_404(ContactLead, contact_id)
+            if any(job.status in ('queued', 'sending', 'error', 'uncertain') for dispatch in contact.dispatches for job in dispatch.jobs):
+                raise ValueError('Este contato tem mensagens na fila. Exclua a campanha antes de remover o contato.')
+            for rsvp in list(contact.rsvps):
+                db.session.delete(rsvp)
+            for dispatch in list(contact.dispatches):
+                db.session.delete(dispatch)
+            db.session.delete(contact)
+            db.session.commit()
+        flash('Contato excluído com sucesso.', 'success')
+    except ValueError as exc:
+        db.session.rollback()
+        flash(str(exc), 'warning')
     return redirect(url_for('admin.contacts'))
 
 
@@ -514,6 +542,11 @@ def whatsapp_connection_disconnect():
 @login_required
 def campaigns():
     if request.method == 'POST':
+        check_panel_csrf()
+        title, message = request.form.get('title', '').strip(), request.form.get('message', '').strip()
+        if not title or len(title) > 180 or not message or len(message) > 10000:
+            flash('Informe um título (até 180 caracteres) e uma mensagem (até 10.000 caracteres).', 'danger')
+            return redirect(url_for('admin.campaigns'))
         image_upload = request.files.get('image')
         image_path = save_upload(image_upload) if image_upload and image_upload.filename else ''
         campaign = WhatsAppCampaign(
@@ -567,7 +600,7 @@ def campaigns():
         whatsapp_error = str(exc)
 
     return render_template(
-        'admin/campaigns.html',
+        'admin/campaign_dashboard.html',
         campaigns=campaigns,
         contacts=contacts,
         dispatches=dispatches,
@@ -578,59 +611,113 @@ def campaigns():
         dispatch_summary=dispatch_summary,
         whatsapp_status=whatsapp_status,
         whatsapp_error=whatsapp_error,
+        delivery=delivery_settings(),
+        queue_metrics=queue_overview(),
+        editing_campaign=db.get_or_404(WhatsAppCampaign, request.args.get('edit', type=int)) if request.args.get('edit', type=int) else None,
     )
 
 
 @admin_bp.route('/campanhas/<int:campaign_id>/disparar', methods=['POST'])
 @login_required
 def trigger_campaign(campaign_id):
-    campaign = WhatsAppCampaign.query.get_or_404(campaign_id)
-    contacts = ContactLead.query.order_by(ContactLead.created_at.asc()).all()
-    send_scope = (request.form.get('send_scope', 'unsent') or 'unsent').strip()
-    site_url = request.url_root.rstrip('/')
-    settings = SiteSettings.query.first()
-
+    check_panel_csrf()
+    campaign = db.get_or_404(WhatsAppCampaign, campaign_id)
+    scope = request.form.get('send_scope', 'unsent')
+    if scope == 'errors' and request.form.get('reviewed') != 'yes':
+        flash('Confira as conversas antes de reenviar: uma falha de conexão pode ocorrer depois da entrega.', 'warning')
+        return redirect(url_for('admin.campaigns'))
     try:
-        batch_size = int(request.form.get('batch_size', 20) or 20)
-    except (TypeError, ValueError):
-        batch_size = 20
-    batch_size = max(1, min(batch_size, 50))
-
-    try:
-        results = send_campaign_messages(
-            campaign,
-            contacts,
-            tag_filter=campaign.target_tag,
-            send_scope=send_scope,
-            settings=settings,
-            site_url=site_url,
-            batch_size=batch_size,
-        )
-        sent = len([r for r in results if r['status'] == 'sent'])
-        skipped = len([r for r in results if r['status'] == 'skipped'])
-        errors = len([r for r in results if r['status'] == 'error'])
-        scope_label = {
-            'unsent': 'pendentes',
-            'errors': 'com erro',
-            'all': 'selecionados',
-        }.get(send_scope, 'selecionados')
-        flash(f'Lote processado para contatos {scope_label}. Limite do lote: {batch_size} | Enviados: {sent} | Ignorados: {skipped} | Erros: {errors}.', 'success' if errors == 0 else 'warning')
-    except WhatsAppConfigError as exc:
-        flash(str(exc), 'danger')
-    except Exception as exc:
-        current_app.logger.exception('Falha ao disparar campanha %s', campaign_id)
+        count = queue_campaign(campaign, request.url_root.rstrip('/'), scope)
+        flash(f'{count} contatos adicionados à fila. O envio continuará em segundo plano.' if count else 'Nenhum contato novo para este envio.', 'success' if count else 'info')
+    except ValueError as exc:
         db.session.rollback()
-        flash(f'Erro interno ao processar o lote da campanha: {exc}', 'danger')
+        flash(str(exc), 'warning')
     return redirect(url_for('admin.campaigns'))
 
 
 @admin_bp.route('/campanhas/<int:campaign_id>/excluir', methods=['POST'])
 @login_required
 def delete_campaign(campaign_id):
-    campaign = WhatsAppCampaign.query.get_or_404(campaign_id)
-    for dispatch in campaign.dispatches:
-        db.session.delete(dispatch)
-    db.session.delete(campaign)
-    db.session.commit()
-    flash('Campanha excluída.', 'success')
+    check_panel_csrf()
+    try:
+        with queue_lock():
+            campaign = db.get_or_404(WhatsAppCampaign, campaign_id)
+            if any(job.status == 'sending' for dispatch in campaign.dispatches for job in dispatch.jobs):
+                raise ValueError('Aguarde a conclusão da mensagem em andamento antes de excluir.')
+            for dispatch in list(campaign.dispatches):
+                db.session.delete(dispatch)
+            db.session.delete(campaign)
+            db.session.commit()
+        flash('Campanha e fila excluídas.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'warning')
+    return redirect(url_for('admin.campaigns'))
+
+
+@admin_bp.route('/campanhas/frequencia', methods=['POST'])
+@login_required
+def campaign_frequency():
+    check_panel_csrf()
+    interval = request.form.get('interval_seconds', type=int)
+    if interval is None or not 15 <= interval <= 600:
+        flash('Escolha um intervalo entre 15 e 600 segundos.', 'danger')
+    else:
+        try:
+            with queue_lock():
+                pacing = delivery_settings()
+                pacing.interval_seconds = interval
+                # A longer interval must also delay an already scheduled send.
+                pacing.next_send_at = max(pacing.next_send_at or datetime.utcnow(), datetime.utcnow() + timedelta(seconds=interval))
+                db.session.commit()
+            flash('Frequência atualizada para todas as campanhas.', 'success')
+        except QueueBusy as exc:
+            flash(str(exc), 'warning')
+    return redirect(url_for('admin.campaigns'))
+
+
+@admin_bp.route('/campanhas/<int:campaign_id>/fila', methods=['POST'])
+@login_required
+def campaign_control(campaign_id):
+    check_panel_csrf()
+    campaign = db.get_or_404(WhatsAppCampaign, campaign_id)
+    action = request.form.get('action')
+    if action not in ('pause', 'resume'):
+        abort(400)
+    if action == 'resume' and any(job.status in ('error', 'uncertain') for dispatch in campaign.dispatches for job in dispatch.jobs):
+        flash('Revise os erros antes de retomar. Confira as conversas para evitar mensagens duplicadas.', 'warning')
+    else:
+        campaign.queue_paused = action == 'pause'
+        db.session.commit()
+        flash('Fila pausada. Uma mensagem em andamento pode terminar.' if campaign.queue_paused else 'Fila retomada.', 'success')
+    return redirect(url_for('admin.campaigns'))
+
+
+@admin_bp.route('/campanhas/progresso')
+@login_required
+def campaign_progress():
+    return jsonify(queue_overview())
+
+
+@admin_bp.route('/campanhas/<int:campaign_id>/editar', methods=['POST'])
+@login_required
+def edit_campaign(campaign_id):
+    check_panel_csrf()
+    campaign = db.get_or_404(WhatsAppCampaign, campaign_id)
+    title, message = request.form.get('title', '').strip(), request.form.get('message', '').strip()
+    if not title or len(title) > 180 or not message or len(message) > 10000:
+        flash('Informe um título e uma mensagem válidos.', 'danger')
+        return redirect(url_for('admin.campaigns', edit=campaign_id))
+    try:
+        with queue_lock():
+            if any(job.status in ('queued', 'sending', 'error', 'uncertain') for dispatch in campaign.dispatches for job in dispatch.jobs):
+                raise ValueError('Esta campanha já tem mensagens na fila. Conclua os envios ou crie uma nova campanha para outro conteúdo.')
+            campaign.title, campaign.message = title, message
+            campaign.target_tag = request.form.get('target_tag', 'todos').strip() or 'todos'
+            image = request.files.get('image')
+            if image and image.filename:
+                campaign.image_path = save_upload(image)
+            db.session.commit()
+        flash('Campanha atualizada.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'warning')
     return redirect(url_for('admin.campaigns'))

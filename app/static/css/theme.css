@@ -202,6 +202,95 @@
   outline: 2px solid var(--kp-brand);
   outline-offset: 3px;
 }
+
+[hidden] { display: none !important; }
+.kp-location-moment { font: 500 .72rem Inter, sans-serif; text-transform: uppercase; letter-spacing: .14em; }
+.kp-home-location .kp-location-time { display: grid; justify-items: center; gap: 7px; margin: 16px 0; font: 600 1.2rem Inter, sans-serif; }
+.kp-location-time i { font-size: .9rem; }
+.kp-location-time small { font-size: .75rem; font-weight: 400; }
+.kp-home-location-panel { padding-block: 30px; }
+.kp-home-faq-list p, .faq-editor-list p { white-space: pre-line; overflow-wrap: anywhere; }
+.kp-inner-page .kp-mural-intro { display: grid; justify-items: center; gap: 20px; text-align: center; margin: 0 0 45px; }
+.kp-inner-page .kp-mural-intro h2 { font: italic 500 2.2rem 'Cormorant Garamond', serif; margin: 0; color: var(--kp-brand-dark); }
+.kp-inner-page .kp-guest-layout { grid-template-columns: minmax(260px,.8fr) minmax(0,1.4fr); align-items: start; }
+.kp-inner-page .kp-guest-messages { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.kp-inner-page .kp-home-message-card p { white-space: pre-line; overflow-wrap: anywhere; }
+.kp-inner-page .kp-mural-pagination { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 25px; }
+.kp-inner-page .kp-mural-pagination a { color: var(--kp-brand-dark); }
+.admin-body .ceremony-editor-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
+.admin-body .ceremony-editor-grid form { margin: 0; }
+.ceremony-editor-icon { font-size: 1.6rem; color: var(--kp-brand); }
+.ceremony-editor-preview { min-height: 180px; border-radius: 12px; display: grid; place-items: center; background-position: center; background-size: cover; padding: 24px; }
+.ceremony-editor-preview.kp-home-location-church { background-image: url('/static/images/kemily-pedro/venue-church-clean.webp'); }
+.ceremony-editor-preview.kp-home-location-party { background-image: url('/static/images/kemily-pedro/venue-party-clean.webp'); }
+.ceremony-editor-preview > span { background: #fffdf7eb; color: var(--kp-brand-dark); border-radius: 8px; padding: 18px; text-align: center; font-weight: 600; }
+.ceremony-editor-preview small { display: block; margin-top: 10px; font-weight: 400; }
+.content-editor-layout { display: grid; grid-template-columns: minmax(260px,.8fr) minmax(0,1.3fr); gap: 24px; align-items: start; }
+.faq-editor-list { display: grid; gap: 22px; }
+.faq-editor-list article { border-top: 1px solid var(--kp-line); padding-top: 20px; }
+.faq-editor-list h3 { margin: 15px 0 10px; }
+.admin-dialog { width: min(760px,calc(100% - 32px)); max-height: calc(100dvh - 48px); margin: auto; padding: 28px; border: 1px solid var(--kp-line); border-radius: 18px; background: var(--kp-surface); color: var(--kp-text); box-shadow: 0 24px 90px #28251540; overflow: auto; }
+.admin-dialog::backdrop { background: #25241480; backdrop-filter: blur(5px); }
+.dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+.dialog-heading h2 { margin: 4px 0 0; font: 600 1.65rem 'Cormorant Garamond',serif; }
+.dialog-close { border: 1px solid var(--kp-line); background: var(--kp-soft); color: var(--kp-brand-dark); min-width: 44px; min-height: 44px; border-radius: 50%; font-size: 1.7rem; cursor: pointer; }
+.admin-dialog .admin-form-card { box-shadow: none; border: 0; margin: 0; padding: 0; }
+.admin-dialog .admin-section-head { display: none; }
+.admin-dialog input,.admin-dialog textarea,.admin-dialog select { width: 100%; box-sizing: border-box; }
+.admin-dialog input[type=checkbox] { width: auto; }
+.dialog-footer { display: flex; gap: 20px; justify-content: space-between; align-items: center; border-top: 1px solid var(--kp-line); padding-top: 22px; }
+.gift-live-preview { display: flex; align-items: center; gap: 22px; background: var(--kp-soft); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
+.gift-live-preview img { width: 110px; height: 110px; object-fit: contain; border-radius: 10px; background: white; }
+.gift-live-preview h3 { margin: 10px 0; overflow-wrap: anywhere; }
+.gift-live-preview strong { color: var(--kp-brand-dark); font-size: 1.3rem; }
+.campaign-overview .stat-card { display: grid; gap: 12px; }
+.campaign-overview a { color: var(--kp-brand-dark); font-size: .78rem; }
+.campaign-overview small { color: var(--kp-muted); font-size: .75rem; }
+.admin-body .campaign-pacing { display: grid; grid-template-columns: minmax(0,1fr) 260px; align-items: center; gap: 35px; border-left: 4px solid var(--kp-brand); }
+.campaign-pacing h2 { margin: 8px 0 12px; }
+.campaign-pacing p { line-height: 1.7; margin-bottom: 12px; }
+.campaign-pacing small { line-height: 1.6; color: var(--kp-muted); }
+.campaign-board { display: grid; gap: 22px; }
+.admin-body .campaign-v3-card { margin: 0; }
+.campaign-v3-card h2 { margin: 14px 0 8px; }
+.campaign-content-preview { border: 1px solid var(--kp-line); border-radius: 10px; padding: 15px 18px; background: #faf7ef; }
+.campaign-content-preview summary { cursor: pointer; font-size: .85rem; font-weight: 500; }
+.campaign-content-preview img { width: 140px; height: 140px; object-fit: contain; margin-top: 15px; }
+.campaign-content-preview .campaign-message { margin-top: 16px; border: 0; padding: 0; background: transparent; white-space: pre-wrap; overflow-wrap: anywhere; }
+.campaign-v3-metrics { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); margin-block: 24px; border: 1px solid var(--kp-line); border-radius: 10px; }
+.campaign-v3-metrics > div { display: grid; gap: 7px; padding: 18px; }
+.campaign-v3-metrics > div + div { border-left: 1px solid var(--kp-line); }
+.campaign-v3-metrics strong { font-size: 1.4rem; color: var(--kp-brand-dark); }
+.campaign-v3-metrics span { font-size: .75rem; color: var(--kp-muted); }
+.campaign-queue-progress { padding: 18px; background: var(--kp-soft); border-radius: 10px; margin-bottom: 22px; }
+.campaign-queue-progress > div { display: flex; justify-content: space-between; gap: 12px; font-size: .8rem; flex-wrap: wrap; }
+.campaign-queue-progress progress { display: block; width: 100%; height: 8px; appearance: none; border: 0; border-radius: 8px; margin: 14px 0; background: var(--kp-line); accent-color: var(--kp-brand); }
+.campaign-queue-progress progress::-webkit-progress-bar { background: var(--kp-line); border-radius: 8px; }
+.campaign-queue-progress progress::-webkit-progress-value { background: var(--kp-brand); border-radius: 8px; }
+.campaign-queue-progress small { font-size: .75rem; }
+.campaign-v3-actions { padding-top: 18px; border-top: 1px solid var(--kp-line); }
+.campaign-v3-actions form { margin: 0; }
+.campaign-personalize { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: .8rem; }
+.campaign-draft-preview { border: 1px solid var(--kp-line); border-radius: 12px; background: var(--kp-soft); padding: 20px; }
+.campaign-draft-preview p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; margin-bottom: 0; }
+.campaign-history > summary { cursor: pointer; display: flex; justify-content: space-between; gap: 15px; font-weight: 600; }
+.campaign-history > summary span { font-size: .8rem; color: var(--kp-muted); }
+.campaign-history td small { display: block; margin-top: 6px; }
+@media(max-width:1050px) {
+  .admin-body .ceremony-editor-grid,.content-editor-layout { grid-template-columns: minmax(0,1fr); }
+  .kp-inner-page .kp-guest-messages { grid-template-columns: minmax(0,1fr); }
+}
+@media(max-width:700px) {
+  .admin-body .campaign-pacing,.kp-inner-page .kp-guest-layout { grid-template-columns: minmax(0,1fr); }
+  .admin-dialog { padding: 22px 18px; max-height: calc(100dvh - 24px); }
+  .admin-dialog .admin-form-grid { grid-template-columns: minmax(0,1fr); }
+  .dialog-footer { align-items: stretch; flex-direction: column; }
+  .campaign-v3-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .campaign-v3-metrics > div:nth-child(3) { border-left: 0; }
+  .campaign-v3-metrics > div:nth-child(n+3) { border-top: 1px solid var(--kp-line); }
+  .gift-live-preview img { width: 80px; height: 80px; }
+  .campaign-v3-card .admin-section-head { flex-wrap: wrap; }
+}
 @media (max-width: 1100px) {
   .admin-body .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

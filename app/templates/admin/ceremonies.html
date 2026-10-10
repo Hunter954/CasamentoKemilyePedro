@@ -1,0 +1,20 @@
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<div class="admin-header admin-header-row"><div><span class="admin-kicker">Nosso dia</span><h1>Cerimônias e locais</h1><p>Organize os dois momentos do casamento. Cada local tem sua própria data, horário e rota.</p></div><a class="btn btn-soft" href="{{ url_for('public.home') }}#locais" target="_blank" rel="noopener">Ver no site ↗</a></div>
+<div class="ceremony-editor-grid">
+{% for item in ceremonies %}
+<form class="section-card stack-form" method="post" enctype="multipart/form-data">
+<input type="hidden" name="csrf_token" value="{{ panel_csrf() }}"><input type="hidden" name="ceremony_id" value="{{ item.id }}">
+<div class="admin-section-head"><div><span class="admin-kicker">Momento {{ loop.index }}</span><h2>{{ item.title }}</h2></div><i class="fa-solid {{ 'fa-church' if item.kind == 'church' else 'fa-champagne-glasses' }} ceremony-editor-icon" aria-hidden="true"></i></div>
+<div class="ceremony-editor-preview kp-home-location-{{ item.kind }}" {% if item.image_path %}style="background-image:url('{{ media_url(item.image_path) }}')"{% endif %}><span>{{ item.venue }}<small>{{ item.event_date.strftime('%d/%m/%Y') if item.event_date else 'Data a definir' }} · {{ item.event_time or 'Horário a definir' }}</small></span></div>
+<label>Nome do momento<input name="title" value="{{ item.title }}" maxlength="120" required></label>
+<label>Local<input name="venue" value="{{ item.venue }}" maxlength="180" required></label>
+<div class="admin-form-grid two-cols"><label>Data<input type="date" name="event_date" value="{{ item.event_date.isoformat() if item.event_date else '' }}"></label><label>Horário<input type="time" name="event_time" value="{{ item.event_time }}"><small>Em branco, o site mostra “Horário a definir”.</small></label></div>
+<label>Endereço<input name="address" value="{{ item.address }}" maxlength="255"></label><label>Cidade / UF<input name="city" value="{{ item.city }}" maxlength="120"></label>
+<label>Link do Google Maps<input type="url" name="route_url" value="{{ item.route_url }}" placeholder="https://maps.app.goo.gl/…"><small>Opcional. A rota é criada pelo endereço se estiver vazio.</small></label>
+<label>Foto do local<input type="file" name="image" accept="image/*"><small>Escolha uma foto sem textos ou botões.</small></label>
+<button class="btn btn-primary">Salvar {{ item.title|lower }}</button>
+</form>
+{% endfor %}
+</div>
+{% endblock %}

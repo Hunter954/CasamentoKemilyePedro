@@ -18,6 +18,12 @@ migrate = Migrate()
 def _sync_schema(app):
     inspector = inspect(db.engine)
 
+    if inspector.has_table('whatsapp_campaign'):
+        columns = {column['name'] for column in inspector.get_columns('whatsapp_campaign')}
+        if 'queue_paused' not in columns:
+            db.session.execute(text('ALTER TABLE whatsapp_campaign ADD COLUMN queue_paused BOOLEAN NOT NULL DEFAULT FALSE'))
+            db.session.commit()
+
     if inspector.has_table('admin_user'):
         user_columns = {column['name'] for column in inspector.get_columns('admin_user')}
         for name, definition in {
@@ -170,15 +176,19 @@ def create_app():
     from .public.routes import public_bp
     from .admin.routes import admin_bp
     from .admin.users import users_bp
+    from .admin.content import content_bp
+    from .admin.security import panel_csrf
     from .api.routes import api_bp
 
     app.register_blueprint(public_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(users_bp, url_prefix='/admin/usuarios')
+    app.register_blueprint(content_bp, url_prefix='/admin')
     app.register_blueprint(api_bp, url_prefix='/api')
 
     app.jinja_env.filters['currency_br'] = format_currency
     app.jinja_env.filters['phone_br'] = format_phone
+    app.jinja_env.globals['panel_csrf'] = panel_csrf
 
     @app.route('/media/<path:filename>')
     def uploaded_media(filename):
@@ -205,6 +215,9 @@ def create_app():
         # Apply this additive catalog release once, including on existing databases.
         from .gift_catalog import seed_gift_catalog
         seed_gift_catalog()
+
+        from .services.site_content import seed_site_content
+        seed_site_content()
 
         # Mantém o acesso administrativo sincronizado com as variáveis do Railway.
         # Antes, ADMIN_EMAIL/ADMIN_PASSWORD só eram usados pelo seed na primeira criação

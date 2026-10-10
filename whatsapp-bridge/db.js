@@ -24,7 +24,12 @@ async function clear(sessionId){ await ensureTable(); await getPool().query('DEL
 async function updateDispatchStatus(messageId,status){
   if(!messageId) return;
   try{
-    await getPool().query(`UPDATE whatsapp_dispatch SET status=$2, updated_at=NOW() WHERE provider_message_id=$1`,[String(messageId),String(status)]);
+    await getPool().query(`UPDATE whatsapp_dispatch SET status=$2, updated_at=NOW()
+      WHERE provider_message_id=$1
+        AND status NOT IN ('error','uncertain')
+        AND NOT (status='read' AND $2<>'read')
+        AND NOT (status='delivered' AND $2='sent')
+        AND NOT EXISTS (SELECT 1 FROM campaign_job WHERE dispatch_id=whatsapp_dispatch.id AND status<>'sent')`,[String(messageId),String(status)]);
   }catch(error){ console.warn('[WhatsApp] Não foi possível atualizar status do disparo:', error.message); }
 }
 let inboxReady;

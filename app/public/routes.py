@@ -2,7 +2,7 @@ from datetime import datetime
 from urllib.parse import quote_plus
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app import db
-from app.models import SiteSettings, GuestbookMessage, RSVP, GiftItem, GiftPurchase, ContactLead
+from app.models import SiteSettings, GuestbookMessage, RSVP, GiftItem, GiftPurchase, ContactLead, Ceremony, FAQ
 from app.services.message_ai import generate_loving_message
 from app.services.mercado_pago import MercadoPagoService
 from app.services.whatsapp import normalize_whatsapp_phone
@@ -71,6 +71,8 @@ def home():
         guestbook_messages=_guestbook_cards(guestbook_messages),
         gifts=gifts,
         countdown_target=countdown_target,
+        ceremonies=Ceremony.query.order_by(Ceremony.id).all(),
+        faqs=FAQ.query.filter_by(active=True).order_by(FAQ.position, FAQ.id).all(),
         computed_map_embed_url=_map_embed_url(settings),
         computed_route_url=_route_url(settings),
     )
@@ -95,8 +97,17 @@ def rsvp():
             flash('Este código já foi confirmado anteriormente.', 'warning')
             return redirect(url_for('public.rsvp'))
 
-        guests_count = max(1, min(int(request.form.get('guests_count', 1) or 1), 10))
         attendance = request.form.get('attendance', 'yes')
+        if attendance not in ('yes', 'no'):
+            flash('Selecione se você irá comparecer.', 'danger')
+            return redirect(url_for('public.rsvp'))
+        try:
+            guests_count = int(request.form.get('guests_count', 1) or 1) if attendance == 'yes' else 0
+            if attendance == 'yes' and not 1 <= guests_count <= 10:
+                raise ValueError()
+        except (TypeError, ValueError):
+            flash('Informe uma quantidade de 1 a 10 pessoas.', 'danger')
+            return redirect(url_for('public.rsvp'))
         message = request.form.get('message', '').strip()
 
         if existing:
@@ -135,17 +146,22 @@ def guestbook():
         if settings and not settings.allow_guestbook:
             flash('O mural está temporariamente desativado.', 'warning')
             return redirect(url_for('public.guestbook'))
+        author = request.form.get('author_name', '').strip()
+        content = request.form.get('message', '').strip()
+        if not author or len(author) > 120 or not content or len(content) > 3000:
+            flash('Informe seu nome (até 120 caracteres) e um recado (até 3.000 caracteres).', 'danger')
+            return redirect(url_for('public.guestbook'))
         message = GuestbookMessage(
-            author_name=request.form.get('author_name', '').strip(),
-            message=request.form.get('message', '').strip(),
+            author_name=author,
+            message=content,
             approved=not (settings.require_guestbook_approval if settings else True),
         )
         db.session.add(message)
         db.session.commit()
         flash('Recado enviado! Ele aparecerá após aprovação.' if (settings.require_guestbook_approval if settings else True) else 'Recado publicado com sucesso!', 'success')
         return redirect(url_for('public.guestbook'))
-    messages = GuestbookMessage.query.filter_by(approved=True).order_by(GuestbookMessage.created_at.desc()).all()
-    return render_template('public/guestbook.html', messages=_guestbook_cards(messages))
+    pagination = GuestbookMessage.query.filter_by(approved=True).order_by(GuestbookMessage.created_at.desc()).paginate(page=request.args.get('page', 1, type=int), per_page=24, error_out=False)
+    return render_template('public/guestbook.html', messages=_guestbook_cards(pagination.items), pagination=pagination)
 
 
 @public_bp.route('/presentes')

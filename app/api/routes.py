@@ -10,6 +10,16 @@ from app.services.whatsapp import normalize_whatsapp_phone, serialize_payload, e
 api_bp = Blueprint('api', __name__)
 
 
+@api_bp.route('/whatsapp/campaigns/tick', methods=['POST'])
+def campaign_tick():
+    secret = current_app.config.get('WA_INTERNAL_TOKEN') or os.getenv('WA_INTERNAL_TOKEN', '')
+    received = request.headers.get('X-WA-Internal-Token', '')
+    if not secret or not hmac.compare_digest(str(secret).encode(), received.encode()):
+        return jsonify({'error': 'Não autorizado.'}), 403
+    from app.services.campaign_queue import process_next
+    return jsonify(process_next())
+
+
 @api_bp.route('/whatsapp/contacts/import', methods=['POST'])
 def whatsapp_contact_import():
     from app.services.contact_import import import_contacts

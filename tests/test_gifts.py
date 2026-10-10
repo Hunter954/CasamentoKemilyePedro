@@ -83,8 +83,10 @@ class GiftStorefrontTests(unittest.TestCase):
         text = response.get_data(as_text=True)
         self.assertEqual(text.count('<article class="kp-gift-card'), 18)
         self.assertIn('R$ 49,90', text)
-        self.assertIn('id="kp-gift-search"', text)
-        self.assertIn('id="kp-gift-budget"', text)
+        self.assertNotIn('id="kp-gift-search"', text)
+        self.assertNotIn('id="kp-gift-budget"', text)
+        self.assertIn('18 presentes cadastrados', text)
+        self.assertNotIn('Pequenos gestos, grandes memórias', text)
         self.assertEqual(self.client.get(f'/presentes/{gift.id}/checkout').status_code, 200)
         gift.allow_multiple_purchases = False
         db.session.add(GiftPurchase(gift_id=gift.id, buyer_name='Teste', buyer_email='teste@example.com', buyer_phone='11999999999', amount=gift.price, status='approved'))

@@ -15,7 +15,7 @@
     <nav class="kp-nav" aria-label="Navegação principal">
       <a class="is-active" href="#inicio">INÍCIO</a>
       <a href="#locais">LOCALIZAÇÃO</a>
-      <a href="#mural">MURAL DE RECADOS</a>
+      <a href="{{ url_for('public.guestbook') }}">MURAL DE RECADOS</a>
       <a href="{{ url_for('public.rsvp') }}">CONFIRME SUA PRESENÇA</a>
       <a href="{{ url_for('public.gifts') }}">LISTA DE PRESENTES</a>
       <a href="#faq">DÚVIDAS FREQUENTES</a>
@@ -33,7 +33,7 @@
   <nav class="site-drawer-nav" aria-label="Menu mobile">
     <a href="#inicio" data-menu-close>Início</a>
     <a href="#locais" data-menu-close>Localização</a>
-    <a href="#mural" data-menu-close>Mural de Recados</a>
+    <a href="{{ url_for('public.guestbook') }}" data-menu-close>Mural de Recados</a>
     <a href="{{ url_for('public.rsvp') }}" data-menu-close>Confirmar Presença</a>
     <a href="{{ url_for('public.gifts') }}" data-menu-close>Lista de Presentes</a>
     <a href="#faq" data-menu-close>Dúvidas Frequentes</a>
@@ -83,22 +83,18 @@
       <div class="kp-home-divider"><span></span><i class="fa-solid fa-location-dot"></i><span></span></div>
     </div>
     <div class="kp-home-locations-grid">
-      <article class="kp-home-location kp-home-location-church">
+      {% for ceremony in ceremonies %}
+      <article class="kp-home-location kp-home-location-{{ ceremony.kind }}" {% if ceremony.image_path %}style="background-image:url('{{ media_url(ceremony.image_path) }}')"{% endif %}>
         <div class="kp-home-location-panel">
           <div class="kp-home-location-icon"><i class="fa-solid fa-location-dot"></i></div>
-          <h3>Paróquia Nossa Senhora de Fátima</h3>
-          <p>R. Exemplo, 123 – Centro<br>Sua Cidade - UF</p>
-          <a href="{{ computed_route_url or '#' }}" target="_blank" rel="noopener">VER NO GOOGLE MAPS <i class="fa-solid fa-arrow-right-long"></i></a>
+          <span class="kp-location-moment">{{ ceremony.title }}</span>
+          <h3>{{ ceremony.venue }}</h3>
+          <p>{{ ceremony.address }}<br>{{ ceremony.city }}</p>
+          <div class="kp-location-time"><i class="fa-regular fa-clock" aria-hidden="true"></i> {{ ceremony.event_time or 'Horário a definir' }}{% if ceremony.event_date %}<small>{{ ceremony.event_date.strftime('%d/%m/%Y') }}</small>{% endif %}</div>
+          <a href="{{ ceremony.maps_url }}" target="_blank" rel="noopener">VER NO GOOGLE MAPS <i class="fa-solid fa-arrow-right-long"></i></a>
         </div>
       </article>
-      <article class="kp-home-location kp-home-location-party">
-        <div class="kp-home-location-panel">
-          <div class="kp-home-location-icon"><i class="fa-solid fa-location-dot"></i></div>
-          <h3>Espaço Porto Dourado</h3>
-          <p>Av. Exemplo, 456 – Bairro<br>Sua Cidade - UF</p>
-          <a href="{{ computed_route_url or '#' }}" target="_blank" rel="noopener">VER NO GOOGLE MAPS <i class="fa-solid fa-arrow-right-long"></i></a>
-        </div>
-      </article>
+      {% endfor %}
     </div>
   </section>
 
@@ -137,7 +133,7 @@
       </article>
       {% endfor %}
     </div>
-    <a href="{{ url_for('public.guestbook') }}" class="kp-home-secondary-btn kp-mural-link">DEIXAR UM RECADO <i class="fa-solid fa-arrow-right-long"></i></a>
+    <a href="{{ url_for('public.guestbook') }}" class="kp-home-secondary-btn kp-mural-link">VER MURAL E DEIXAR RECADO <i class="fa-solid fa-arrow-right-long"></i></a>
   </section>
 
   <section class="kp-home-faq kp-home-section-blend" id="faq">
@@ -148,26 +144,9 @@
       <div class="kp-home-divider"><span></span><i class="fa-regular fa-heart"></i><span></span></div>
     </div>
     <div class="kp-home-faq-list">
-      <details>
-        <summary>Posso levar acompanhante?</summary>
-        <p>Consulte o convite recebido, pois nele estará indicada a quantidade de pessoas incluídas no seu convite.</p>
-      </details>
-      <details>
-        <summary>Qual o traje sugerido?</summary>
-        <p>Traje social leve / esporte fino. Escolha algo confortável e elegante para celebrar conosco.</p>
-      </details>
-      <details>
-        <summary>Haverá estacionamento?</summary>
-        <p>As informações de estacionamento serão disponibilizadas junto às orientações de cada local.</p>
-      </details>
-      <details>
-        <summary>Crianças são bem-vindas?</summary>
-        <p>Sim. Para organização, pedimos apenas que elas sejam incluídas na confirmação de presença.</p>
-      </details>
-      <details>
-        <summary>Como confirmar minha presença?</summary>
-        <p>Clique em “Confirmar presença” para acessar a página dedicada e concluir sua confirmação.</p>
-      </details>
+      {% for faq in faqs %}
+      <details><summary>{{ faq.question }}</summary><p>{{ faq.answer }}</p></details>
+      {% endfor %}
     </div>
   </section>
 

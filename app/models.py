@@ -182,6 +182,7 @@ class WhatsAppCampaign(TimestampMixin, db.Model):
     active = db.Column(db.Boolean, default=True)
     target_tag = db.Column(db.String(80), default='todos')
     image_path = db.Column(db.String(255), default='')
+    queue_paused = db.Column(db.Boolean, nullable=False, default=False)
 
 
 class WhatsAppDispatch(TimestampMixin, db.Model):
@@ -208,3 +209,58 @@ class WhatsAppWebhookLog(TimestampMixin, db.Model):
     phone = db.Column(db.String(40), default='')
     payload = db.Column(db.Text, default='')
     notes = db.Column(db.Text, default='')
+
+
+class Ceremony(TimestampMixin, db.Model):
+    __tablename__ = 'ceremony'
+    id = db.Column(db.Integer, primary_key=True)
+    kind = db.Column(db.String(20), nullable=False, unique=True)
+    title = db.Column(db.String(120), nullable=False)
+    venue = db.Column(db.String(180), nullable=False)
+    address = db.Column(db.String(255), default='')
+    city = db.Column(db.String(120), default='')
+    event_date = db.Column(db.Date, nullable=True)
+    event_time = db.Column(db.String(5), default='')
+    route_url = db.Column(db.String(1000), default='')
+    image_path = db.Column(db.String(255), default='')
+
+    @property
+    def maps_url(self):
+        from urllib.parse import quote_plus
+        return self.route_url or 'https://www.google.com/maps/dir/?api=1&destination=' + quote_plus(', '.join(filter(None, [self.venue, self.address, self.city])))
+
+
+class FAQ(TimestampMixin, db.Model):
+    __tablename__ = 'faq'
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.String(255), nullable=False)
+    answer = db.Column(db.Text, nullable=False)
+    position = db.Column(db.Integer, nullable=False, default=0)
+    active = db.Column(db.Boolean, nullable=False, default=True)
+
+
+class ContentRelease(db.Model):
+    __tablename__ = 'content_release'
+    key = db.Column(db.String(80), primary_key=True)
+
+
+class CampaignDelivery(db.Model):
+    __tablename__ = 'campaign_delivery'
+    id = db.Column(db.Integer, primary_key=True)
+    interval_seconds = db.Column(db.Integer, nullable=False, default=15)
+    next_send_at = db.Column(db.DateTime, nullable=True)
+
+
+class CampaignJob(TimestampMixin, db.Model):
+    __tablename__ = 'campaign_job'
+    id = db.Column(db.Integer, primary_key=True)
+    dispatch_id = db.Column(db.Integer, db.ForeignKey('whatsapp_dispatch.id'), nullable=False, index=True)
+    kind = db.Column(db.String(10), nullable=False)
+    phone = db.Column(db.String(40), nullable=False)
+    message = db.Column(db.Text, default='')
+    image_url = db.Column(db.String(1000), default='')
+    status = db.Column(db.String(20), nullable=False, default='queued', index=True)
+    started_at = db.Column(db.DateTime, nullable=True)
+    provider_message_id = db.Column(db.String(120), default='')
+    error = db.Column(db.Text, default='')
+    dispatch = db.relationship('WhatsAppDispatch', backref=db.backref('jobs', cascade='all, delete-orphan'))
