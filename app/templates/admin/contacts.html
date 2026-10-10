@@ -1,131 +1,85 @@
 {% extends 'admin/base.html' %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/contacts.css') }}">{% endblock %}
 {% block admin_content %}
-<div class="admin-header">
-  <h1>Contatos</h1>
-  <p>Base oficial para os disparos do WhatsApp e geração do código único de confirmação.</p>
-</div>
+<div class="contacts-page" data-contacts-page data-status-url="{{ url_for('admin.contact_import_status') }}" data-groups-url="{{ url_for('admin.contact_import_groups') }}">
+  <header class="admin-header contacts-heading">
+    <div><span class="contacts-eyebrow">Tudo pronto para receber quem vocês amam</span><h1>Contatos e convidados</h1><p>Organizem a lista juntos, direto pelo WhatsApp ou por aqui.</p></div>
+    <a class="btn btn-primary" href="#contact-form" data-open-contact-form><i class="fa-solid fa-plus" aria-hidden="true"></i> Novo convidado</a>
+  </header>
 
-<form class="section-card stack-form contacts-form-card{% if editing_contact %} is-editing{% endif %}" method="post">
-  <div class="contacts-form-head">
-    <div>
-      <span class="admin-kicker">{% if editing_contact %}Edição inline{% else %}Novo contato{% endif %}</span>
-      <h2>{% if editing_contact %}Editar contato{% else %}Cadastrar contato{% endif %}</h2>
-      <p>{% if editing_contact %}Altere os dados abaixo e salve no mesmo bloco, sem abrir outra aba.{% else %}Cadastre o telefone com DDD. O sistema normaliza o número automaticamente e cria o código único de confirmação.{% endif %}</p>
+  <div class="contacts-stats" aria-label="Resumo dos convidados">
+    <div><span>Total de convidados</span><strong data-contact-total>{{ overview.total }}</strong><small>Na lista do casamento</small></div>
+    <div><span>Via WhatsApp</span><strong data-import-created>{{ overview.created }}</strong><small>Cadastros automáticos realizados</small></div>
+    <div><span>Duplicados evitados</span><strong data-import-duplicates>{{ overview.duplicates }}</strong><small>Cadastros existentes preservados</small></div>
+  </div>
+
+  <section class="section-card contacts-import" aria-labelledby="import-heading">
+    <div class="contacts-section-head">
+      <div class="contacts-import-title"><span class="contacts-icon"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></span><div><h2 id="import-heading">Do WhatsApp para a lista</h2><p>Encaminhem um contato no grupo e deixem o cadastro com a gente.</p></div></div>
+      <span class="contacts-status" data-import-status>{{ 'Verificando conexão…' if import_settings.enabled else 'Não ativado' }}</span>
     </div>
-    {% if editing_contact %}
-      <a class="btn btn-secondary contacts-cancel-btn" href="{{ url_for('admin.contacts') }}">Cancelar edição</a>
-    {% endif %}
-  </div>
+    <details class="contacts-guide" {% if not import_settings.enabled %}open{% endif %}>
+    <summary>Como cadastrar pelo WhatsApp</summary>
+    <ol class="contacts-steps">
+      <li><span>1</span><div><strong>Criem o grupo</strong><p>Adicionem os dois noivos e o número conectado ao site.</p></div></li>
+      <li><span>2</span><div><strong>Escolham abaixo</strong><p>Selecionem o grupo “Convidados” e ativem a importação.</p></div></li>
+      <li><span>3</span><div><strong>Compartilhem contatos</strong><p>No WhatsApp, usem Anexar → Contato. Pode enviar vários juntos.</p></div></li>
+    </ol>
+    <p class="contacts-import-note">O nome, o telefone e o código de confirmação são cadastrados automaticamente. Contatos repetidos são ignorados. A importação começa após a ativação e funciona com a página fechada.</p>
+    </details>
+    {% if import_settings.group_name %}<div class="contacts-current-group"><span>Grupo escolhido</span><strong>{{ import_settings.group_name }}</strong></div>{% endif %}
+    <p class="contacts-connection-note" data-import-connection role="status" aria-live="polite">{% if import_settings.enabled %}Conferindo a conexão e as importações…{% else %}Escolham um grupo para começar. Os contatos enviados por participantes desse grupo serão importados.{% endif %}</p>
+    <details class="contacts-group-settings" {% if not import_settings.enabled %}open{% endif %}>
+      <summary>{{ 'Trocar grupo ou pausar' if import_settings.enabled else 'Configurar grupo de convidados' }}</summary>
+      <form class="contacts-group-form" method="post" action="{{ url_for('admin.configure_contact_import') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="btn btn-secondary" type="button" data-load-groups>Buscar meus grupos</button>
+        <label><span>Grupo de convidados</span><select name="group_jid" required disabled data-group-select data-current-group="{{ import_settings.group_jid }}"><option value="">Busquem os grupos para escolher</option></select></label>
+        <button class="btn btn-primary" type="submit" disabled data-save-group>{{ 'Salvar grupo' if import_settings.enabled else 'Ativar importação' }}</button>
+      </form>
+      <p class="contacts-group-feedback" data-group-feedback role="status" aria-live="polite"></p>
+      <div class="contacts-group-footer"><a href="{{ url_for('admin.whatsapp_connection') }}">Ver conexão do WhatsApp <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>{% if import_settings.enabled %}<form method="post" action="{{ url_for('admin.configure_contact_import') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="pause"><button class="btn btn-soft btn-sm">Pausar importação</button></form>{% endif %}</div>
+    </details>
+    <details class="contacts-history"><summary>Últimas importações <span data-import-history-count>{{ overview.events|length }}</span></summary><div data-import-history></div><p class="contacts-history-help">Se um contato aparecer como inválido, confiram o nome e o telefone no WhatsApp e encaminhem novamente. Nos cartões com vários números, usamos primeiro o número associado ao WhatsApp.</p></details>
+  </section>
 
-  <input type="hidden" name="contact_id" value="{{ editing_contact.id if editing_contact else '' }}">
+  <details id="contact-form" class="section-card contacts-manual" {% if editing_contact or request.method == 'POST' %}open{% endif %}>
+    <summary>{{ 'Editar convidado' if editing_contact else 'Cadastrar convidado manualmente' }}<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></summary>
+    <form method="post" class="contacts-manual-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="contact_id" value="{{ editing_contact.id if editing_contact else '' }}">
+      <div class="contacts-fields">
+        <label><span>Nome do convidado ou casal</span><input name="name" autocomplete="name" required maxlength="180" placeholder="João & Maria" value="{{ form_data.get('name', '') }}"></label>
+        <label><span>WhatsApp com DDD</span><input name="phone" type="tel" autocomplete="tel" required maxlength="40" placeholder="(45) 99999-9999" value="{{ form_data.get('phone', '') }}"><small>Podem usar espaços e parênteses. Para outro país, incluam + e o código.</small></label>
+        <label><span>Categoria</span><input name="tag" list="contact-tags" maxlength="80" placeholder="Família, amigos, padrinhos…" value="{{ form_data.get('tag', 'convidado') }}"><datalist id="contact-tags">{% for category in tags %}<option value="{{ category }}">{% endfor %}</datalist><small>Ajuda a organizar a lista e os convites.</small></label>
+      </div>
+      <div class="contacts-form-footer"><p>O código de confirmação é gerado ao cadastrar.</p><div>{% if editing_contact %}<a class="btn btn-secondary" href="{{ url_for('admin.contacts', q=search, tag=tag) }}">Cancelar</a>{% endif %}<button class="btn btn-primary">{{ 'Salvar alterações' if editing_contact else 'Cadastrar convidado' }}</button></div></div>
+    </form>
+  </details>
 
-  <div class="contacts-form-grid">
-    <label class="contacts-field">
-      <span class="contacts-label">Nome do contato ou casal</span>
-      <input name="name" required placeholder="João & Maria" value="{{ editing_contact.name if editing_contact else '' }}">
-    </label>
-
-    <label class="contacts-field contacts-field-phone">
-      <span class="contacts-label">Telefone para envio</span>
-      <input name="phone" required inputmode="numeric" pattern="[0-9]{10,13}" maxlength="13" placeholder="45999999999" value="{{ editing_contact.phone if editing_contact else '' }}">
-      <small class="admin-helper-inline contacts-helper">Use somente números. Pode informar DDD + número ou 55 + DDD + número.</small>
-    </label>
-
-    <label class="contacts-field">
-      <span class="contacts-label">Tag</span>
-      <input name="tag" value="{{ editing_contact.tag if editing_contact else 'convidado' }}" placeholder="família, padrinhos, convidados">
-    </label>
-  </div>
-
-  <div class="contacts-form-actions">
-    <button class="btn btn-primary">{% if editing_contact %}Salvar alterações{% else %}Salvar contato{% endif %}</button>
-  </div>
-</form>
-
-<div class="section-card contacts-table-card">
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Telefone</th>
-          <th>Visual</th>
-          <th>Código</th>
-          <th>Tag</th>
-          <th style="width: 260px;">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-      {% for item in contacts %}
-        <tr>
-          <td>{{ item.name }}</td>
-          <td><code>{{ item.phone }}</code></td>
-          <td>{{ item.phone|phone_br }}</td>
-          <td><strong>{{ item.confirmation_code or '-' }}</strong></td>
-          <td>{{ item.tag }}</td>
-          <td>
-            <div class="table-actions-inline">
-              <a class="btn btn-secondary btn-sm" href="{{ url_for('admin.contacts', edit=item.id) }}">Editar</a>
-              <form method="post" action="{{ url_for('admin.regenerate_contact_code', contact_id=item.id) }}" onsubmit="return confirm('Gerar um novo código para este contato?');" style="margin:0;">
-                <button class="btn btn-soft btn-sm" type="submit">Novo código</button>
-              </form>
-              <form method="post" action="{{ url_for('admin.delete_contact', contact_id=item.id) }}" onsubmit="return confirm('Excluir este contato?');" style="margin:0;">
-                <button class="btn btn-danger btn-sm" type="submit">Excluir</button>
-              </form>
-            </div>
-          </td>
-        </tr>
-      {% else %}
-        <tr><td colspan="6">Nenhum contato ainda.</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <section class="section-card contacts-list" aria-labelledby="list-heading">
+    <div class="contacts-section-head"><div><h2 id="list-heading">Lista de convidados</h2><p>{{ pagination.total }} {{ 'resultado encontrado' if pagination.total == 1 else 'resultados encontrados' }}{% if search or tag %} para os filtros{% endif %}</p></div><a class="btn btn-secondary" href="{{ url_for('admin.contacts', q=search, tag=tag) }}" hidden data-refresh-list>Novos convidados · Atualizar lista</a></div>
+    <form class="contacts-filters" method="get" role="search">
+      <label class="contacts-search"><span class="sr-only">Buscar convidados</span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" name="q" value="{{ search }}" placeholder="Buscar nome, telefone ou código"></label>
+      <label><span class="sr-only">Filtrar categoria</span><select name="tag"><option value="">Todas as categorias</option>{% for category in tags %}<option value="{{ category }}" {% if category == tag %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></label>
+      <button class="btn btn-primary">Buscar</button>{% if search or tag %}<a class="contacts-clear" href="{{ url_for('admin.contacts') }}">Limpar filtros</a>{% endif %}
+    </form>
+    {% if contacts %}
+    <table class="contacts-table"><thead><tr><th>Convidado</th><th>WhatsApp</th><th>Código de confirmação</th><th>Categoria</th><th>Ações</th></tr></thead><tbody>
+    {% for item in contacts %}<tr>
+      <td class="contacts-name"><span class="contacts-avatar" aria-hidden="true">{{ item.name[:1]|upper }}</span><strong>{{ item.name }}</strong></td>
+      <td data-label="WhatsApp">{{ item.phone|phone_br }}</td>
+      <td data-label="Código"><button type="button" class="contacts-copy" data-copy-code="{{ item.confirmation_code }}" aria-label="Copiar código de {{ item.name }}"><code>{{ item.confirmation_code }}</code><i class="fa-regular fa-copy" aria-hidden="true"></i></button></td>
+      <td data-label="Categoria"><span class="contacts-tag">{{ item.tag }}</span></td>
+      <td class="contacts-actions"><a class="btn btn-secondary btn-sm" href="{{ url_for('admin.contacts', edit=item.id, q=search, tag=tag, page=pagination.page) }}#contact-form">Editar</a><details class="contacts-more"><summary>Mais <i class="fa-solid fa-angle-down" aria-hidden="true"></i></summary><div>
+        <form method="post" action="{{ url_for('admin.regenerate_contact_code', contact_id=item.id) }}" onsubmit="return confirm('Gerar outro código? O código anterior deixará de funcionar.');"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-soft btn-sm">Novo código</button></form>
+        <form method="post" action="{{ url_for('admin.delete_contact', contact_id=item.id) }}" onsubmit="return confirm('Excluir este convidado e seus registros de confirmação e envio?');"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-danger btn-sm">Excluir</button></form>
+      </div></details></td>
+    </tr>{% endfor %}</tbody></table>
+    <nav class="contacts-pagination" aria-label="Páginas de convidados"><span>Página {{ pagination.page }} de {{ pagination.pages }}</span><div>{% if pagination.has_prev %}<a class="btn btn-secondary btn-sm" href="{{ url_for('admin.contacts', page=pagination.prev_num, q=search, tag=tag) }}">Anterior</a>{% endif %}{% if pagination.has_next %}<a class="btn btn-secondary btn-sm" href="{{ url_for('admin.contacts', page=pagination.next_num, q=search, tag=tag) }}">Próxima</a>{% endif %}</div></nav>
+    {% else %}<div class="contacts-empty"><i class="fa-regular fa-address-book" aria-hidden="true"></i><h3>{{ 'Nenhum convidado encontrado' if search or tag else 'A lista começa com as pessoas queridas' }}</h3><p>{{ 'Tentem outro nome, telefone ou categoria.' if search or tag else 'Ativem o grupo do WhatsApp ou cadastrem o primeiro convidado.' }}</p></div>{% endif %}
+    <span class="contacts-copy-feedback" data-copy-feedback role="status" aria-live="polite"></span>
+  </section>
+  <script type="application/json" id="contacts-initial-data">{{ overview|tojson }}</script>
 </div>
-
-<style>
-  .contacts-form-card {
-    gap: 1.35rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-    padding: 1.6rem;
-  }
-  .contacts-form-card.is-editing {
-    border-color: rgba(241, 77, 120, 0.35);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.14);
-  }
-  .contacts-form-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-  .contacts-form-head h2 { margin: 0.2rem 0 0.35rem; }
-  .contacts-form-head p { margin: 0; max-width: 62ch; opacity: 0.78; line-height: 1.6; }
-  .admin-kicker { display: inline-block; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
-  .contacts-cancel-btn { white-space: nowrap; align-self: flex-start; }
-  .contacts-form-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(240px, 0.7fr); gap: 1rem; align-items: start; }
-  .contacts-field { display: grid; gap: 0.6rem; align-content: start; min-width: 0; }
-  .contacts-label { font-weight: 700; color: #5d3945; }
-  .contacts-field input { width: 100%; min-height: 58px; }
-  .contacts-field-phone input { letter-spacing: 0.02em; }
-  .contacts-helper { display: block; min-height: 2.8em; line-height: 1.45; color: #816570; }
-  .contacts-form-actions { display: flex; justify-content: flex-end; padding-top: 0.15rem; }
-  .contacts-form-actions .btn { min-width: 190px; }
-  .contacts-table-card { margin-top: 1rem; }
-  .table-actions-inline { display: flex; align-items: center; justify-content: flex-start; gap: 0.55rem; flex-wrap: wrap; }
-  .btn-sm { padding: 0.58rem 0.9rem; font-size: 0.84rem; }
-  @media (max-width: 1180px) {
-    .contacts-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .contacts-field:last-child { grid-column: 1 / -1; }
-  }
-  @media (max-width: 980px) {
-    .contacts-form-card { padding: 1.25rem; }
-    .contacts-form-grid { grid-template-columns: 1fr; }
-    .contacts-field:last-child { grid-column: auto; }
-    .contacts-form-head { flex-direction: column; align-items: stretch; }
-    .contacts-form-actions { justify-content: stretch; }
-    .contacts-form-actions .btn, .contacts-form-head .btn { width: 100%; text-align: center; }
-  }
-</style>
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/contacts.js') }}" defer></script>{% endblock %}

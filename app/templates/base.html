@@ -19,6 +19,7 @@
       --banner-image: url('{{ media_url(site_settings.gift_banner_image) if site_settings and site_settings.gift_banner_image else 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?q=80&w=1200&auto=format&fit=crop' }}');
     }
   </style>
+  {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
   {% with messages = get_flashed_messages(with_categories=true) %}

@@ -1,4 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+import hmac
+import secrets
+from datetime import datetime
+
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify, abort
 from flask_login import login_user, logout_user, login_required, current_user
 
 from app import db
@@ -29,7 +33,10 @@ from app.services.whatsapp import (
     restart_instance,
     disconnect_instance,
     configure_instance_webhooks,
+    _bridge_request,
 )
+from app.services.contact_import import (clean_phone, contact_write_lock, find_duplicate,
+                                         import_settings, import_overview)
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -284,56 +291,139 @@ def delete_purchase(purchase_id):
 def contacts():
     edit_id = request.args.get('edit', type=int)
     editing_contact = ContactLead.query.get(edit_id) if edit_id else None
-
+    status_code = 200
+    csrf_token = session.setdefault('contacts_csrf', secrets.token_urlsafe(32))
     if request.method == 'POST':
+        _check_contacts_csrf()
         contact_id = request.form.get('contact_id', type=int)
-        phone = normalize_phone_digits(request.form.get('phone', ''))
-
-        if not phone.startswith('55') or len(phone) not in {12, 13}:
-            flash('Cadastre o telefone com DDD. O sistema adiciona o código 55 automaticamente quando necessário.', 'danger')
-            target = url_for('admin.contacts', edit=contact_id) if contact_id else url_for('admin.contacts')
-            return redirect(target)
-
-        name = request.form.get('name', '').strip()
-        tag = request.form.get('tag', 'convidado').strip() or 'convidado'
-
-        if contact_id:
-            contact = ContactLead.query.get_or_404(contact_id)
-            contact.name = name
-            contact.phone = phone
-            contact.tag = tag
-            if request.form.get('regenerate_code') == '1':
-                contact.confirmation_code = ''
-                get_or_create_contact_code(contact)
-            flash('Contato atualizado com sucesso.', 'success')
+        editing_contact = ContactLead.query.get_or_404(contact_id) if contact_id else None
+        phone = clean_phone(request.form.get('phone', ''))
+        name = request.form.get('name', '').strip()[:180]
+        tag = request.form.get('tag', 'convidado').strip()[:80] or 'convidado'
+        if not name or not phone:
+            flash('Informe o nome e um telefone válido com DDD. Para outros países, use + e o código do país.', 'danger')
+            status_code = 422
         else:
-            contact = ContactLead(
-                name=name,
-                phone=phone,
-                email='',
-                tag=tag,
-            )
-            db.session.add(contact)
-            db.session.flush()
-            get_or_create_contact_code(contact)
-            flash('Contato salvo com sucesso.', 'success')
+            with contact_write_lock():
+                duplicate = find_duplicate(phone, exclude_id=contact_id)
+                if duplicate:
+                    flash(f'Este telefone já pertence a {duplicate.name}. O cadastro existente foi mantido.', 'warning')
+                    duplicate_id = duplicate.id
+                    db.session.commit()
+                    return redirect(url_for('admin.contacts', edit=duplicate_id))
+                contact = editing_contact or ContactLead(email='')
+                contact.name, contact.phone, contact.tag = name, phone, tag
+                db.session.add(contact)
+                db.session.flush()
+                get_or_create_contact_code(contact)
+                db.session.commit()
+            flash('Convidado atualizado.' if contact_id else 'Convidado cadastrado. O código de confirmação já está pronto.', 'success')
+            return redirect(url_for('admin.contacts'))
 
+    with contact_write_lock():
+        ensure_all_contact_codes()
+        overview = import_overview()
+        settings = import_settings()
         db.session.commit()
-        return redirect(url_for('admin.contacts'))
+    query = ContactLead.query
+    search = request.args.get('q', '').strip()[:180]
+    tag = request.args.get('tag', '').strip()[:80]
+    if search:
+        phone_search = ''.join(char for char in search if char.isdigit())
+        phone_column = ContactLead.phone
+        for character in (' ', '(', ')', '-', '+'):
+            phone_column = db.func.replace(phone_column, character, '')
+        filters = [db.func.lower(ContactLead.name).contains(search.lower(), autoescape=True),
+                   ContactLead.confirmation_code.contains(search, autoescape=True)]
+        if phone_search:
+            filters.append(phone_column.contains(phone_search, autoescape=True))
+        query = query.filter(db.or_(*filters))
+    if tag:
+        query = query.filter(ContactLead.tag == tag)
+    pagination = query.order_by(ContactLead.created_at.desc(), ContactLead.id.desc()).paginate(
+        page=max(1, request.args.get('page', 1, type=int)), per_page=25, error_out=False)
+    form_data = request.form if request.method == 'POST' else {
+        'name': editing_contact.name if editing_contact else '',
+        'phone': editing_contact.phone if editing_contact else '',
+        'tag': editing_contact.tag if editing_contact else 'convidado'}
+    return render_template('admin/contacts.html', contacts=pagination.items, pagination=pagination,
+                           editing_contact=editing_contact, form_data=form_data, csrf_token=csrf_token,
+                           import_settings=settings, overview=overview, search=search, tag=tag,
+                           tags=_tag_options()[1:]), status_code
 
-    ensure_all_contact_codes(commit=True)
-    contacts = ContactLead.query.order_by(ContactLead.created_at.desc()).all()
-    return render_template('admin/contacts.html', contacts=contacts, editing_contact=editing_contact)
+
+def _check_contacts_csrf():
+    expected = session.get('contacts_csrf', '')
+    received = request.form.get('csrf_token', '')
+    if not expected or not hmac.compare_digest(expected.encode(), received.encode()):
+        abort(400, description='Atualize a página e tente novamente.')
+
+
+@admin_bp.route('/contatos/whatsapp/grupos')
+@login_required
+def contact_import_groups():
+    try:
+        return jsonify(_bridge_request('GET', '/groups', timeout=20))
+    except Exception:
+        return jsonify({'error': 'Não foi possível carregar os grupos. Confira a conexão do WhatsApp e tente novamente.'}), 503
+
+
+@admin_bp.route('/contatos/whatsapp/configurar', methods=['POST'])
+@login_required
+def configure_contact_import():
+    _check_contacts_csrf()
+    if request.form.get('action') == 'pause':
+        with contact_write_lock():
+            import_settings().enabled = False
+            db.session.commit()
+        flash('Importação pausada. Os convidados cadastrados foram mantidos.', 'success')
+        return redirect(url_for('admin.contacts'))
+    group_jid = request.form.get('group_jid', '')
+    try:
+        groups = _bridge_request('GET', '/groups', timeout=20).get('groups', [])
+        group = next((item for item in groups if item.get('id') == group_jid), None)
+        if not group:
+            flash('Escolha um dos grupos disponíveis no WhatsApp conectado.', 'danger')
+            return redirect(url_for('admin.contacts'))
+        with contact_write_lock():
+            settings = import_settings()
+            # Saving the same active group preserves queued offline contacts.
+            if not settings.enabled or settings.group_jid != group_jid:
+                settings.activated_at = datetime.utcnow()
+            settings.group_jid = group_jid
+            settings.group_name = str(group.get('name') or 'Convidados')[:180]
+            settings.enabled = True
+            db.session.commit()
+        flash('Importação ativada! Encaminhe os contatos no grupo escolhido para cadastrar os convidados.', 'success')
+    except Exception:
+        db.session.rollback()
+        flash('Não foi possível ativar. Confira a conexão do WhatsApp e tente novamente.', 'danger')
+    return redirect(url_for('admin.contacts'))
+
+
+@admin_bp.route('/contatos/whatsapp/status')
+@login_required
+def contact_import_status():
+    with contact_write_lock():
+        overview = import_overview()
+        db.session.commit()
+    try:
+        overview['bridge'] = _bridge_request('GET', '/contacts/status', timeout=3)
+    except Exception:
+        overview['bridge'] = {'ready': False, 'unavailable': True}
+    return jsonify(overview)
 
 
 @admin_bp.route('/contatos/<int:contact_id>/gerar-codigo', methods=['POST'])
 @login_required
 def regenerate_contact_code(contact_id):
-    contact = ContactLead.query.get_or_404(contact_id)
-    old_code = contact.confirmation_code
-    contact.confirmation_code = ''
-    get_or_create_contact_code(contact)
-    db.session.commit()
+    _check_contacts_csrf()
+    with contact_write_lock():
+        contact = ContactLead.query.get_or_404(contact_id)
+        old_code = contact.confirmation_code
+        contact.confirmation_code = ''
+        get_or_create_contact_code(contact)
+        db.session.commit()
     flash(f'Novo código gerado para {contact.name}: {old_code or "-"} → {contact.confirmation_code}.', 'success')
     return redirect(url_for('admin.contacts'))
 
@@ -341,13 +431,15 @@ def regenerate_contact_code(contact_id):
 @admin_bp.route('/contatos/<int:contact_id>/excluir', methods=['POST'])
 @login_required
 def delete_contact(contact_id):
-    contact = ContactLead.query.get_or_404(contact_id)
-    for rsvp in list(contact.rsvps):
-        db.session.delete(rsvp)
-    for dispatch in list(contact.dispatches):
-        db.session.delete(dispatch)
-    db.session.delete(contact)
-    db.session.commit()
+    _check_contacts_csrf()
+    with contact_write_lock():
+        contact = ContactLead.query.get_or_404(contact_id)
+        for rsvp in list(contact.rsvps):
+            db.session.delete(rsvp)
+        for dispatch in list(contact.dispatches):
+            db.session.delete(dispatch)
+        db.session.delete(contact)
+        db.session.commit()
     flash('Contato excluído com sucesso.', 'success')
     return redirect(url_for('admin.contacts'))
 

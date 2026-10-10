@@ -1,10 +1,11 @@
 const { Boom } = require('@hapi/boom');
 const qrcode = require('qrcode');
 const db = require('./db');
+const { receiveContacts } = require('./contact-import');
 let sock=null, starting=false, reconnectTimer=null;
 const sessionId=process.env.WA_SESSION_ID || 'kemily-pedro-casamento';
 const state={ready:false,qr:null,status:'Aguardando início',lastError:null,connectedAt:null,lastQrAt:null,phone:null};
-function normalizePhone(v){const d=String(v||'').replace(/\D/g,''); if(!d)return ''; return (d.length===10||d.length===11)?`55${d}`:d;}
+function normalizePhone(v){const raw=String(v||'').trim();const d=raw.replace(/\D/g,''); if(!d)return ''; return !raw.startsWith('+')&&(d.length===10||d.length===11)?`55${d}`:d;}
 function jid(v){const p=normalizePhone(v); return p?`${p}@s.whatsapp.net`:'';}
 async function authState(baileys){
   const {initAuthCreds,BufferJSON,proto}=baileys;
@@ -28,6 +29,11 @@ async function start(clean=false){
     const auth=await authState(baileys); const ver=await fetchLatestBaileysVersion().catch(()=>({version:undefined}));
     sock=makeWASocket({version:ver.version,auth:auth.state,printQRInTerminal:false,browser:['Kemily & Pedro','Chrome','2.0.0'],syncFullHistory:false,markOnlineOnConnect:false,generateHighQualityLinkPreview:false,defaultQueryTimeoutMs:120000,connectTimeoutMs:120000});
     sock.ev.on('creds.update',auth.saveCreds);
+    sock.ev.on('messages.upsert', event => {
+      receiveContacts(event, baileys.normalizeMessageContent).catch(error => {
+        console.warn('Não foi possível registrar os contatos compartilhados:', error.message);
+      });
+    });
     sock.ev.on('messages.update', async updates => {
       for (const item of updates || []) {
         const id = item?.key?.id;
@@ -52,4 +58,10 @@ async function start(clean=false){
 async function sendText(phone,text){if(!sock||!state.ready) throw new Error('WhatsApp não está conectado. Abra Conexão WhatsApp e leia o QR Code.'); const r=await sock.sendMessage(jid(phone),{text:String(text||'')}); return {id:r?.key?.id||'',remoteJid:r?.key?.remoteJid||''};}
 async function sendImage(phone,url,caption=''){if(!sock||!state.ready) throw new Error('WhatsApp não está conectado. Abra Conexão WhatsApp e leia o QR Code.'); const r=await sock.sendMessage(jid(phone),{image:{url:String(url)},caption:String(caption||'')}); return {id:r?.key?.id||'',remoteJid:r?.key?.remoteJid||''};}
 function getState(){return {...state,starting,engine:'baileys',authStore:'PostgreSQL',sessionId};}
-module.exports={start,stop,sendText,sendImage,getState,clear:()=>db.clear(sessionId)};
+async function listGroups() {
+  if (!sock || !state.ready) throw new Error('Conecte o WhatsApp antes de escolher o grupo.');
+  const groups = await sock.groupFetchAllParticipating();
+  return Object.values(groups).map(group => ({ id: group.id, name: group.subject || 'Grupo sem nome',
+    participants: group.participants?.length || 0 })).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+}
+module.exports={start,stop,sendText,sendImage,getState,listGroups,clear:()=>db.clear(sessionId)};

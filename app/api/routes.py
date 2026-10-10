@@ -1,12 +1,28 @@
 import os
+import hmac
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from app import db
 from app.models import GiftPurchase, WhatsAppDispatch, WhatsAppWebhookLog
 from app.services.mercado_pago import MercadoPagoService
 from app.services.whatsapp import normalize_whatsapp_phone, serialize_payload, extract_message_id
 
 api_bp = Blueprint('api', __name__)
+
+
+@api_bp.route('/whatsapp/contacts/import', methods=['POST'])
+def whatsapp_contact_import():
+    from app.services.contact_import import import_contacts
+    secret = current_app.config.get('WA_INTERNAL_TOKEN') or os.getenv('WA_INTERNAL_TOKEN', '')
+    received = request.headers.get('X-WA-Internal-Token', '')
+    if not secret or not hmac.compare_digest(str(secret).encode(), received.encode()):
+        return jsonify({'error': 'Não autorizado.'}), 403
+    if request.content_length and request.content_length > 262144:
+        return jsonify({'error': 'Lote muito grande.'}), 413
+    try:
+        return jsonify(import_contacts(request.get_json(silent=True)))
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
 
 
 @api_bp.route('/mercado-pago/webhook', methods=['POST'])

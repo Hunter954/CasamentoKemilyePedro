@@ -31,7 +31,7 @@ def normalize_whatsapp_phone(value: str) -> str:
         return ''
     if digits.startswith('55') and len(digits) in {12, 13}:
         return digits
-    if len(digits) in {10, 11}:
+    if len(digits) in {10, 11} and not str(value or '').strip().startswith('+'):
         return f'55{digits}'
     return digits
 
@@ -154,7 +154,7 @@ def _post_send_text(phone: str, message: str, delay_seconds: int | None = None):
     normalized = normalize_whatsapp_phone(phone)
     if not normalized:
         raise WhatsAppSendError('Telefone inválido para envio.')
-    data = _bridge_request('POST', '/send-text', {'phone': normalized, 'message': message}, timeout=35)
+    data = _bridge_request('POST', '/send-text', {'phone': '+' + normalized, 'message': message}, timeout=35)
     return {'ok': True, 'response': data, 'message_id': data.get('messageId', ''), 'phone': normalized}
 
 
@@ -164,7 +164,7 @@ def _post_send_image(phone: str, image_url: str, caption: str = '', delay_second
         raise WhatsAppSendError('Telefone inválido para envio da imagem.')
     if not image_url:
         raise WhatsAppSendError('Imagem da campanha não encontrada.')
-    data = _bridge_request('POST', '/send-image', {'phone': normalized, 'image': image_url, 'caption': caption or ''}, timeout=45)
+    data = _bridge_request('POST', '/send-image', {'phone': '+' + normalized, 'image': image_url, 'caption': caption or ''}, timeout=45)
     return {'ok': True, 'response': data, 'message_id': data.get('messageId', ''), 'phone': normalized}
 
 

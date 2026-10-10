@@ -136,6 +136,27 @@ class ContactLead(TimestampMixin, db.Model):
     confirmation_code = db.Column(db.String(20), default='', index=True)
 
 
+class ContactImportSettings(TimestampMixin, db.Model):
+    __tablename__ = 'contact_import_settings'
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(db.Boolean, default=False, nullable=False)
+    group_jid = db.Column(db.String(120), default='', nullable=False)
+    group_name = db.Column(db.String(180), default='', nullable=False)
+    activated_at = db.Column(db.DateTime, nullable=True)
+
+
+class ContactImportEvent(db.Model):
+    __tablename__ = 'contact_import_event'
+    event_key = db.Column(db.String(64), primary_key=True)
+    group_name = db.Column(db.String(180), default='')
+    sender_name = db.Column(db.String(180), default='')
+    created_count = db.Column(db.Integer, default=0, nullable=False)
+    duplicate_count = db.Column(db.Integer, default=0, nullable=False)
+    invalid_count = db.Column(db.Integer, default=0, nullable=False)
+    details = db.Column(db.Text, default='[]', nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+
 class WhatsAppCampaign(TimestampMixin, db.Model):
     __tablename__ = 'whatsapp_campaign'
     id = db.Column(db.Integer, primary_key=True)

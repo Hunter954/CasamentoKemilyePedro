@@ -23,7 +23,12 @@ def normalize_phone_digits(value, default_country_code='55'):
 
 
 def format_phone(value):
+    raw = str(value or '').strip()
     digits = ''.join(char for char in str(value or '') if char.isdigit())
+    if raw.startswith('+') and not digits.startswith('55'):
+        return raw
+    if digits.startswith('55') and len(digits) in (12, 13):
+        return '+55 ' + format_phone(digits[2:])
     if len(digits) == 11:
         return f'({digits[:2]}) {digits[2:7]}-{digits[7:]}'
     if len(digits) == 10:
