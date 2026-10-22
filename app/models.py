@@ -156,6 +156,26 @@ class ContactLead(TimestampMixin, db.Model):
     tag = db.Column(db.String(80), default='convidado')
     confirmation_code = db.Column(db.String(20), default='', index=True)
 
+    @property
+    def invited_names(self):
+        from app.guest_counts import invitation_names
+        return invitation_names(self.name)
+
+    @property
+    def people_count(self):
+        return len(self.invited_names)
+
+    @property
+    def latest_rsvp(self):
+        # Prefer an actual response to an older draft; keep all historical rows.
+        return max(self.rsvps, key=lambda item: (bool(item.confirmed_at),
+                   item.confirmed_at or item.created_at or datetime.min, item.id or 0), default=None)
+
+    @property
+    def rsvp_status(self):
+        response = self.latest_rsvp
+        return response.attendance if response and response.confirmed_at and response.attendance in ('yes', 'no') else 'pending'
+
 
 class ContactImportSettings(TimestampMixin, db.Model):
     __tablename__ = 'contact_import_settings'

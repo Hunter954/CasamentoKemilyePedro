@@ -68,6 +68,17 @@
 .contacts-table td { padding: 1rem .65rem; border-bottom: 1px solid var(--contact-line); }
 .contacts-table th:first-child { width: 30%; }
 .contacts-name { overflow-wrap: anywhere; }
+.contacts-name-display { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+.contacts-name-display .contacts-avatar { margin-right: 0; flex-shrink: 0; }
+.contacts-name-display strong { min-width: 0; }
+.contacts-edit-name { display: inline-flex; align-items: center; gap: .4rem; min-height: 36px; padding: .35rem .5rem; border: 1px solid var(--contact-line); border-radius: 8px; background: var(--kp-surface); color: var(--kp-brand-dark); font: inherit; font-size: .72rem; cursor: pointer; }
+.contacts-edit-name:focus-visible { outline: 2px solid var(--kp-brand); outline-offset: 2px; }
+.contacts-name-form { display: grid; gap: .5rem; min-width: 180px; margin: 0; }
+.contacts-name-buttons { display: flex; flex-wrap: wrap; gap: .4rem; }
+.contacts-name-feedback { margin: .4rem 0 0; font-size: .75rem; color: var(--kp-brand-dark); }
+.contacts-name-feedback:empty { display: none; }
+.contacts-name-feedback.is-error { color: #96442f; }
+.contacts-invitation-summary { display: block; margin-top: .4rem; font-size: .72rem; line-height: 1.5; color: var(--kp-muted); }
 .contacts-avatar { display: inline-grid; place-items: center; width: 32px; height: 32px; background: var(--kp-soft); color: var(--kp-brand-dark); border-radius: 50%; margin-right: .6rem; font-size: .8rem; }
 .contacts-tag { display: inline-block; border-radius: 999px; background: var(--kp-canvas); padding: .35rem .6rem; font-size: .7rem; overflow-wrap: anywhere; max-width: 160px; }
 .contacts-copy { display: inline-flex; align-items: center; gap: .65rem; border: 1px solid var(--contact-line); background: var(--kp-surface); border-radius: 8px; padding: .65rem; cursor: pointer; color: var(--kp-brand-dark); min-height: 44px; }

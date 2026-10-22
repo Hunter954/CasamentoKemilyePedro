@@ -1,6 +1,7 @@
 {% extends 'admin/base.html' %}
 {% block admin_content %}
-<div class="admin-header"><h1>Confirmações de presença</h1><p>Cada convidado possui um código único. Aqui você acompanha quem já confirmou e quem ainda está pendente.</p></div>
+<div class="admin-header"><h1>Confirmações de presença</h1><p>A resposta vale para todos os nomes do convite. As quantidades seguem o cadastro atual, separando os nomes por &amp;.</p></div>
+<div class="stats-grid"><div class="stat-card"><span>Pessoas convidadas</span><strong>{{ totals.people }}</strong></div><div class="stat-card"><span>Pessoas confirmadas</span><strong>{{ totals.yes }}</strong></div><div class="stat-card"><span>Ausências informadas</span><strong>{{ totals.no }}</strong></div><div class="stat-card"><span>Pessoas pendentes</span><strong>{{ totals.pending }}</strong></div></div>
 <div class="section-card"><div class="table-wrap"><table><thead><tr><th>Contato</th><th>Telefone</th><th>Código</th><th>Status</th><th>Pessoas</th><th>Quando</th><th>Mensagem</th></tr></thead><tbody>
 {% for row in rows %}
 <tr>
@@ -8,9 +9,10 @@
   <td>{{ row.contact.phone|phone_br }}</td>
   <td><strong>{{ row.contact.confirmation_code or '-' }}</strong></td>
   <td>
-    <span class="admin-tag {{ 'tag-success' if row.confirmed else 'tag-neutral' }}">{{ 'confirmado' if row.confirmed else 'pendente' }}</span>
+    <span class="admin-tag {{ 'tag-success' if row.status == 'yes' else 'tag-neutral' }}">{{ {'yes':'Presença confirmada', 'no':'Não comparecerá', 'pending':'Pendente'}[row.status] }}</span>
+    <details style="margin-top:.5rem"><summary>Corrigir resposta</summary><form class="stack-form" method="post" action="{{ url_for('admin.correct_invitation_response', contact_id=row.contact.id) }}"><input type="hidden" name="csrf_token" value="{{ panel_csrf() }}"><label>Resposta de {{ row.contact.name }}<select name="attendance" required>{% if row.status == 'pending' %}<option value="" selected disabled>Selecione a resposta</option>{% endif %}<option value="yes" {% if row.status == 'yes' %}selected{% endif %}>Presença confirmada</option><option value="no" {% if row.status == 'no' %}selected{% endif %}>Não comparecerá</option></select></label><button class="btn btn-soft btn-sm">Salvar resposta</button></form></details>
   </td>
-  <td>{{ row.rsvp.guests_count if row.rsvp else '-' }}</td>
+  <td>{{ row.people }}{% if row.rsvp and row.rsvp.confirmed_at and row.status == 'yes' and row.rsvp.guests_count != row.people %}<small style="display:block">Registro anterior: {{ row.rsvp.guests_count }}. Cadastro atual: {{ row.people }}.</small>{% endif %}</td>
   <td>{{ row.rsvp.confirmed_at.strftime('%d/%m/%Y %H:%M') if row.rsvp and row.rsvp.confirmed_at else '-' }}</td>
   <td>{{ row.rsvp.message if row.rsvp and row.rsvp.message else '-' }}</td>
 </tr>

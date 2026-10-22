@@ -1,14 +1,18 @@
-from datetime import datetime
+from random import shuffle
+import hmac
+import re
+import secrets
 from urllib.parse import quote_plus
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, session
 from app import db
-from app.models import SiteSettings, GuestbookMessage, RSVP, GiftItem, GiftPurchase, ContactLead, Ceremony, FAQ
+from app.models import SiteSettings, GuestbookMessage, GiftItem, GiftPurchase, ContactLead, Ceremony, FAQ
 from app.services.message_ai import generate_loving_message
 from app.services.mercado_pago import MercadoPagoService
 from app.services.whatsapp import normalize_whatsapp_phone
-from app.services.guestbook import attach_message
 from app.services.payment_status import apply_verified_payment
 from app.utils import format_phone
+from app.services.contact_import import contact_write_lock
+from app.services.invitations import record_invitation_response
 
 public_bp = Blueprint('public', __name__)
 
@@ -63,6 +67,8 @@ def _guestbook_cards(messages):
 
 @public_bp.route('/')
 def home():
+    if 'codigo' in request.args:
+        return _open_invitation(request.args.get('codigo', ''))
     settings = SiteSettings.query.first()
     guestbook_messages = GuestbookMessage.query.filter_by(approved=True).order_by(GuestbookMessage.created_at.desc()).limit(8).all()
     gifts = GiftItem.query.filter_by(active=True).order_by(GiftItem.created_at.desc()).limit(6).all()
@@ -80,70 +86,76 @@ def home():
     )
 
 
+def _invitation_contact(code, lock=False):
+    code = str(code or '').strip()
+    if not re.fullmatch(r'[0-9]{4,20}', code):
+        return None
+    query = ContactLead.query.filter_by(confirmation_code=code)
+    if lock:
+        query = query.populate_existing().with_for_update()
+    matches = query.limit(2).all()
+    return matches[0] if len(matches) == 1 else None
+
+
+def _open_invitation(code):
+    contact = _invitation_contact(code)
+    session.pop('rsvp_code', None)
+    if contact:
+        session['rsvp_code'] = contact.confirmation_code
+    else:
+        flash('Não encontramos esse convite. Confira o código recebido pelo WhatsApp e tente novamente.', 'warning')
+    # Remove the credential from the URL before rendering any external assets.
+    return redirect(url_for('public.rsvp'), code=303)
+
+
+@public_bp.after_request
+def protect_invitation_response(response):
+    if request.endpoint == 'public.rsvp' or (request.endpoint == 'public.home' and 'codigo' in request.args):
+        response.headers['Cache-Control'] = 'no-store, private'
+        response.headers['Referrer-Policy'] = 'no-referrer'
+        response.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+    return response
+
+
 @public_bp.route('/confirmar-presenca', methods=['GET', 'POST'])
 @public_bp.route('/rsvp', methods=['GET', 'POST'])
 def rsvp():
+    if request.method == 'GET' and 'codigo' in request.args:
+        return _open_invitation(request.args.get('codigo', ''))
+    csrf_token = session.setdefault('rsvp_csrf', secrets.token_urlsafe(32))
     if request.method == 'POST':
-        code = ''.join(char for char in request.form.get('confirmation_code', '') if char.isdigit())
-        if not code:
-            flash('Digite o código que você recebeu no WhatsApp.', 'danger')
-            return redirect(url_for('public.rsvp'))
-
-        contact = ContactLead.query.filter_by(confirmation_code=code).with_for_update().first()
-        if not contact:
-            flash('Código não encontrado. Confira o número enviado no WhatsApp e tente novamente.', 'danger')
-            return redirect(url_for('public.rsvp'))
-
-        existing = RSVP.query.filter_by(contact_id=contact.id).order_by(RSVP.created_at.desc()).first()
-        if existing and existing.confirmed_at:
-            flash('Este código já foi confirmado anteriormente.', 'warning')
-            return redirect(url_for('public.rsvp'))
-
-        attendance = request.form.get('attendance', 'yes')
-        if attendance not in ('yes', 'no'):
-            flash('Selecione se você irá comparecer.', 'danger')
-            return redirect(url_for('public.rsvp'))
-        try:
-            guests_count = int(request.form.get('guests_count', 1) or 1) if attendance == 'yes' else 0
-            if attendance == 'yes' and not 1 <= guests_count <= 10:
-                raise ValueError()
-        except (TypeError, ValueError):
-            flash('Informe uma quantidade de 1 a 10 pessoas.', 'danger')
-            return redirect(url_for('public.rsvp'))
+        received = request.form.get('csrf_token', '')
+        if not received or not hmac.compare_digest(csrf_token.encode(), received.encode()):
+            flash('Esta página expirou. Confira o convite abaixo e tente novamente.', 'warning')
+            return redirect(url_for('public.rsvp'), code=303)
+        action = request.form.get('action', '')
+        if action == 'lookup':
+            return _open_invitation(request.form.get('confirmation_code', ''))
+        if action == 'clear':
+            session.pop('rsvp_code', None)
+            return redirect(url_for('public.rsvp'), code=303)
+        attendance = request.form.get('attendance', '')
         message = request.form.get('message', '').strip()
-        if len(message) > 3000:
-            flash('O recado deve ter até 3.000 caracteres.', 'danger')
-            return redirect(url_for('public.rsvp'))
-
-        if existing:
-            existing.guest_name = contact.name
-            existing.phone = format_phone(contact.phone)
-            existing.guests_count = guests_count
-            existing.attendance = attendance
-            existing.message = message
-            existing.confirmation_code = code
-            existing.confirmed_at = datetime.utcnow()
-            existing.email = existing.email or (contact.email or '').strip()
-        else:
-            existing = RSVP(
-                guest_name=contact.name,
-                phone=format_phone(contact.phone),
-                email=(contact.email or '').strip(),
-                guests_count=guests_count,
-                attendance=attendance,
-                message=message,
-                contact_id=contact.id,
-                confirmation_code=code,
-                confirmed_at=datetime.utcnow(),
-            )
-            db.session.add(existing)
-
-        db.session.flush()
-        attach_message(existing, 'rsvp')
-        db.session.commit()
-        flash(f'Presença registrada com sucesso para {contact.name}. Obrigado!', 'success')
-        return redirect(url_for('public.rsvp'))
-    return render_template('public/rsvp.html')
+        if action != 'reply' or attendance not in ('yes', 'no') or len(message) > 3000:
+            flash('Escolha confirmar ou recusar a presença. O recado pode ter até 3.000 caracteres.', 'warning')
+            return redirect(url_for('public.rsvp'), code=303)
+        with contact_write_lock():
+            contact = _invitation_contact(session.get('rsvp_code'), lock=True)
+            if not contact:
+                session.pop('rsvp_code', None)
+                flash('Confira o código recebido pelo WhatsApp para identificar seu convite.', 'warning')
+            elif not contact.people_count:
+                flash('Precisamos conferir os nomes deste convite. Entre em contato com o casal.', 'warning')
+            else:
+                # The shared transaction lock serializes clicks and concurrent devices.
+                record_invitation_response(contact, attendance, message)
+                db.session.commit()
+        return redirect(url_for('public.rsvp'), code=303)
+    contact = _invitation_contact(session.get('rsvp_code'))
+    if not contact:
+        session.pop('rsvp_code', None)
+    return render_template('public/rsvp.html', invitation=contact,
+                           response=contact.latest_rsvp if contact else None, csrf_token=csrf_token)
 
 
 @public_bp.route('/mural')
@@ -154,7 +166,8 @@ def guestbook():
 
 @public_bp.route('/presentes')
 def gifts():
-    gifts = GiftItem.query.filter_by(active=True).order_by(GiftItem.price.asc()).all()
+    gifts = GiftItem.query.filter_by(active=True).all()
+    shuffle(gifts)
     return render_template('public/gifts.html', gifts=gifts)
 
 

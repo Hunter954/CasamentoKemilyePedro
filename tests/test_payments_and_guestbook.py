@@ -126,6 +126,9 @@ class PaymentAndGuestbookTests(unittest.TestCase):
         self.assertEqual(GuestbookMessage.query.count(),0)
         contact=ContactLead(name='Convidado',phone='11999991234',confirmation_code='123456')
         db.session.add(contact);db.session.commit()
+        self.client.get('/?codigo=123456', follow_redirects=True)
+        with self.client.session_transaction() as state:
+            data.update(csrf_token=state['rsvp_csrf'], action='reply')
         self.client.post('/rsvp',data=data)
         message=GuestbookMessage.query.one()
         self.assertEqual(message.source_key,f'rsvp:{RSVP.query.one().id}')

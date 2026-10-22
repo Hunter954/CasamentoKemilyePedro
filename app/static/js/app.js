@@ -46,19 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const attendance = document.getElementById('attendance');
-  const guests = document.getElementById('guests_count');
-  const guestsField = document.getElementById('guests-count-field');
-  if (attendance && guests && guestsField) {
-    const updateAttendance = () => {
-      const attending = attendance.value === 'yes';
-      guestsField.hidden = !attending;
-      guests.disabled = !attending;
-      guests.required = attending;
-    };
-    attendance.addEventListener('change', updateAttendance);
-    updateAttendance();
-  }
   const giftGrid = document.getElementById('kp-gift-grid');
   if (giftGrid) {
     giftGrid.querySelectorAll('.kp-gift-photo img').forEach((img) => {

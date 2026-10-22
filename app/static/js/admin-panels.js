@@ -34,12 +34,34 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const message = document.querySelector('[data-message-editor]');
   if (message) {
+    const preview = document.querySelector('[data-message-preview]');
+    const recipient = document.querySelector('[data-preview-contact]');
+    let timer;
+    let sequence = 0;
     const update = () => {
-      document.querySelector('[data-message-preview]').textContent = message.value
-        .replaceAll('%contato%', 'Maria').replaceAll('%codigo%', '123456')
-        .replaceAll('%nome_noivos%', 'Kemily & Pedro').replaceAll('%site_url%', window.location.origin);
+      clearTimeout(timer);
+      const current = ++sequence;
+      if (!recipient?.value) { preview.textContent = 'Cadastre um convidado para visualizar a mensagem personalizada.'; return; }
+      preview.textContent = 'Preparando prévia…';
+      timer = setTimeout(async () => {
+        try {
+          const body = new FormData();
+          body.set('csrf_token', message.form.elements.csrf_token.value);
+          body.set('contact_id', recipient.value);
+          body.set('message', message.value);
+          const response = await fetch(preview.dataset.previewUrl, {
+            method: 'POST', body, credentials: 'same-origin', headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(15000)
+          });
+          if (!response.ok || response.redirected) throw new Error();
+          const data = await response.json();
+          if (current === sequence) preview.textContent = data.message || 'Digite a mensagem do convite.';
+        } catch (_) {
+          if (current === sequence) preview.textContent = 'Não foi possível carregar a prévia. Atualize a página e tente novamente.';
+        }
+      }, 250);
     };
     message.addEventListener('input', update);
+    recipient?.addEventListener('change', update);
     document.querySelectorAll('[data-insert-token]').forEach(button => button.addEventListener('click', () => {
       const token = button.dataset.insertToken;
       message.setRangeText(token, message.selectionStart, message.selectionEnd, 'end');

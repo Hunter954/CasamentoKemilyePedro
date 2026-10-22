@@ -1,5 +1,5 @@
 {% extends 'admin/base.html' %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/contacts.css') }}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/contacts.css', v='smart-rsvp-20261022') }}">{% endblock %}
 {% block admin_content %}
 <div class="contacts-page" data-contacts-page data-status-url="{{ url_for('admin.contact_import_status') }}" data-groups-url="{{ url_for('admin.contact_import_groups') }}">
   <header class="admin-header contacts-heading">
@@ -66,7 +66,16 @@
     {% if contacts %}
     <table class="contacts-table"><thead><tr><th>Convidado</th><th>WhatsApp</th><th>Código de confirmação</th><th>Categoria</th><th>Ações</th></tr></thead><tbody>
     {% for item in contacts %}<tr>
-      <td class="contacts-name"><span class="contacts-avatar" aria-hidden="true">{{ item.name[:1]|upper }}</span><strong>{{ item.name }}</strong></td>
+      <td class="contacts-name" data-name-editor>
+        <div class="contacts-name-display" data-name-display><span class="contacts-avatar" aria-hidden="true">{{ item.name[:1]|upper }}</span><strong data-contact-name>{{ item.name }}</strong><button type="button" class="contacts-edit-name" data-edit-name aria-label="Editar nome de {{ item.name }}"><i class="fa-solid fa-pen" aria-hidden="true"></i><span>Editar nome</span></button></div>
+        <form class="contacts-name-form" data-name-form method="post" action="{{ url_for('admin.update_contact_name', contact_id=item.id) }}" hidden>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <label><span class="sr-only">Nome do convidado ou casal</span><input name="name" value="{{ item.name }}" required maxlength="180" autocomplete="off" data-name-input></label>
+          <div class="contacts-name-buttons"><button type="submit" class="btn btn-primary btn-sm" data-save-name>Salvar</button><button type="button" class="btn btn-secondary btn-sm" data-cancel-name>Cancelar</button></div>
+        </form>
+        <p class="contacts-name-feedback" data-name-feedback role="status" aria-live="polite"></p>
+        <small class="contacts-invitation-summary"><span data-contact-people>{{ item.people_count }} {{ 'pessoa' if item.people_count == 1 else 'pessoas' }}</span> · {{ {'yes':'Presença confirmada', 'no':'Não comparecerá', 'pending':'Pendente'}[item.rsvp_status] }}</small>
+      </td>
       <td data-label="WhatsApp">{{ item.phone|phone_br }}</td>
       <td data-label="Código"><button type="button" class="contacts-copy" data-copy-code="{{ item.confirmation_code }}" aria-label="Copiar código de {{ item.name }}"><code>{{ item.confirmation_code }}</code><i class="fa-regular fa-copy" aria-hidden="true"></i></button></td>
       <td data-label="Categoria"><span class="contacts-tag">{{ item.tag }}</span></td>
@@ -82,4 +91,4 @@
   <script type="application/json" id="contacts-initial-data">{{ overview|tojson }}</script>
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='js/contacts.js') }}" defer></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/contacts.js', v='smart-rsvp-20261022') }}" defer></script>{% endblock %}

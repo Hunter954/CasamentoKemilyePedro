@@ -88,15 +88,16 @@ class SiteUpdateTests(unittest.TestCase):
         seed_site_content()
         self.assertIsNone(db.session.get(FAQ, item.id))
 
-    def test_rsvp_decline_ignores_count_and_yes_rejects_invalid_count(self):
+    def test_rsvp_uses_registered_count_and_decline_ignores_browser_count(self):
         contact = ContactLead(name='Maria', phone='11999991234', confirmation_code='123456')
         db.session.add(contact)
         db.session.commit()
-        self.client.post('/rsvp', data={'confirmation_code':'123456','attendance':'yes','guests_count':'abc'})
+        self.client.get('/?codigo=123456', follow_redirects=True)
+        with self.client.session_transaction() as state:
+            token = state['rsvp_csrf']
+        self.client.post('/rsvp', data={'csrf_token':token,'action':'reply','attendance':'maybe','guests_count':'1'})
         self.assertEqual(RSVP.query.count(),0)
-        self.client.post('/rsvp', data={'confirmation_code':'123456','attendance':'maybe','guests_count':'1'})
-        self.assertEqual(RSVP.query.count(),0)
-        self.client.post('/rsvp', data={'confirmation_code':'123456','attendance':'no','guests_count':'garbage'})
+        self.client.post('/rsvp', data={'csrf_token':token,'action':'reply','attendance':'no','guests_count':'garbage'})
         self.assertEqual((RSVP.query.one().attendance,RSVP.query.one().guests_count),('no',0))
 
     def test_guestbook_rejects_public_post_and_only_displays_approved(self):

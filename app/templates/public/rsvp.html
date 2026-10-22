@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
-{% block body_class %}wedding-home kp-inner-page{% endblock %}
+{% block title %}Confirmação de presença | Kemily & Pedro{% endblock %}
+{% block body_class %}wedding-home kp-inner-page kp-rsvp-page{% endblock %}
+{% block extra_head %}<meta name="referrer" content="no-referrer"><link rel="stylesheet" href="{{ url_for('static', filename='css/rsvp.css', v='20261022') }}">{% endblock %}
 {% block content %}
 <header class="kp-header kp-header-home">
  <div class="kp-shell kp-header-inner">
@@ -15,8 +17,34 @@
  <div class="site-drawer-head"><strong>K + P</strong><button type="button" class="menu-toggle drawer-close" aria-label="Fechar menu" data-menu-close><i class="fa-solid fa-xmark"></i></button></div>
  <nav class="site-drawer-nav" aria-label="Menu mobile"><a data-menu-close href="{{ url_for('public.home') }}#inicio">Início</a><a data-menu-close href="{{ url_for('public.home') }}#locais">Localização</a><a data-menu-close href="{{ url_for('public.guestbook') }}">Mural de Recados</a><a data-menu-close href="{{ url_for('public.rsvp') }}">Confirmar Presença</a><a data-menu-close href="{{ url_for('public.gifts') }}">Lista de Presentes</a><a data-menu-close href="{{ url_for('public.home') }}#faq">Dúvidas Frequentes</a></nav>
 </aside><main class="kp-page kp-inner-main"><section class="kp-inner-hero"><div class="kp-inner-decor kp-inner-decor-left" data-parallax="0.12" aria-hidden="true"></div><div class="kp-inner-decor kp-inner-decor-right" data-parallax="0.17" aria-hidden="true"></div><div class="kp-inner-hero-text"><span class="kp-inner-eyebrow">KEMILY <i class="fa-regular fa-heart"></i> PEDRO</span><h1>Confirme sua presença</h1><div class="kp-home-divider"><span></span><i class="fa-regular fa-heart"></i><span></span></div><p>Nossa alegria será ainda maior com você ao nosso lado neste dia tão especial.</p></div></section>
-<section class="kp-inner-content kp-form-section"><div class="kp-form-layout"><div class="kp-form-aside"><span class="kp-inner-kicker">ESPERAMOS VOCÊ</span><h2>Um dia para guardar no coração.</h2><p>Recebeu seu convite pelo WhatsApp? Basta informar o código enviado e confirmar sua participação.</p><div class="kp-aside-note"><i class="fa-regular fa-envelope-open"></i><span>Cada convite possui um código exclusivo. Respeite a quantidade de convidados informada no convite.</span></div></div>
-<div class="kp-form-panel"><div class="kp-form-panel-head"><i class="fa-regular fa-heart"></i><h2>Sua confirmação</h2><p>Preencha os dados abaixo.</p></div><form class="kp-elegant-form" method="post">
- <label for="confirmation_code">CÓDIGO DO CONVITE</label><input id="confirmation_code" name="confirmation_code" placeholder="Digite o código recebido" inputmode="numeric" pattern="[0-9]{4,20}" maxlength="20" required>
- <div class="kp-form-duo"><div><label for="attendance">VOCÊ IRÁ COMPARECER?</label><select id="attendance" name="attendance"><option value="yes">Sim, confirmo presença!</option><option value="no">Não poderei comparecer</option></select></div><div id="guests-count-field"><label for="guests_count">NÚMERO DE PESSOAS</label><input id="guests_count" name="guests_count" type="number" min="1" max="10" value="1" required></div></div>
- <label for="rsvp_message">RECADO PARA O CASAL (OPCIONAL)</label><textarea id="rsvp_message" name="message" rows="4" maxlength="3000" placeholder="Seu recado poderá aparecer no mural após aprovação do casal..."></textarea><button class="kp-home-primary-btn kp-submit-btn">ENVIAR CONFIRMAÇÃO <i class="fa-solid fa-arrow-right-long"></i></button></form></div></div></section><footer class="kp-home-footer"><div class="kp-section-art kp-art-floral-left kp-art-footer-left" data-parallax="0.05" aria-hidden="true"></div><div class="kp-section-art kp-art-floral-right kp-art-footer-right" data-parallax="0.08" aria-hidden="true"></div><div class="kp-home-footer-inner"><div class="kp-home-footer-monogram">K + P</div><p class="kp-home-footer-note">Feito com muito amor <i class="fa-regular fa-heart"></i></p></div></footer></main>{% endblock %}
+<section class="kp-inner-content kp-rsvp-section" aria-label="Seu convite">
+<div class="kp-form-panel kp-rsvp-panel" data-rsvp-panel>
+{% if invitation %}
+  {% set status = invitation.rsvp_status %}
+  <div class="kp-form-panel-head"><i class="fa-regular fa-heart" aria-hidden="true"></i><h2 tabindex="-1" data-rsvp-heading>{{ 'Presença confirmada!' if status == 'yes' else ('Resposta registrada' if status == 'no' else 'Seu convite') }}</h2><p>{{ 'Que alegria ter vocês conosco!' if status == 'yes' else ('Sentiremos a falta de vocês neste dia especial.' if status == 'no' else 'Que alegria compartilhar este momento com vocês!') }}</p></div>
+  <div class="kp-rsvp-invitation"><span class="kp-inner-kicker">CONVIDADOS IDENTIFICADOS</span><h3>{{ invitation.invited_names|join(' & ') }}</h3><p class="kp-rsvp-total">Total: <strong>{{ invitation.people_count }} {{ 'pessoa' if invitation.people_count == 1 else 'pessoas' }}</strong></p></div>
+  {% if status != 'pending' %}
+    <div class="kp-rsvp-result {{ 'is-declined' if status == 'no' else '' }}" role="status"><i class="fa-solid {{ 'fa-circle-check' if status == 'yes' else 'fa-envelope-open' }}" aria-hidden="true"></i><p><strong>{{ invitation.people_count }} {{ ('pessoa confirmada' if invitation.people_count == 1 else 'pessoas confirmadas') if status == 'yes' else ('pessoa não comparecerá' if invitation.people_count == 1 else 'pessoas não comparecerão') }}.</strong></p>{% if status == 'yes' %}<p>Nos vemos no dia 11 de dezembro de 2026! 💚</p>{% endif %}<small>Sua resposta já está salva. Para corrigir a presença, entre em contato com o casal.</small></div>
+  {% elif invitation.people_count %}
+    <form method="post" class="kp-elegant-form kp-rsvp-answer" data-rsvp-form>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="reply">
+      <p class="kp-rsvp-question">Você confirma a presença de todos os convidados acima?</p>
+      <details class="kp-rsvp-message"><summary>Deixar um recado para o casal (opcional)</summary><label class="sr-only" for="rsvp_message">Recado para o casal</label><textarea id="rsvp_message" name="message" rows="3" maxlength="3000" placeholder="Seu recado poderá aparecer no mural após aprovação do casal."></textarea></details>
+      <button type="submit" name="attendance" value="yes" class="kp-home-primary-btn kp-rsvp-confirm">Confirmar presença <i class="fa-regular fa-heart" aria-hidden="true"></i></button>
+      <button type="submit" name="attendance" value="no" class="kp-home-secondary-btn kp-rsvp-decline">Não poderemos comparecer</button>
+      <p class="kp-rsvp-loading" data-rsvp-loading role="status" aria-live="polite"></p>
+    </form>
+  {% else %}<p role="alert">Precisamos conferir os nomes deste convite. Entre em contato com o casal.</p>{% endif %}
+  <details class="kp-rsvp-code"><summary>Ver código do convite</summary><label for="confirmation_code">Código identificado</label><input id="confirmation_code" value="{{ invitation.confirmation_code }}" readonly aria-readonly="true" autocomplete="off"></details>
+  <form method="post" class="kp-rsvp-other" data-rsvp-form><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="clear"><button type="submit">Consultar outro convite</button></form>
+{% else %}
+  <div class="kp-form-panel-head"><i class="fa-regular fa-envelope-open" aria-hidden="true"></i><h2 tabindex="-1" data-rsvp-heading>Encontre seu convite</h2><p>Informe o código recebido pelo WhatsApp para ver os convidados e responder.</p></div>
+  <form method="post" class="kp-elegant-form" data-rsvp-form>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="lookup">
+    <label for="confirmation_code">CÓDIGO DO CONVITE</label><input id="confirmation_code" name="confirmation_code" placeholder="Digite o código recebido" inputmode="numeric" pattern="[0-9]{4,20}" maxlength="20" autocomplete="off" required>
+    <button type="submit" class="kp-home-primary-btn kp-submit-btn">Encontrar meu convite <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i></button>
+    <p class="kp-rsvp-loading" data-rsvp-loading role="status" aria-live="polite"></p>
+  </form>
+{% endif %}
+</div></section><footer class="kp-home-footer"><div class="kp-section-art kp-art-floral-left kp-art-footer-left" data-parallax="0.05" aria-hidden="true"></div><div class="kp-section-art kp-art-floral-right kp-art-footer-right" data-parallax="0.08" aria-hidden="true"></div><div class="kp-home-footer-inner"><div class="kp-home-footer-monogram">K + P</div><p class="kp-home-footer-note">Feito com muito amor <i class="fa-regular fa-heart"></i></p></div></footer></main>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/rsvp.js', v='20261022') }}" defer></script>{% endblock %}

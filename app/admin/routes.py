@@ -2,6 +2,7 @@ import hmac
 import secrets
 import math
 from datetime import timedelta
+from sqlalchemy.orm import selectinload
 from app.admin.security import check_panel_csrf
 from app.services.campaign_queue import queue_campaign, queue_lock, queue_overview, delivery_settings, QueueBusy
 from datetime import datetime
@@ -40,6 +41,8 @@ from app.services.whatsapp import (
 )
 from app.services.contact_import import (clean_phone, contact_write_lock, find_duplicate,
                                          import_settings, import_overview)
+from app.services.invitations import invitation_report, record_invitation_response
+from app.services.whatsapp import render_campaign_message
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -95,8 +98,11 @@ def logout():
 @login_required
 def dashboard():
     approved_purchases = GiftPurchase.query.filter_by(status='approved')
+    _, _, invitation_totals = invitation_report()
     stats = {
-        'rsvps': RSVP.query.count(),
+        'rsvps': invitation_totals['yes'],
+        'absent': invitation_totals['no'],
+        'pending_people': invitation_totals['pending'],
         'approved_messages': GuestbookMessage.query.filter_by(approved=True).count(),
         'gifts': GiftItem.query.count(),
         'paid': approved_purchases.count(),
@@ -241,17 +247,28 @@ def delete_gift(gift_id):
 @login_required
 def manage_rsvps():
     ensure_all_contact_codes(commit=True)
-    contacts = ContactLead.query.order_by(ContactLead.created_at.desc()).all()
-    rows = []
-    for contact in contacts:
-        latest_rsvp = RSVP.query.filter_by(contact_id=contact.id).order_by(RSVP.created_at.desc()).first()
-        rows.append({
-            'contact': contact,
-            'rsvp': latest_rsvp,
-            'confirmed': bool(latest_rsvp and latest_rsvp.confirmed_at),
-        })
-    legacy_rsvps = RSVP.query.filter(RSVP.contact_id.is_(None)).order_by(RSVP.created_at.desc()).all()
-    return render_template('admin/rsvps.html', rows=rows, legacy_rsvps=legacy_rsvps)
+    rows, legacy_rsvps, totals = invitation_report()
+    return render_template('admin/rsvps.html', rows=rows, legacy_rsvps=legacy_rsvps, totals=totals)
+
+
+@admin_bp.route('/confirmacoes/<int:contact_id>/resposta', methods=['POST'])
+@login_required
+def correct_invitation_response(contact_id):
+    check_panel_csrf()
+    attendance = request.form.get('attendance', '')
+    if attendance not in ('yes', 'no'):
+        flash('Escolha presença confirmada ou ausência.', 'warning')
+        return redirect(url_for('admin.manage_rsvps'))
+    with contact_write_lock():
+        contact = db.get_or_404(ContactLead, contact_id)
+        if not contact.people_count:
+            flash('Corrija os nomes deste convite antes de registrar a resposta.', 'warning')
+        else:
+            previous = contact.latest_rsvp
+            record_invitation_response(contact, attendance, previous.message if previous else '', allow_change=True)
+            db.session.commit()
+            flash('Resposta do convite atualizada.', 'success')
+    return redirect(url_for('admin.manage_rsvps'))
 
 
 @admin_bp.route('/mural')
@@ -347,7 +364,7 @@ def contacts():
         overview = import_overview()
         settings = import_settings()
         db.session.commit()
-    query = ContactLead.query
+    query = ContactLead.query.options(selectinload(ContactLead.rsvps))
     search = request.args.get('q', '').strip()[:180]
     tag = request.args.get('tag', '').strip()[:80]
     if search:
@@ -379,6 +396,25 @@ def _check_contacts_csrf():
     received = request.form.get('csrf_token', '')
     if not expected or not hmac.compare_digest(expected.encode(), received.encode()):
         abort(400, description='Atualize a página e tente novamente.')
+
+
+@admin_bp.route('/contatos/<int:contact_id>/nome', methods=['POST'])
+@login_required
+def update_contact_name(contact_id):
+    _check_contacts_csrf()
+    name = request.form.get('name', '').strip()
+    if not name or len(name) > 180:
+        return jsonify(error='Informe um nome com até 180 caracteres.'), 422
+    with contact_write_lock():
+        contact = db.get_or_404(ContactLead, contact_id)
+        contact.name = name
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('Failed to update contact name')
+            return jsonify(error='Não foi possível salvar. Tente novamente.'), 503
+    return jsonify(id=contact.id, name=contact.name, people_count=contact.people_count)
 
 
 @admin_bp.route('/contatos/whatsapp/grupos')
@@ -615,6 +651,22 @@ def campaigns():
         queue_metrics=queue_overview(),
         editing_campaign=db.get_or_404(WhatsAppCampaign, request.args.get('edit', type=int)) if request.args.get('edit', type=int) else None,
     )
+
+
+@admin_bp.route('/campanhas/previa', methods=['POST'])
+@login_required
+def campaign_preview():
+    check_panel_csrf()
+    message = request.form.get('message', '')
+    if len(message) > 10000:
+        return jsonify(error='A mensagem pode ter até 10.000 caracteres.'), 422
+    with contact_write_lock():
+        contact = db.get_or_404(ContactLead, request.form.get('contact_id', type=int) or 0)
+        rendered = render_campaign_message(message, contact, site_url=request.url_root.rstrip('/'))
+        db.session.commit()
+    response = jsonify(message=rendered)
+    response.headers['Cache-Control'] = 'no-store, private'
+    return response
 
 
 @admin_bp.route('/campanhas/<int:campaign_id>/disparar', methods=['POST'])

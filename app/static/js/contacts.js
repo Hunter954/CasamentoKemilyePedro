@@ -3,6 +3,86 @@
   const page = document.querySelector('[data-contacts-page]');
   if (!page) return;
   const find = selector => page.querySelector(selector);
+  page.querySelectorAll('[data-name-editor]').forEach(editor => {
+    const display = editor.querySelector('[data-name-display]');
+    const name = editor.querySelector('[data-contact-name]');
+    const edit = editor.querySelector('[data-edit-name]');
+    const form = editor.querySelector('[data-name-form]');
+    const input = editor.querySelector('[data-name-input]');
+    const saveName = editor.querySelector('[data-save-name]');
+    const cancel = editor.querySelector('[data-cancel-name]');
+    const feedback = editor.querySelector('[data-name-feedback]');
+    let saving = false;
+    const close = () => {
+      form.hidden = true;
+      display.hidden = false;
+      edit.focus({ preventScroll: true });
+    };
+    edit.addEventListener('click', () => {
+      input.value = name.textContent;
+      feedback.textContent = '';
+      feedback.classList.remove('is-error');
+      display.hidden = true;
+      form.hidden = false;
+      input.focus({ preventScroll: true });
+      input.select();
+    });
+    cancel.addEventListener('click', () => {
+      if (saving) return;
+      feedback.textContent = '';
+      close();
+    });
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !saving) {
+        event.preventDefault();
+        cancel.click();
+      }
+    });
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (saving) return;
+      input.value = input.value.trim();
+      if (!input.reportValidity()) return;
+      const body = new FormData(form);
+      saving = true;
+      input.disabled = saveName.disabled = cancel.disabled = true;
+      form.setAttribute('aria-busy', 'true');
+      saveName.textContent = 'Salvando…';
+      feedback.textContent = '';
+      feedback.classList.remove('is-error');
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST', body, credentials: 'same-origin',
+          headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(20000)
+        });
+        if (response.redirected || response.status === 400 || response.status === 401) {
+          throw new Error('Atualize a página para entrar novamente e salvar.');
+        }
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || typeof data.name !== 'string') {
+          throw new Error(data.error || 'Não foi possível salvar. Tente novamente.');
+        }
+        name.textContent = data.name;
+        input.value = data.name;
+        const people = editor.querySelector('[data-contact-people]');
+        if (people) people.textContent = `${data.people_count} ${data.people_count === 1 ? 'pessoa' : 'pessoas'}`;
+        const avatar = editor.querySelector('.contacts-avatar');
+        if (avatar) avatar.textContent = Array.from(data.name)[0]?.toLocaleUpperCase('pt-BR') || '';
+        edit.setAttribute('aria-label', `Editar nome de ${data.name}`);
+        editor.closest('tr').querySelector('[data-copy-code]')?.setAttribute('aria-label', `Copiar código de ${data.name}`);
+        feedback.textContent = 'Nome salvo.';
+        close();
+      } catch (error) {
+        feedback.classList.add('is-error');
+        feedback.textContent = error.message || 'Não foi possível salvar. Tente novamente.';
+      } finally {
+        saving = false;
+        input.disabled = saveName.disabled = cancel.disabled = false;
+        form.removeAttribute('aria-busy');
+        saveName.textContent = 'Salvar';
+      }
+    });
+  });
   const initial = JSON.parse(document.getElementById('contacts-initial-data').textContent);
   let lastEvent = initial.latest;
   let polling = false;

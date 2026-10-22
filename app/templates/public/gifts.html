@@ -27,12 +27,10 @@
   <div class="kp-gift-photo-fallback" {% if gift_image %}hidden{% endif %}><i class="fa-solid fa-gift" aria-hidden="true"></i><span>Um carinho para nós</span></div>
   {% if gift_image %}<img src="{{ gift_image }}" alt="{{ gift.title }}" width="640" height="640" loading="lazy" decoding="async">{% endif %}
   {% if available %}<a class="kp-gift-photo-link" href="{{ url_for('public.gift_checkout', gift_id=gift.id) }}" aria-label="Ver presente: {{ gift.title }}"></a>{% endif %}
-  <span class="kp-gift-label">{{ 'Com carinho' if available else 'Indisponível' }}</span>
+  {% if not available %}<span class="kp-gift-label">Indisponível</span>{% endif %}
  </div>
  <div class="kp-gift-info">
-  <span class="kp-gift-number">PARA NOSSO NOVO COMEÇO</span>
   <h3>{% if available %}<a href="{{ url_for('public.gift_checkout', gift_id=gift.id) }}">{{ gift.title }}</a>{% else %}{{ gift.title }}{% endif %}</h3>
-  <p>{{ gift.description or 'Um gesto especial para celebrar nosso novo capítulo.' }}</p>
   <div class="kp-gift-bottom">
    <div class="kp-gift-price"><span>Valor do presente</span><strong>{{ gift.price|currency_br }}</strong></div>
    {% if available %}<a href="{{ url_for('public.gift_checkout', gift_id=gift.id) }}" class="kp-gift-buy" aria-label="Presentear: {{ gift.title }}, {{ gift.price|currency_br }}"><i class="fa-solid fa-gift" aria-hidden="true"></i> PRESENTEAR <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i></a>{% else %}<span class="kp-gift-sold">INDISPONÍVEL</span>{% endif %}
