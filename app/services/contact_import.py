@@ -11,6 +11,7 @@ from sqlalchemy import text
 from app import db
 from app.models import ContactLead, ContactImportSettings, ContactImportEvent
 from app.services.whatsapp import get_or_create_contact_code
+from app.guest_counts import invitation_names
 
 _contact_lock = threading.RLock()
 
@@ -137,9 +138,10 @@ def import_overview():
                               db.func.coalesce(db.func.sum(ContactImportEvent.duplicate_count), 0),
                               db.func.coalesce(db.func.sum(ContactImportEvent.invalid_count), 0)).one()
     events = ContactImportEvent.query.order_by(ContactImportEvent.created_at.desc()).limit(8).all()
+    invitation_counts = [len(invitation_names(name)) for (name,) in db.session.query(ContactLead.name).all()]
     return {'enabled': settings.enabled, 'group_name': settings.group_name,
             'created': totals[0], 'duplicates': totals[1], 'invalid': totals[2],
-            'total': ContactLead.query.count(),
+            'total': len(invitation_counts), 'people': sum(invitation_counts),
             'latest': events[0].event_key if events else '',
             'events': [{'sender': event.sender_name, 'group': event.group_name,
                         'at': event.created_at.isoformat() + 'Z', 'created': event.created_count,

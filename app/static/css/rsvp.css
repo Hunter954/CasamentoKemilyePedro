@@ -32,3 +32,29 @@
 @keyframes rsvp-reveal { from { opacity: .7; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 680px) { .kp-rsvp-page .kp-inner-hero { padding: 28px 18px 18px; } .kp-rsvp-page .kp-inner-hero-text > p { display: none; } .kp-rsvp-page .kp-rsvp-section { padding: 14px 16px 50px; } .kp-rsvp-panel { padding: 24px 20px; } .kp-rsvp-invitation { padding: 20px 14px; } }
 @media (prefers-reduced-motion: reduce) { .kp-rsvp-panel { animation: none; } }
+.kp-rsvp-people { border: 0; padding: 0; margin: 0 0 8px; min-width: 0; }
+.kp-rsvp-people legend { font: 600 1.6rem/1.2 'Cormorant Garamond',serif; color: #46563d; margin-bottom: 8px; }
+.kp-rsvp-people > p { font: 400 .8rem/1.6 Inter,sans-serif; color: #6b745d; margin: 0 0 14px; }
+.kp-rsvp-page .kp-rsvp-people .kp-rsvp-person { display: flex; align-items: center; gap: 12px; padding: 14px; min-height: 54px; margin: 8px 0; border: 1px solid #d9ddcf; border-radius: 9px; background: #fffdf9; font: 500 .92rem/1.4 Inter,sans-serif; color: #46563d; cursor: pointer; text-transform: none; letter-spacing: 0; }
+.kp-rsvp-page .kp-rsvp-person input[type="checkbox"] { width: 21px; height: 21px; min-height: 21px; flex-shrink: 0; margin: 0; padding: 0; accent-color: #606c4d; cursor: pointer; }
+.kp-rsvp-person span { flex: 1; overflow-wrap: anywhere; }
+.kp-rsvp-person > i { color: #606c4d; opacity: 0; }
+.kp-rsvp-person:has(input:checked) { background: #f0f3e8; border-color: #a9b899; }
+.kp-rsvp-person:has(input:checked) > i { opacity: 1; }
+.kp-rsvp-person:focus-within { outline: 2px solid #879574; outline-offset: 2px; }
+.kp-rsvp-people .kp-rsvp-selection-total { margin-top: 14px; color: #46563d; font-weight: 600; }
+.kp-rsvp-gift-link { display: flex; justify-content: center; margin-top: 18px; text-transform: none; letter-spacing: 0; padding: 16px; text-align: center; }
+.kp-gift-handoff { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; overflow-y: auto; background: #f8f5edeb; backdrop-filter: blur(9px); }
+.kp-gift-handoff-card { position: relative; width: min(100%, 560px); padding: clamp(28px, 6vw, 48px); border: 1px solid #e0ddce; border-radius: 24px; box-shadow: 0 24px 100px #454b3225; background: #fffdf8; text-align: center; animation: gift-card-in .6s ease-out both; }
+.kp-gift-handoff-icon { display: inline-block; font-size: 3.4rem; animation: gift-float 1.5s ease-in-out infinite; }
+.kp-gift-handoff-sparkle { display: inline-block; position: absolute; right: 23%; top: 30px; font-size: 1.7rem; animation: gift-sparkle 1.2s ease-in-out infinite alternate; }
+.kp-gift-handoff-card h2 { color: #46563d; font: 600 clamp(1.8rem,6vw,2.4rem)/1.2 'Cormorant Garamond',serif; margin: 24px 0 16px; }
+.kp-gift-handoff-card h2:focus { outline: none; }
+.kp-gift-handoff-card > p { color: #647050; font: 600 1rem/1.6 Inter,sans-serif; }
+.kp-gift-handoff-card > a { display: flex; justify-content: center; margin: 24px 0 14px; padding: 16px; text-transform: none; letter-spacing: 0; }
+.kp-gift-handoff-card > small { display: block; font: 400 .76rem/1.5 Inter,sans-serif; color: #747b66; }
+.kp-gift-handoff-card > button { border: 0; background: none; color: #69725b; text-decoration: underline; text-underline-offset: 3px; font: 400 .76rem Inter,sans-serif; padding: 16px 8px 0; cursor: pointer; }
+@keyframes gift-card-in { from { opacity: 0; transform: translateY(18px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes gift-float { 50% { transform: translateY(-6px) rotate(4deg); } }
+@keyframes gift-sparkle { from { opacity: .4; transform: scale(.8) rotate(-10deg); } to { opacity: 1; transform: scale(1.1) rotate(10deg); } }
+@media (prefers-reduced-motion: reduce) { .kp-gift-handoff-card, .kp-gift-handoff-icon, .kp-gift-handoff-sparkle { animation: none; } }

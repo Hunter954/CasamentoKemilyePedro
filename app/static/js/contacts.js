@@ -3,6 +3,7 @@
   const page = document.querySelector('[data-contacts-page]');
   if (!page) return;
   const find = selector => page.querySelector(selector);
+  let overviewVersion = 0;
   page.querySelectorAll('[data-name-editor]').forEach(editor => {
     const display = editor.querySelector('[data-name-display]');
     const name = editor.querySelector('[data-contact-name]');
@@ -62,10 +63,15 @@
         if (!response.ok || typeof data.name !== 'string') {
           throw new Error(data.error || 'Não foi possível salvar. Tente novamente.');
         }
+        overviewVersion += 1;
         name.textContent = data.name;
         input.value = data.name;
         const people = editor.querySelector('[data-contact-people]');
         if (people) people.textContent = `${data.people_count} ${data.people_count === 1 ? 'pessoa' : 'pessoas'}`;
+        const totalPeople = find('[data-contact-people-total]');
+        if (totalPeople && Number.isInteger(data.people_total)) totalPeople.textContent = data.people_total;
+        const responseLabel = editor.querySelector('[data-contact-response]');
+        if (responseLabel && data.rsvp_summary) responseLabel.textContent = data.rsvp_summary;
         const avatar = editor.querySelector('.contacts-avatar');
         if (avatar) avatar.textContent = Array.from(data.name)[0]?.toLocaleUpperCase('pt-BR') || '';
         edit.setAttribute('aria-label', `Editar nome de ${data.name}`);
@@ -138,9 +144,13 @@
   async function poll() {
     if (polling || document.hidden) return;
     polling = true;
+    const version = overviewVersion;
     try {
       const data = await getJson(page.dataset.statusUrl);
+      if (version !== overviewVersion) return;
       find('[data-contact-total]').textContent = data.total;
+      const totalPeople = find('[data-contact-people-total]');
+      if (totalPeople) totalPeople.textContent = data.people;
       find('[data-import-created]').textContent = data.created;
       find('[data-import-duplicates]').textContent = data.duplicates;
       if (data.latest !== lastEvent) {

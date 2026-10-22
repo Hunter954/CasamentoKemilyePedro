@@ -12,7 +12,7 @@ from app.services.whatsapp import normalize_whatsapp_phone
 from app.services.payment_status import apply_verified_payment
 from app.utils import format_phone
 from app.services.contact_import import contact_write_lock
-from app.services.invitations import record_invitation_response
+from app.services.invitations import record_invitation_response, selected_invitation_names
 
 public_bp = Blueprint('public', __name__)
 
@@ -148,14 +148,24 @@ def rsvp():
                 flash('Precisamos conferir os nomes deste convite. Entre em contato com o casal.', 'warning')
             else:
                 # The shared transaction lock serializes clicks and concurrent devices.
-                record_invitation_response(contact, attendance, message)
-                db.session.commit()
+                previous = contact.latest_rsvp
+                new_reply = not previous or not previous.confirmed_at
+                try:
+                    selected = selected_invitation_names(contact, request.form, attendance)
+                except ValueError as exc:
+                    flash(str(exc), 'warning')
+                else:
+                    record_invitation_response(contact, attendance, message, selected_names=selected)
+                    db.session.commit()
+                    if attendance == 'yes' and new_reply:
+                        session['rsvp_gift_transition'] = True
         return redirect(url_for('public.rsvp'), code=303)
     contact = _invitation_contact(session.get('rsvp_code'))
     if not contact:
         session.pop('rsvp_code', None)
     return render_template('public/rsvp.html', invitation=contact,
-                           response=contact.latest_rsvp if contact else None, csrf_token=csrf_token)
+                           response=contact.latest_rsvp if contact else None, csrf_token=csrf_token,
+                           gift_transition=session.pop('rsvp_gift_transition', False))
 
 
 @public_bp.route('/mural')

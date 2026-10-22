@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Confirmação de presença | Kemily & Pedro{% endblock %}
 {% block body_class %}wedding-home kp-inner-page kp-rsvp-page{% endblock %}
-{% block extra_head %}<meta name="referrer" content="no-referrer"><link rel="stylesheet" href="{{ url_for('static', filename='css/rsvp.css', v='20261022') }}">{% endblock %}
+{% block extra_head %}<meta name="referrer" content="no-referrer"><link rel="stylesheet" href="{{ url_for('static', filename='css/rsvp.css', v='partial-rsvp-20261022') }}">{% endblock %}
 {% block content %}
 <header class="kp-header kp-header-home">
  <div class="kp-shell kp-header-inner">
@@ -18,17 +18,24 @@
  <nav class="site-drawer-nav" aria-label="Menu mobile"><a data-menu-close href="{{ url_for('public.home') }}#inicio">Início</a><a data-menu-close href="{{ url_for('public.home') }}#locais">Localização</a><a data-menu-close href="{{ url_for('public.guestbook') }}">Mural de Recados</a><a data-menu-close href="{{ url_for('public.rsvp') }}">Confirmar Presença</a><a data-menu-close href="{{ url_for('public.gifts') }}">Lista de Presentes</a><a data-menu-close href="{{ url_for('public.home') }}#faq">Dúvidas Frequentes</a></nav>
 </aside><main class="kp-page kp-inner-main"><section class="kp-inner-hero"><div class="kp-inner-decor kp-inner-decor-left" data-parallax="0.12" aria-hidden="true"></div><div class="kp-inner-decor kp-inner-decor-right" data-parallax="0.17" aria-hidden="true"></div><div class="kp-inner-hero-text"><span class="kp-inner-eyebrow">KEMILY <i class="fa-regular fa-heart"></i> PEDRO</span><h1>Confirme sua presença</h1><div class="kp-home-divider"><span></span><i class="fa-regular fa-heart"></i><span></span></div><p>Nossa alegria será ainda maior com você ao nosso lado neste dia tão especial.</p></div></section>
 <section class="kp-inner-content kp-rsvp-section" aria-label="Seu convite">
-<div class="kp-form-panel kp-rsvp-panel" data-rsvp-panel>
+<div class="kp-form-panel kp-rsvp-panel" data-rsvp-panel{% if gift_transition and invitation and invitation.rsvp_status == 'yes' %} data-gift-transition{% endif %}>
 {% if invitation %}
   {% set status = invitation.rsvp_status %}
   <div class="kp-form-panel-head"><i class="fa-regular fa-heart" aria-hidden="true"></i><h2 tabindex="-1" data-rsvp-heading>{{ 'Presença confirmada!' if status == 'yes' else ('Resposta registrada' if status == 'no' else 'Seu convite') }}</h2><p>{{ 'Que alegria ter vocês conosco!' if status == 'yes' else ('Sentiremos a falta de vocês neste dia especial.' if status == 'no' else 'Que alegria compartilhar este momento com vocês!') }}</p></div>
   <div class="kp-rsvp-invitation"><span class="kp-inner-kicker">CONVIDADOS IDENTIFICADOS</span><h3>{{ invitation.invited_names|join(' & ') }}</h3><p class="kp-rsvp-total">Total: <strong>{{ invitation.people_count }} {{ 'pessoa' if invitation.people_count == 1 else 'pessoas' }}</strong></p></div>
   {% if status != 'pending' %}
-    <div class="kp-rsvp-result {{ 'is-declined' if status == 'no' else '' }}" role="status"><i class="fa-solid {{ 'fa-circle-check' if status == 'yes' else 'fa-envelope-open' }}" aria-hidden="true"></i><p><strong>{{ invitation.people_count }} {{ ('pessoa confirmada' if invitation.people_count == 1 else 'pessoas confirmadas') if status == 'yes' else ('pessoa não comparecerá' if invitation.people_count == 1 else 'pessoas não comparecerão') }}.</strong></p>{% if status == 'yes' %}<p>Nos vemos no dia 11 de dezembro de 2026! 💚</p>{% endif %}<small>Sua resposta já está salva. Para corrigir a presença, entre em contato com o casal.</small></div>
+    {% set confirmed_count = invitation.accepted_people if status == 'yes' else invitation.people_count %}
+    <div class="kp-rsvp-result {{ 'is-declined' if status == 'no' else '' }}" role="status"><i class="fa-solid {{ 'fa-circle-check' if status == 'yes' else 'fa-envelope-open' }}" aria-hidden="true"></i><p><strong>{{ confirmed_count }} {{ ('pessoa confirmada' if confirmed_count == 1 else 'pessoas confirmadas') if status == 'yes' else ('pessoa não comparecerá' if confirmed_count == 1 else 'pessoas não comparecerão') }}.</strong></p>{% if status == 'yes' %}<p>Quem vai: <strong>{{ invitation.accepted_names|join(' & ') }}</strong></p><p>Nos vemos no dia 11 de dezembro de 2026! 💚</p>{% endif %}<small>Sua resposta já está salva. Para corrigir a presença, entre em contato com o casal.</small></div>
+    {% if status == 'yes' %}<a class="kp-home-primary-btn kp-rsvp-gift-link" href="{{ url_for('public.gifts') }}">🎁 Conhecer nossa lista de presentes</a>
+    <div class="kp-gift-handoff" data-gift-handoff hidden role="dialog" aria-modal="true" aria-labelledby="gift-handoff-title" data-gifts-url="{{ url_for('public.gifts') }}">
+      <div class="kp-gift-handoff-card"><span class="kp-gift-handoff-icon" aria-hidden="true">🎁</span><span class="kp-gift-handoff-sparkle" aria-hidden="true">✨</span><h2 id="gift-handoff-title" tabindex="-1">✨ E agora... vamos para uma das partes mais especiais! 💖</h2><p>Preparamos nossa lista de presentes com muito amor!</p><a class="kp-home-primary-btn" href="{{ url_for('public.gifts') }}">Ver a lista de presentes</a><small data-gift-countdown role="status" aria-live="polite">Abrindo nossa lista em instantes…</small><button type="button" data-cancel-gift-transition>Continuar nesta página</button></div>
+    </div>{% endif %}
   {% elif invitation.people_count %}
     <form method="post" class="kp-elegant-form kp-rsvp-answer" data-rsvp-form>
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="reply">
-      <p class="kp-rsvp-question">Você confirma a presença de todos os convidados acima?</p>
+      <input type="hidden" name="selection_present" value="1">
+      <fieldset class="kp-rsvp-people"><legend>Quem vai comemorar com a gente?</legend><p>Todos já estão selecionados. Desmarque apenas quem não poderá ir.</p>{% for name in invitation.invited_names %}<label class="kp-rsvp-person"><input type="checkbox" name="attendee" value="{{ loop.index0 }}" checked><span>{{ name }}</span><i class="fa-solid fa-check" aria-hidden="true"></i></label>{% endfor %}<p class="kp-rsvp-selection-total" data-selection-total role="status" aria-live="polite">{{ invitation.people_count }} de {{ invitation.people_count }} {{ 'pessoa selecionada' if invitation.people_count == 1 else 'pessoas selecionadas' }}</p></fieldset>
+      <p class="kp-rsvp-question">Confirme a presença das pessoas selecionadas.</p>
       <details class="kp-rsvp-message"><summary>Deixar um recado para o casal (opcional)</summary><label class="sr-only" for="rsvp_message">Recado para o casal</label><textarea id="rsvp_message" name="message" rows="3" maxlength="3000" placeholder="Seu recado poderá aparecer no mural após aprovação do casal."></textarea></details>
       <button type="submit" name="attendance" value="yes" class="kp-home-primary-btn kp-rsvp-confirm">Confirmar presença <i class="fa-regular fa-heart" aria-hidden="true"></i></button>
       <button type="submit" name="attendance" value="no" class="kp-home-secondary-btn kp-rsvp-decline">Não poderemos comparecer</button>
@@ -47,4 +54,4 @@
   </form>
 {% endif %}
 </div></section><footer class="kp-home-footer"><div class="kp-section-art kp-art-floral-left kp-art-footer-left" data-parallax="0.05" aria-hidden="true"></div><div class="kp-section-art kp-art-floral-right kp-art-footer-right" data-parallax="0.08" aria-hidden="true"></div><div class="kp-home-footer-inner"><div class="kp-home-footer-monogram">K + P</div><p class="kp-home-footer-note">Feito com muito amor <i class="fa-regular fa-heart"></i></p></div></footer></main>{% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='js/rsvp.js', v='20261022') }}" defer></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/rsvp.js', v='partial-rsvp-20261022') }}" defer></script>{% endblock %}

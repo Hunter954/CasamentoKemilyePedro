@@ -165,7 +165,7 @@ class SmartRSVPTests(unittest.TestCase):
         contact.name = 'Kevin & Anita & BB'
         db.session.commit()
         rows, _, totals = invitation_report()
-        self.assertEqual((rows[0]['people'], totals['yes']), (3, 3))
+        self.assertEqual((rows[0]['people'], totals['yes'], totals['no']), (3, 1, 2))
         self.assertEqual((record.guests_count, record.guest_name), (1, 'Kevin'))
 
     def test_admin_report_separates_pending_accepted_declined_and_historical_records(self):

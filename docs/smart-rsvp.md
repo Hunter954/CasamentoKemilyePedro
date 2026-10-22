@@ -1,5 +1,9 @@
 # Confirmação por convite — 22/10/2026
 
+Atualização posterior: a seleção de pessoas, as contagens parciais e a
+transição para presentes estão em [partial-rsvp.md](partial-rsvp.md). As regras
+de grupo inteiro abaixo documentam a primeira versão do fluxo.
+
 O link `https://kemilyepedro.com.br/?codigo=%codigo%` usa o mesmo substituidor
 de campanhas e legendas já existente. O parâmetro é validado no servidor. Um
 redirecionamento 303 abre `/rsvp` e remove o código da URL. A credencial fica

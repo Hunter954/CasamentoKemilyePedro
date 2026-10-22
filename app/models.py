@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
@@ -82,6 +83,7 @@ class RSVP(TimestampMixin, db.Model):
     phone = db.Column(db.String(40), nullable=False)
     email = db.Column(db.String(120), nullable=True)
     guests_count = db.Column(db.Integer, default=1)
+    attendee_names = db.Column(db.Text, default='')
     attendance = db.Column(db.String(20), default='yes')
     message = db.Column(db.Text, default='')
     contact_id = db.Column(db.Integer, db.ForeignKey('contact_lead.id'), nullable=True)
@@ -89,6 +91,16 @@ class RSVP(TimestampMixin, db.Model):
     confirmed_at = db.Column(db.DateTime, nullable=True)
     guestbook_synced = db.Column(db.Boolean, nullable=False, default=False)
     contact = db.relationship('ContactLead', backref='rsvps')
+
+    @property
+    def selected_names(self):
+        if not self.attendee_names:
+            return None  # Historical whole-invitation response.
+        try:
+            names = json.loads(self.attendee_names)
+            return names if isinstance(names, list) and all(isinstance(name, str) for name in names) else None
+        except (ValueError, TypeError):
+            return None
 
 
 class GuestbookMessage(TimestampMixin, db.Model):
@@ -175,6 +187,28 @@ class ContactLead(TimestampMixin, db.Model):
     def rsvp_status(self):
         response = self.latest_rsvp
         return response.attendance if response and response.confirmed_at and response.attendance in ('yes', 'no') else 'pending'
+
+    @property
+    def accepted_people(self):
+        if self.rsvp_status != 'yes':
+            return 0
+        response = self.latest_rsvp
+        return min(self.people_count, len(response.selected_names)) if response.selected_names is not None else self.people_count
+
+    @property
+    def accepted_names(self):
+        if self.rsvp_status != 'yes':
+            return []
+        selected = self.latest_rsvp.selected_names
+        return selected if selected is not None else self.invited_names
+
+    @property
+    def rsvp_label(self):
+        if self.rsvp_status != 'yes':
+            return 'Não comparecerá' if self.rsvp_status == 'no' else 'Pendente'
+        count = self.accepted_people
+        label = 'Presença parcial' if count < self.people_count else 'Presença confirmada'
+        return f'{label} · {count} ' + ('presente' if count == 1 else 'presentes')
 
 
 class ContactImportSettings(TimestampMixin, db.Model):

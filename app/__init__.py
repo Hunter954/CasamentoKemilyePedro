@@ -96,6 +96,8 @@ def _sync_schema(app):
             db.session.execute(text("ALTER TABLE rsvp ADD COLUMN confirmation_code VARCHAR(20) DEFAULT ''"))
         if 'confirmed_at' not in rsvp_columns:
             db.session.execute(text("ALTER TABLE rsvp ADD COLUMN confirmed_at TIMESTAMP"))
+        if 'attendee_names' not in rsvp_columns:
+            db.session.execute(text("ALTER TABLE rsvp ADD COLUMN attendee_names TEXT DEFAULT ''"))
         db.session.commit()
 
     if inspector.has_table('whatsapp_campaign'):

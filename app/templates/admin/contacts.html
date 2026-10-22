@@ -1,5 +1,5 @@
 {% extends 'admin/base.html' %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/contacts.css', v='smart-rsvp-20261022') }}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/contacts.css', v='partial-rsvp-20261022') }}">{% endblock %}
 {% block admin_content %}
 <div class="contacts-page" data-contacts-page data-status-url="{{ url_for('admin.contact_import_status') }}" data-groups-url="{{ url_for('admin.contact_import_groups') }}">
   <header class="admin-header contacts-heading">
@@ -8,7 +8,8 @@
   </header>
 
   <div class="contacts-stats" aria-label="Resumo dos convidados">
-    <div><span>Total de convidados</span><strong data-contact-total>{{ overview.total }}</strong><small>Na lista do casamento</small></div>
+    <div><span>Convites cadastrados</span><strong data-contact-total>{{ overview.total }}</strong><small>Cadastros na lista do casamento</small></div>
+    <div><span>Pessoas convidadas</span><strong data-contact-people-total>{{ overview.people }}</strong><small>Prévia pelos nomes separados por &amp;</small></div>
     <div><span>Via WhatsApp</span><strong data-import-created>{{ overview.created }}</strong><small>Cadastros automáticos realizados</small></div>
     <div><span>Duplicados evitados</span><strong data-import-duplicates>{{ overview.duplicates }}</strong><small>Cadastros existentes preservados</small></div>
   </div>
@@ -74,7 +75,7 @@
           <div class="contacts-name-buttons"><button type="submit" class="btn btn-primary btn-sm" data-save-name>Salvar</button><button type="button" class="btn btn-secondary btn-sm" data-cancel-name>Cancelar</button></div>
         </form>
         <p class="contacts-name-feedback" data-name-feedback role="status" aria-live="polite"></p>
-        <small class="contacts-invitation-summary"><span data-contact-people>{{ item.people_count }} {{ 'pessoa' if item.people_count == 1 else 'pessoas' }}</span> · {{ {'yes':'Presença confirmada', 'no':'Não comparecerá', 'pending':'Pendente'}[item.rsvp_status] }}</small>
+        <small class="contacts-invitation-summary"><span data-contact-people>{{ item.people_count }} {{ 'pessoa' if item.people_count == 1 else 'pessoas' }}</span> · <span data-contact-response>{{ item.rsvp_label }}</span></small>
       </td>
       <td data-label="WhatsApp">{{ item.phone|phone_br }}</td>
       <td data-label="Código"><button type="button" class="contacts-copy" data-copy-code="{{ item.confirmation_code }}" aria-label="Copiar código de {{ item.name }}"><code>{{ item.confirmation_code }}</code><i class="fa-regular fa-copy" aria-hidden="true"></i></button></td>
@@ -91,4 +92,4 @@
   <script type="application/json" id="contacts-initial-data">{{ overview|tojson }}</script>
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='js/contacts.js', v='smart-rsvp-20261022') }}" defer></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/contacts.js', v='partial-rsvp-20261022') }}" defer></script>{% endblock %}

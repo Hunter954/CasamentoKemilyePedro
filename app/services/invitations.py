@@ -1,6 +1,7 @@
 """Shared, read-only invitation reporting. Historical RSVP snapshots stay intact."""
 from sqlalchemy.orm import selectinload
 from datetime import datetime
+import json
 from app import db
 from app.models import ContactLead, RSVP
 from app.guest_counts import invitation_names
@@ -8,7 +9,22 @@ from app.utils import format_phone
 from app.services.guestbook import attach_message
 
 
-def record_invitation_response(contact, attendance, message='', allow_change=False):
+def selected_invitation_names(contact, form, attendance):
+    if attendance == 'no':
+        return []
+    names = contact.invited_names
+    if form.get('selection_present') != '1':
+        return names  # Compatibility with an already-open older form.
+    positions = form.getlist('attendee')
+    if not positions:
+        raise ValueError('Marque pelo menos uma pessoa ou escolha “Não poderemos comparecer”.')
+    allowed = {str(index) for index in range(len(names))}
+    if len(positions) != len(set(positions)) or any(position not in allowed for position in positions):
+        raise ValueError('Escolha somente pessoas que aparecem neste convite.')
+    return [names[index] for index in sorted(int(position) for position in positions)]
+
+
+def record_invitation_response(contact, attendance, message='', allow_change=False, selected_names=None):
     """Caller holds contact_write_lock and commits. Public replies are idempotent."""
     existing = contact.latest_rsvp
     if existing and existing.confirmed_at and not allow_change:
@@ -17,7 +33,9 @@ def record_invitation_response(contact, attendance, message='', allow_change=Fal
     existing.guest_name = contact.name
     existing.phone = format_phone(contact.phone)
     existing.email = existing.email or (contact.email or '').strip()
-    existing.guests_count = contact.people_count if attendance == 'yes' else 0
+    selected_names = (contact.invited_names if selected_names is None else selected_names) if attendance == 'yes' else []
+    existing.guests_count = len(selected_names)
+    existing.attendee_names = json.dumps(selected_names, ensure_ascii=False)
     existing.attendance = attendance
     existing.message = message
     existing.confirmation_code = contact.confirmation_code
@@ -31,12 +49,16 @@ def record_invitation_response(contact, attendance, message='', allow_change=Fal
 def invitation_report():
     contacts = ContactLead.query.options(selectinload(ContactLead.rsvps)).order_by(ContactLead.created_at.desc(), ContactLead.id.desc()).all()
     rows = [{'contact': contact, 'rsvp': contact.latest_rsvp, 'status': contact.rsvp_status,
-             'people': contact.people_count} for contact in contacts]
+             'people': contact.people_count, 'accepted': contact.accepted_people,
+             'absent': (contact.people_count - contact.accepted_people if contact.rsvp_status == 'yes'
+                        else contact.people_count if contact.rsvp_status == 'no' else 0)} for contact in contacts]
     legacy = RSVP.query.filter(RSVP.contact_id.is_(None)).order_by(RSVP.created_at.desc(), RSVP.id.desc()).all()
     totals = {'invites': len(rows), 'people': sum(row['people'] for row in rows),
               'yes': 0, 'no': 0, 'pending': 0, 'responded_invites': 0}
     for row in rows:
-        totals[row['status']] += row['people']
+        totals['yes'] += row['accepted']
+        totals['no'] += row['absent']
+        totals['pending'] += row['people'] if row['status'] == 'pending' else 0
         totals['responded_invites'] += int(row['status'] != 'pending')
     # Unlinked manual records retain the originally recorded accepted quantity.
     for item in legacy:

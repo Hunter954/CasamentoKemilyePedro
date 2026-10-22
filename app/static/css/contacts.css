@@ -6,7 +6,7 @@
 .contacts-heading p, .contacts-section-head p { margin: .25rem 0 0; color: var(--kp-muted); line-height: 1.6; }
 .contacts-eyebrow { font-size: .74rem; letter-spacing: .075em; text-transform: uppercase; color: var(--kp-brand-dark); }
 .contacts-heading .btn { flex-shrink: 0; }
-.contacts-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+.contacts-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
 .contacts-stats > div { display: grid; gap: .35rem; background: var(--kp-surface); border: 1px solid var(--contact-line); padding: 1.3rem 1.5rem; border-radius: 18px; }
 .contacts-stats span { font-size: .82rem; font-weight: 600; color: var(--kp-muted); }
 .contacts-stats strong { font-size: 2.35rem; font-weight: 500; line-height: 1.15; color: var(--kp-brand-dark); font-family: 'Cormorant Garamond', serif; }
@@ -108,7 +108,7 @@
   .contacts-page input, .contacts-page select { font-size: 1rem; }
   .contacts-heading { align-items: flex-start; flex-direction: column; }
   .contacts-heading .btn { width: 100%; }
-  .contacts-stats { gap: .5rem; }
+  .contacts-stats { gap: .5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .contacts-stats > div { padding: .85rem .6rem; border-radius: 12px; }
   .contacts-stats span { font-size: .67rem; line-height: 1.5; }
   .contacts-stats strong { font-size: 2rem; }

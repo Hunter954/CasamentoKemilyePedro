@@ -41,7 +41,7 @@ from app.services.whatsapp import (
 )
 from app.services.contact_import import (clean_phone, contact_write_lock, find_duplicate,
                                          import_settings, import_overview)
-from app.services.invitations import invitation_report, record_invitation_response
+from app.services.invitations import invitation_report, record_invitation_response, selected_invitation_names
 from app.services.whatsapp import render_campaign_message
 
 admin_bp = Blueprint('admin', __name__)
@@ -265,9 +265,15 @@ def correct_invitation_response(contact_id):
             flash('Corrija os nomes deste convite antes de registrar a resposta.', 'warning')
         else:
             previous = contact.latest_rsvp
-            record_invitation_response(contact, attendance, previous.message if previous else '', allow_change=True)
-            db.session.commit()
-            flash('Resposta do convite atualizada.', 'success')
+            try:
+                selected = selected_invitation_names(contact, request.form, attendance)
+            except ValueError as exc:
+                flash(str(exc), 'warning')
+            else:
+                record_invitation_response(contact, attendance, previous.message if previous else '',
+                                           allow_change=True, selected_names=selected)
+                db.session.commit()
+                flash('Resposta do convite atualizada.', 'success')
     return redirect(url_for('admin.manage_rsvps'))
 
 
@@ -414,7 +420,8 @@ def update_contact_name(contact_id):
             db.session.rollback()
             current_app.logger.exception('Failed to update contact name')
             return jsonify(error='Não foi possível salvar. Tente novamente.'), 503
-    return jsonify(id=contact.id, name=contact.name, people_count=contact.people_count)
+    return jsonify(id=contact.id, name=contact.name, people_count=contact.people_count,
+                   people_total=import_overview()['people'], rsvp_summary=contact.rsvp_label)
 
 
 @admin_bp.route('/contatos/whatsapp/grupos')

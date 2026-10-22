@@ -45,7 +45,7 @@ class ContactNameTests(unittest.TestCase):
     def test_rename_preserves_other_fields_and_renders_editor(self):
         response = self.save('  João & Maria  ', phone='000', tag='changed', confirmation_code='000000')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json, {'id': self.contact.id, 'name': 'João & Maria', 'people_count': 2})
+        self.assertEqual(response.json, {'id': self.contact.id, 'name': 'João & Maria', 'people_count': 2, 'people_total': 2, 'rsvp_summary': 'Pendente'})
         db.session.expire_all()
         self.assertEqual((self.contact.name, self.contact.phone, self.contact.tag,
                           self.contact.confirmation_code, self.contact.email),
