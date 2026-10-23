@@ -1,4 +1,3 @@
-from random import shuffle
 import hmac
 import re
 import secrets
@@ -13,6 +12,7 @@ from app.services.payment_status import apply_verified_payment
 from app.utils import format_phone
 from app.services.contact_import import contact_write_lock
 from app.services.invitations import record_invitation_response, selected_invitation_names
+from app.services.gift_order import ordered_public_gifts
 
 public_bp = Blueprint('public', __name__)
 
@@ -176,8 +176,7 @@ def guestbook():
 
 @public_bp.route('/presentes')
 def gifts():
-    gifts = GiftItem.query.filter_by(active=True).all()
-    shuffle(gifts)
+    gifts = ordered_public_gifts()
     return render_template('public/gifts.html', gifts=gifts)
 
 

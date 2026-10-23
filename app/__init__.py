@@ -18,6 +18,12 @@ migrate = Migrate()
 def _sync_schema(app):
     inspector = inspect(db.engine)
 
+    if inspector.has_table('gift_item'):
+        columns = {column['name'] for column in inspector.get_columns('gift_item')}
+        if 'display_order' not in columns:
+            db.session.execute(text('ALTER TABLE gift_item ADD COLUMN display_order INTEGER'))
+            db.session.commit()
+
     for table in ('rsvp', 'gift_purchase'):
         if inspector.has_table(table):
             columns = {column['name'] for column in inspector.get_columns(table)}

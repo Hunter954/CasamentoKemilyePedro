@@ -121,6 +121,7 @@ class GiftItem(TimestampMixin, db.Model):
     image_url = db.Column(db.String(255), default='')
     active = db.Column(db.Boolean, default=True)
     allow_multiple_purchases = db.Column(db.Boolean, default=True)
+    display_order = db.Column(db.Integer, nullable=True)
 
     @property
     def approved_purchases_count(self):

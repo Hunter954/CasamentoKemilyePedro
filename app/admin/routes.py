@@ -43,6 +43,7 @@ from app.services.contact_import import (clean_phone, contact_write_lock, find_d
                                          import_settings, import_overview)
 from app.services.invitations import invitation_report, record_invitation_response, selected_invitation_names
 from app.services.whatsapp import render_campaign_message
+from app.services.gift_order import admin_gifts_query, move_gift
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -194,8 +195,28 @@ def manage_gifts():
         flash('Presente cadastrado com sucesso.', 'success')
         return redirect(url_for('admin.manage_gifts'))
 
-    gifts = GiftItem.query.order_by(GiftItem.created_at.desc()).all()
+    gifts = admin_gifts_query().all()
     return render_template('admin/gifts.html', gifts=gifts, edit_gift=edit_gift)
+
+
+@admin_bp.route('/presentes/<int:gift_id>/ordem', methods=['POST'])
+@login_required
+def update_gift_order(gift_id):
+    check_panel_csrf()
+    raw = request.form.get('position', '').strip()
+    if not raw.isascii() or not raw.isdecimal() or len(raw) > 5:
+        return jsonify(error='Informe uma posição válida, como 1, 2 ou 3.'), 422
+    try:
+        positions = move_gift(gift_id, int(raw))
+    except LookupError as exc:
+        return jsonify(error=str(exc)), 404
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 422
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Failed to save gift order')
+        return jsonify(error='Não foi possível salvar a ordem. Tente novamente.'), 503
+    return jsonify(positions=positions, position=positions[str(gift_id)], count=len(positions))
 
 
 @admin_bp.route('/presentes/<int:gift_id>/toggle', methods=['POST'])

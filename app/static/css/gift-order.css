@@ -1,0 +1,14 @@
+.gift-order { margin: 14px 0; }
+.gift-order [hidden] { display: none !important; }
+.gift-order-display { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: .82rem; }
+.gift-order-display > span { color: var(--kp-muted); }
+.gift-order-display strong { color: var(--kp-brand-dark); }
+.gift-order .btn { min-height: 40px; }
+.gift-order-form { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.gift-order-form label { display: grid; gap: 6px; color: var(--kp-brand-dark); font-size: .78rem; font-weight: 600; }
+.gift-order-form input[type="number"] { width: 110px; min-height: 44px; padding: 9px 12px; border: 1px solid var(--kp-line); border-radius: 8px; background: var(--kp-surface); color: var(--kp-text); font: 400 1rem Inter,sans-serif; }
+.gift-order-form > div { display: flex; gap: 8px; flex-wrap: wrap; }
+.gift-order-feedback { font-size: .76rem; line-height: 1.5; color: var(--kp-brand-dark); margin: 8px 0 0; }
+.gift-order-feedback:empty { display: none; }
+.gift-order-feedback.is-error { color: #96442f; }
+.gift-order button:disabled, .gift-order input:disabled { opacity: .6; cursor: wait; }

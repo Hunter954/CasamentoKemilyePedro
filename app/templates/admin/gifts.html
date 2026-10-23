@@ -1,4 +1,5 @@
 {% extends 'admin/base.html' %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/gift-order.css', v='20261022') }}">{% endblock %}
 {% block admin_content %}
 <div class="admin-header admin-header-row"><div>
   <h1>Presentes</h1>
@@ -52,13 +53,14 @@
     <div>
       <span class="admin-kicker">Lista cadastrada</span>
       <h2>Presentes do site</h2>
+      <p>Use “Editar ordem” para escolher a posição. Os outros presentes se ajustam automaticamente. Até a primeira alteração, a lista pública continua aleatória.</p>
     </div>
   </div>
 
   <div class="admin-gift-list">
     {% for gift in gifts %}
     {% set gift_image = media_url(gift.image_url) if gift.image_url and not gift.image_url.startswith('http') else gift.image_url %}
-    <article class="admin-gift-card {% if gift.is_sold_out %}is-sold-out{% endif %}">
+    <article class="admin-gift-card {% if gift.is_sold_out %}is-sold-out{% endif %}" data-gift-id="{{ gift.id }}">
       <div class="admin-gift-card-top">
         <div class="admin-gift-thumb" {% if gift_image %}style="background-image:url('{{ gift_image }}')"{% endif %}></div>
         <div class="admin-gift-main">
@@ -68,6 +70,12 @@
               <p>{{ gift.description or 'Sem descrição cadastrada.' }}</p>
             </div>
             <strong>{{ gift.price|currency_br }}</strong>
+          </div>
+          <div class="gift-order" data-gift-order data-position="{{ loop.index }}">
+            <div class="gift-order-display" data-order-display><span>Ordem: <strong data-order-value>{{ loop.index if gift.display_order is not none else 'Automática' }}</strong></span><button type="button" class="btn btn-soft btn-sm" data-order-edit aria-label="Editar ordem de {{ gift.title }}"><i class="fa-solid fa-pen" aria-hidden="true"></i> Editar ordem</button></div>
+            <form class="gift-order-form" method="post" action="{{ url_for('admin.update_gift_order', gift_id=gift.id) }}" data-order-form hidden>
+              <input type="hidden" name="csrf_token" value="{{ panel_csrf() }}"><label>Posição na lista<input type="number" name="position" min="1" max="{{ gifts|length }}" step="1" value="{{ loop.index }}" inputmode="numeric" required data-order-input></label><div><button class="btn btn-primary btn-sm" type="submit" data-order-save>Salvar</button><button class="btn btn-soft btn-sm" type="button" data-order-cancel>Cancelar</button></div>
+            </form><p class="gift-order-feedback" data-order-feedback role="status" aria-live="polite"></p>
           </div>
           <div class="admin-tag-row">
             <span class="admin-tag {{ 'tag-success' if gift.active else 'tag-neutral' }}">{{ 'Ativo' if gift.active else 'Inativo' }}</span>
@@ -92,4 +100,4 @@
 </div>
 {% endblock %}
 
-{% block scripts %}<script src="{{ url_for('static', filename='js/admin-panels.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/admin-panels.js') }}"></script><script src="{{ url_for('static', filename='js/gift-order.js', v='20261022') }}" defer></script>{% endblock %}
