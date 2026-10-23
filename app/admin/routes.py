@@ -195,7 +195,7 @@ def manage_gifts():
         flash('Presente cadastrado com sucesso.', 'success')
         return redirect(url_for('admin.manage_gifts'))
 
-    gifts = admin_gifts_query().all()
+    gifts = admin_gifts_query().options(selectinload(GiftItem.purchases)).all()
     return render_template('admin/gifts.html', gifts=gifts, edit_gift=edit_gift)
 
 

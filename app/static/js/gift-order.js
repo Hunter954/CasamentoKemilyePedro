@@ -1,5 +1,6 @@
 (() => {
   let saving = false;
+  let openEditor;
   document.querySelectorAll('[data-gift-order]').forEach(editor => {
     const display = editor.querySelector('[data-order-display]');
     const edit = editor.querySelector('[data-order-edit]');
@@ -14,6 +15,8 @@
       edit.focus({ preventScroll: true });
     };
     edit.addEventListener('click', () => {
+      if (openEditor && openEditor !== cancel) openEditor.click();
+      openEditor = cancel;
       input.value = editor.dataset.position;
       feedback.textContent = '';
       feedback.classList.remove('is-error');
@@ -23,6 +26,9 @@
       input.select();
     });
     cancel.addEventListener('click', () => { if (!saving) { feedback.textContent = ''; close(); } });
+    document.addEventListener('click', event => {
+      if (!saving && !form.hidden && !editor.contains(event.target)) { form.hidden = true; display.hidden = false; }
+    });
     input.addEventListener('keydown', event => {
       if (event.key === 'Escape' && !saving) { event.preventDefault(); cancel.click(); }
     });
@@ -54,6 +60,7 @@
           const row = card.querySelector('[data-gift-order]');
           if (!row || !Number.isInteger(position)) return;
           row.dataset.position = position;
+          card.dataset.sitePosition = position;
           row.querySelector('[data-order-value]').textContent = position;
           const rowForm = row.querySelector('[data-order-form]');
           if (rowForm.hidden) row.querySelector('[data-order-input]').value = position;
@@ -61,6 +68,7 @@
         });
         feedback.textContent = 'Ordem salva. Os outros presentes foram ajustados.';
         saved = true;
+        document.dispatchEvent(new CustomEvent('gift-order:saved', { detail: data }));
       } catch (error) {
         feedback.classList.add('is-error');
         feedback.textContent = error.message || 'Não foi possível salvar. Tente novamente.';
