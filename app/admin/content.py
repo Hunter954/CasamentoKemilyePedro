@@ -81,3 +81,27 @@ def delete_faq(faq_id):
     db.session.commit()
     flash('Pergunta excluída.', 'success')
     return redirect(url_for('admin_content.faqs'))
+
+
+@content_bp.route('/perguntas-frequentes/<int:faq_id>/acao', methods=['POST'])
+@login_required
+def faq_action(faq_id):
+    check_panel_csrf()
+    item = db.get_or_404(FAQ, faq_id)
+    action = request.form.get('action')
+    if action == 'toggle':
+        item.active = not item.active
+    elif action in ('up', 'down'):
+        items = FAQ.query.order_by(FAQ.position, FAQ.id).with_for_update().all()
+        index = items.index(item)
+        target = index + (-1 if action == 'up' else 1)
+        if 0 <= target < len(items):
+            items[index], items[target] = items[target], items[index]
+            for position, row in enumerate(items):
+                row.position = position
+    else:
+        from flask import abort
+        abort(400)
+    db.session.commit()
+    flash('Perguntas atualizadas no site.', 'success')
+    return redirect(url_for('admin_content.faqs'))

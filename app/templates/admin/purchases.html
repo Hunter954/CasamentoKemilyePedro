@@ -1,23 +1,17 @@
 {% extends 'admin/base.html' %}
+{% from 'admin/_filters.html' import filters %}
 {% block admin_content %}
-<div class="admin-header"><h1>Compras e pagamentos</h1><p>Dados completos dos presentes recebidos e opção para limpar compras de teste.</p></div>
-<div class="section-card"><div class="table-wrap"><table><thead><tr><th>Comprador</th><th>Presente</th><th>Valor</th><th>E-mail</th><th>Telefone</th><th>Presença</th><th>Recado</th><th>Status</th><th>Ações</th></tr></thead><tbody>
-{% for item in purchases %}
-<tr>
-  <td>{{ item.buyer_name }}</td>
-  <td>{{ item.gift.title if item.gift else '-' }}</td>
-  <td>{{ item.amount|currency_br }}</td>
-  <td>{{ item.buyer_email }}</td>
-  <td>{{ item.buyer_phone|phone_br }}</td>
-  <td>{{ 'Sim' if item.confirmed_presence else 'Não' }}</td>
-  <td>{{ item.message }}</td>
-  <td>{{ item.status }}</td>
-  <td>
-    <form method="post" action="{{ url_for('admin.delete_purchase', purchase_id=item.id) }}" onsubmit="return confirm('Deseja realmente excluir esta compra?');">
-      <button class="btn btn-soft btn-danger-outline" type="submit">Excluir</button>
-    </form>
-  </td>
-</tr>
-{% else %}<tr><td colspan="9">Nenhuma compra ainda.</td></tr>{% endfor %}
-</tbody></table></div></div>
+{% set paid = purchases|selectattr('status','equalto','approved')|list %}
+{% set waiting = purchases|selectattr('status','in',['pending','in_process','authorized'])|list %}
+{% set labels = {'approved':'Pago','pending':'Aguardando pagamento','in_process':'Em análise','authorized':'Autorizado','rejected':'Recusado','cancelled':'Cancelado','refunded':'Reembolsado','charged_back':'Contestação'} %}
+<div class="admin-header"><span class="admin-kicker">Presentes e contribuições</span><h1>Compras e pagamentos</h1><p>Acompanhe os presentes recebidos, encontre pagamentos e consulte os detalhes de cada compra.</p></div>
+<div class="stats-grid"><div class="stat-card"><span>Total recebido</span><strong>{{ paid|sum(attribute='amount')|currency_br }}</strong><small>Apenas pagamentos aprovados</small></div><div class="stat-card"><span>Compras pagas</span><strong>{{ paid|length }}</strong><small>Presentes recebidos</small></div><div class="stat-card"><span>Aguardando pagamento</span><strong>{{ waiting|length }}</strong><small>{{ waiting|sum(attribute='amount')|currency_br }} em aberto</small></div><div class="stat-card"><span>Compras registradas</span><strong>{{ purchases|length }}</strong><small>Todos os status</small></div></div>
+<div class="section-card ux-panel ux-table" data-filter-panel data-filter-money data-csv-headers='["Compra","Comprador","Presente","Valor","Status","Data","E-mail","Telefone","ID pagamento"]'>
+{{ filters(statuses=[('approved','Pago'),('pending','Aguardando pagamento'),('in_process','Em análise'),('authorized','Autorizado'),('rejected','Recusado'),('cancelled','Cancelado'),('refunded','Reembolsado'),('charged_back','Contestação')], dates=true, money=true, export=true, name='compras') }}
+<p class="ux-muted">O valor da lista filtrada inclui todos os status selecionados. Consulte “Total recebido” para o montante pago.</p>
+<div class="table-wrap"><table><thead><tr><th>Compra / comprador</th><th>Presente</th><th>Valor</th><th>Pagamento</th><th>Data</th><th>Detalhes</th></tr></thead><tbody data-filter-list>
+{% for item in purchases %}<tr data-filter-row data-name="{{ item.buyer_name }}" data-status="{{ item.status }}" data-date="{{ item.created_at.isoformat() if item.created_at else '' }}" data-amount="{{ item.amount }}" data-search="{{ item.id }} {{ item.buyer_name }} {{ item.buyer_email }} {{ item.buyer_phone }} {{ item.gift.title if item.gift else '' }} {{ item.mercado_pago_payment_id }} {{ item.message }}" data-csv='{{ [item.id,item.buyer_name,item.gift.title if item.gift else "Presente removido",item.amount,labels.get(item.status,item.status),item.created_at.strftime("%d/%m/%Y %H:%M") if item.created_at else "",item.buyer_email,item.buyer_phone,item.mercado_pago_payment_id]|tojson }}'>
+<td><strong>{{ item.buyer_name }}</strong><small>Compra #{{ item.id }}</small></td><td>{{ item.gift.title if item.gift else 'Presente removido' }}</td><td class="ux-money">{{ item.amount|currency_br }}</td><td><span class="admin-tag {{ 'tag-success' if item.status == 'approved' else 'tag-warning' if item.status in ['pending','in_process','authorized'] else 'tag-neutral' }}">{{ labels.get(item.status,item.status) }}</span></td><td>{{ item.created_at.strftime('%d/%m/%Y') if item.created_at else '—' }}<small>{{ item.created_at.strftime('%H:%M') if item.created_at else '' }}</small></td>
+<td><details><summary>Ver compra</summary><div class="ux-detail"><p><strong>Contato</strong><br><a href="mailto:{{ item.buyer_email }}">{{ item.buyer_email }}</a><br>{{ item.buyer_phone|phone_br }}</p><p><strong>Presença informada na compra:</strong> {{ 'Sim' if item.confirmed_presence else 'Não' }}</p><p><strong>Recado:</strong> {{ item.message or 'Sem recado' }}</p><p><strong>ID do pagamento:</strong> {{ item.mercado_pago_payment_id or 'Ainda não informado' }}</p>{% if item.status != 'approved' %}<form method="post" action="{{ url_for('admin.delete_purchase', purchase_id=item.id) }}" onsubmit="return confirm('Excluir este registro de compra? Essa ação não cancela nem reembolsa o pagamento no Mercado Pago.');"><input type="hidden" name="csrf_token" value="{{ panel_csrf() }}"><button class="btn btn-danger-outline btn-sm">Excluir registro</button></form>{% endif %}</div></details></td></tr>
+{% endfor %}</tbody></table></div></div>
 {% endblock %}

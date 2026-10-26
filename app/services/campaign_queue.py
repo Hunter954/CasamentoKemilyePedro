@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta
 from sqlalchemy import text, func
 from app import db
+from app.services.campaign_audience import audience_contacts, matches_audience
 from app.models import CampaignDelivery, CampaignJob, WhatsAppCampaign, WhatsAppDispatch, ContactLead, SiteSettings
 from app.services.whatsapp import (normalize_whatsapp_phone, render_campaign_message, to_public_media_url,
                                    get_instance_status, _post_send_text, _post_send_image, serialize_payload)
@@ -59,7 +60,7 @@ def queue_campaign(campaign, site_url, scope='unsent'):
         image = to_public_media_url(campaign.image_path or '', site_url=site_url)
         count = 0
         existing_dispatches = {dispatch.contact_id: dispatch for dispatch in WhatsAppDispatch.query.filter_by(campaign_id=campaign.id).all()}
-        for contact in ContactLead.query.order_by(ContactLead.id).all():
+        for contact in audience_contacts(campaign, retry=scope == 'errors'):
             if scope == 'unsent' and campaign.target_tag != 'todos' and (contact.tag or '').strip().lower() != campaign.target_tag.strip().lower():
                 continue
             dispatch = existing_dispatches.get(contact.id)
@@ -104,14 +105,14 @@ def queue_overview():
     interval = delivery_settings().interval_seconds
     overview = {}
     for cid, status, count in groups:
-        data = overview.setdefault(cid, {'total': 0, 'sent': 0, 'queued': 0, 'sending': 0, 'error': 0, 'uncertain': 0})
+        data = overview.setdefault(cid, {'total': 0, 'sent': 0, 'queued': 0, 'sending': 0, 'error': 0, 'uncertain': 0, 'cancelled': 0})
         data['total'] += count
         if status in data:
             data[status] += count
     for cid, data in overview.items():
         data['remaining'] = data['queued'] + data['sending']
         data['minutes'] = (data['remaining'] * interval + 59) // 60
-        data['percent'] = round(100 * data['sent'] / data['total']) if data['total'] else 0
+        data['percent'] = round(100 * (data['sent'] + data['cancelled']) / data['total']) if data['total'] else 0
         data['paused'] = paused.get(cid, True)
     return overview
 
@@ -139,6 +140,15 @@ def process_next(now=None):
                    .order_by(CampaignJob.id).first())
             if job is None:
                 return {'state': 'idle'}
+            # A guest may reply while a reminder is waiting. Never send it then.
+            if job.dispatch.campaign.target_rsvp == 'pending' and not matches_audience(job.dispatch.campaign, job.dispatch.contact):
+                for part in job.dispatch.jobs:
+                    if part.status == 'queued':
+                        part.status = 'cancelled'
+                job.dispatch.status = 'cancelled'
+                job.dispatch.error_message = 'Lembrete cancelado: o contato já respondeu ou saiu do público.'
+                db.session.commit()
+                return {'state': 'cancelled'}
             if not get_instance_status().get('connected'):
                 return {'state': 'disconnected'}
             job.status, job.started_at = 'sending', now

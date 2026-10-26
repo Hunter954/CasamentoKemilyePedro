@@ -1,43 +1,13 @@
 {% extends 'admin/base.html' %}
+{% from 'admin/_filters.html' import filters %}
 {% block admin_content %}
-<div class="admin-header">
-  <h1>Mural de recados</h1>
-  <p>Aprove, desaprove e exclua mensagens com mais organização.</p>
-</div>
-
-<div class="section-card">
-  <div class="admin-section-head">
-    <div>
-      <span class="admin-kicker">Moderação</span>
-      <h2>Recados recebidos</h2>
-    </div>
-  </div>
-
-  <div class="admin-message-list">
-    {% for item in messages %}
-    <article class="admin-message-card">
-      <div class="admin-message-head">
-        <div>
-          <strong>{{ item.author_name }}</strong>
-          <small>{{ item.created_at.strftime('%d/%m/%Y às %H:%M') if item.created_at else '' }}</small>
-        </div>
-        <span class="admin-tag {{ 'tag-success' if item.approved else 'tag-warning' }}">{{ 'Aprovado' if item.approved else 'Pendente' }}</span>
-      </div>
-      <p>{{ item.message }}</p>
-      <div class="admin-card-actions">
-        {% if item.approved %}
-        <a href="{{ url_for('admin.disapprove_message', message_id=item.id) }}" class="btn btn-soft">Desaprovar</a>
-        {% else %}
-        <a href="{{ url_for('admin.approve_message', message_id=item.id) }}" class="btn btn-soft">Aprovar</a>
-        {% endif %}
-        <form method="post" action="{{ url_for('admin.delete_message', message_id=item.id) }}" onsubmit="return confirm('Deseja realmente excluir este recado?');">
-          <button class="btn btn-soft btn-danger-outline" type="submit">Excluir</button>
-        </form>
-      </div>
-    </article>
-    {% else %}
-    <div class="empty-admin-state">Nenhum recado ainda.</div>
-    {% endfor %}
-  </div>
-</div>
+{% set approved = messages|selectattr('approved')|list %}
+<div class="admin-header admin-header-row"><div><span class="admin-kicker">Palavras que ficam</span><h1>Mural de recados</h1><p>Revise cada mensagem e escolha o carinho que aparece no livro de memórias do casal.</p></div><a class="btn btn-soft" href="{{ url_for('public.guestbook') }}" target="_blank" rel="noopener">Ver mural público ↗</a></div>
+<div class="stats-grid"><div class="stat-card"><span>Recados recebidos</span><strong>{{ messages|length }}</strong></div><div class="stat-card"><span>Aguardando revisão</span><strong>{{ messages|length - approved|length }}</strong></div><div class="stat-card"><span>Publicados no mural</span><strong>{{ approved|length }}</strong></div></div>
+<div class="section-card ux-panel" data-filter-panel>
+{{ filters(statuses=[('pending','Aguardando revisão'),('approved','Publicados')],dates=true) }}
+<div class="ux-message-grid" data-filter-list>{% for item in messages %}
+<article class="admin-message-card" data-filter-row data-name="{{ item.author_name }}" data-status="{{ 'approved' if item.approved else 'pending' }}" data-date="{{ item.created_at.isoformat() if item.created_at else '' }}" data-search="{{ item.author_name }} {{ item.message }}">
+<div class="admin-message-head"><div class="ux-author"><span class="ux-message-avatar" aria-hidden="true">{{ item.author_name[:1]|upper }}</span><div><strong>{{ item.author_name }}</strong><small>{{ item.created_at.strftime('%d/%m/%Y às %H:%M') if item.created_at else '' }}</small></div></div><span class="admin-tag {{ 'tag-success' if item.approved else 'tag-warning' }}">{{ 'Publicado' if item.approved else 'Aguardando revisão' }}</span></div>
+<p>{{ item.message }}</p><div class="admin-card-actions"><form method="post" action="{{ url_for('admin.disapprove_message' if item.approved else 'admin.approve_message', message_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ panel_csrf() }}"><button class="btn {{ 'btn-soft' if item.approved else 'btn-primary' }}">{{ 'Retirar do mural' if item.approved else 'Aprovar e publicar' }}</button></form><form method="post" action="{{ url_for('admin.delete_message', message_id=item.id) }}" onsubmit="return confirm('Excluir este recado definitivamente?');"><input type="hidden" name="csrf_token" value="{{ panel_csrf() }}"><button class="btn btn-danger-outline">Excluir</button></form></div></article>{% endfor %}</div></div>
 {% endblock %}

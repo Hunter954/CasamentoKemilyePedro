@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block body_class %}wedding-home kp-inner-page{% endblock %}
+{% block body_class %}wedding-home kp-inner-page kp-guestbook-page{% endblock %}
 {% block content %}
 <header class="kp-header kp-header-home">
  <div class="kp-shell kp-header-inner">
-  <a href="{{ url_for('public.home') }}#inicio" class="kp-monogram" aria-label="Kemily e Pedro">K + P</a>
+  <a href="{{ url_for('public.home') }}#inicio" class="kp-monogram" aria-label="Kemily e Pedro">K <span class="kp-monogram-heart" aria-hidden="true">♥</span> P</a>
   <button class="kp-mobile-menu" type="button" aria-label="Abrir menu" aria-expanded="false" data-menu-toggle><i class="fa-solid fa-bars"></i></button>
   <nav class="kp-nav" aria-label="Navegação principal">
    <a href="{{ url_for('public.home') }}#inicio">INÍCIO</a><a href="{{ url_for('public.home') }}#locais">LOCALIZAÇÃO</a><a href="{{ url_for('public.guestbook') }}">MURAL DE RECADOS</a><a href="{{ url_for('public.rsvp') }}">CONFIRMAR PRESENÇA</a><a href="{{ url_for('public.gifts') }}">PRESENTES</a><a href="{{ url_for('public.home') }}#faq">DÚVIDAS FREQUENTES</a>
@@ -12,17 +12,18 @@
 </header>
 <div class="drawer-backdrop" data-menu-close></div>
 <aside class="site-drawer kp-drawer" id="site-drawer" aria-hidden="true">
- <div class="site-drawer-head"><strong>K + P</strong><button type="button" class="menu-toggle drawer-close" aria-label="Fechar menu" data-menu-close><i class="fa-solid fa-xmark"></i></button></div>
+ <div class="site-drawer-head"><strong>K <span class="kp-monogram-heart" aria-hidden="true">♥</span> P</strong><button type="button" class="menu-toggle drawer-close" aria-label="Fechar menu" data-menu-close><i class="fa-solid fa-xmark"></i></button></div>
  <nav class="site-drawer-nav" aria-label="Menu mobile"><a data-menu-close href="{{ url_for('public.home') }}#inicio">Início</a><a data-menu-close href="{{ url_for('public.home') }}#locais">Localização</a><a data-menu-close href="{{ url_for('public.guestbook') }}">Mural de Recados</a><a data-menu-close href="{{ url_for('public.rsvp') }}">Confirmar Presença</a><a data-menu-close href="{{ url_for('public.gifts') }}">Lista de Presentes</a><a data-menu-close href="{{ url_for('public.home') }}#faq">Dúvidas Frequentes</a></nav>
 </aside><main class="kp-page kp-inner-main"><section class="kp-inner-hero"><div class="kp-inner-decor kp-inner-decor-left" data-parallax="0.12" aria-hidden="true"></div><div class="kp-inner-decor kp-inner-decor-right" data-parallax="0.17" aria-hidden="true"></div><div class="kp-inner-hero-text"><span class="kp-inner-eyebrow">KEMILY <i class="fa-regular fa-heart"></i> PEDRO</span><h1>Mural de Recados</h1><div class="kp-home-divider"><span></span><i class="fa-regular fa-heart"></i><span></span></div><p>Palavras cheias de afeto para acompanhar o começo da nossa nova história.</p></div></section>
 <section class="kp-inner-content kp-mural-section">
-  <div class="kp-mural-intro"><span class="kp-inner-kicker">NOSSO LIVRO DE MEMÓRIAS</span><h2>Carinho em cada palavra</h2><p>Recados enviados junto aos presentes e às confirmações de presença.</p><span class="kp-mural-count">{{ pagination.total }} {{ 'recado de carinho' if pagination.total == 1 else 'recados de carinho' }}</span></div>
+  <div class="kp-mural-intro"><div><span class="kp-inner-kicker">NOSSO LIVRO DE MEMÓRIAS</span><h2>Carinho em cada palavra</h2><p>Recados enviados junto aos presentes e às confirmações de presença.</p></div><span class="kp-mural-count">{{ pagination.total }} {{ 'recado de carinho' if pagination.total == 1 else 'recados de carinho' }}</span></div>
   <div class="kp-mural-grid">
   {% for card in messages %}
-    <article class="kp-mural-card"><i class="fa-regular fa-heart kp-mural-heart" aria-hidden="true"></i><p>{{ card.item.message }}</p><div class="kp-mural-card-signature"><h3>{{ card.item.author_name }}</h3><small>{{ card.posted_at }}</small></div></article>
+    <article class="kp-mural-card"><i class="fa-regular fa-heart kp-mural-heart" aria-hidden="true"></i><p>{{ card.item.message }}</p><div class="kp-mural-card-signature"><span class="kp-mural-avatar" aria-hidden="true">{{ card.item.author_name[:1]|upper }}</span><div><h3>{{ card.item.author_name }}</h3><small>{{ card.posted_at }}</small></div></div></article>
   {% else %}
     <div class="kp-mural-empty"><i class="fa-regular fa-heart" aria-hidden="true"></i><h3>Nossas memórias começam aqui</h3><p>Os recados aprovados dos presentes e das confirmações aparecerão neste espaço.</p></div>
   {% endfor %}
   </div>
+  <div class="kp-mural-cta"><p>Seu carinho também pode fazer parte da nossa história.</p><a href="{{ url_for('public.rsvp') }}">Confirmar presença e deixar um recado</a></div>
   {% if pagination.pages > 1 %}<nav class="kp-mural-pagination" aria-label="Páginas do mural">{% if pagination.has_prev %}<a href="{{ url_for('public.guestbook', page=pagination.prev_num) }}">← Anterior</a>{% endif %}<span>{{ pagination.page }} de {{ pagination.pages }}</span>{% if pagination.has_next %}<a href="{{ url_for('public.guestbook', page=pagination.next_num) }}">Próxima →</a>{% endif %}</nav>{% endif %}
-</section><footer class="kp-home-footer"><div class="kp-section-art kp-art-floral-left kp-art-footer-left" data-parallax="0.05" aria-hidden="true"></div><div class="kp-section-art kp-art-floral-right kp-art-footer-right" data-parallax="0.08" aria-hidden="true"></div><div class="kp-home-footer-inner"><div class="kp-home-footer-monogram">K + P</div><p class="kp-home-footer-note">Feito com muito amor <i class="fa-regular fa-heart"></i></p></div></footer></main>{% endblock %}
+</section><footer class="kp-home-footer"><div class="kp-section-art kp-art-floral-left kp-art-footer-left" data-parallax="0.05" aria-hidden="true"></div><div class="kp-section-art kp-art-floral-right kp-art-footer-right" data-parallax="0.08" aria-hidden="true"></div><div class="kp-home-footer-inner"><div class="kp-home-footer-monogram">K <span class="kp-monogram-heart" aria-hidden="true">♥</span> P</div><p class="kp-home-footer-note">Feito com muito amor <i class="fa-regular fa-heart"></i></p></div></footer></main>{% endblock %}

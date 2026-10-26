@@ -42,6 +42,9 @@ def _sync_schema(app):
 
     if inspector.has_table('whatsapp_campaign'):
         columns = {column['name'] for column in inspector.get_columns('whatsapp_campaign')}
+        if 'target_rsvp' not in columns:
+            db.session.execute(text("ALTER TABLE whatsapp_campaign ADD COLUMN target_rsvp VARCHAR(20) NOT NULL DEFAULT 'all'"))
+            db.session.commit()
         if 'queue_paused' not in columns:
             db.session.execute(text('ALTER TABLE whatsapp_campaign ADD COLUMN queue_paused BOOLEAN NOT NULL DEFAULT FALSE'))
             db.session.commit()

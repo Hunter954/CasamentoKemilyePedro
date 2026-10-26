@@ -44,8 +44,16 @@ from app.services.contact_import import (clean_phone, contact_write_lock, find_d
 from app.services.invitations import invitation_report, record_invitation_response, selected_invitation_names
 from app.services.whatsapp import render_campaign_message
 from app.services.gift_order import admin_gifts_query, move_gift
+from app.services.campaign_audience import AUDIENCES, audience_contacts
 
 admin_bp = Blueprint('admin', __name__)
+
+
+def _campaign_target_rsvp():
+    value = request.form.get('target_rsvp', 'all')
+    if value not in AUDIENCES:
+        abort(400, description='Selecione um público válido para a campanha.')
+    return value
 
 
 def _to_float(value):
@@ -269,7 +277,7 @@ def delete_gift(gift_id):
 def manage_rsvps():
     ensure_all_contact_codes(commit=True)
     rows, legacy_rsvps, totals = invitation_report()
-    return render_template('admin/rsvps.html', rows=rows, legacy_rsvps=legacy_rsvps, totals=totals)
+    return render_template('admin/rsvps.html', rows=rows, legacy_rsvps=legacy_rsvps, totals=totals, tags=_tag_options())
 
 
 @admin_bp.route('/confirmacoes/<int:contact_id>/resposta', methods=['POST'])
@@ -305,9 +313,12 @@ def manage_guestbook():
     return render_template('admin/guestbook.html', messages=messages)
 
 
-@admin_bp.route('/mural/<int:message_id>/aprovar')
+@admin_bp.route('/mural/<int:message_id>/aprovar', methods=['GET', 'POST'])
 @login_required
 def approve_message(message_id):
+    if request.method != 'POST':
+        return redirect(url_for('admin.manage_guestbook'))
+    check_panel_csrf()
     message = GuestbookMessage.query.get_or_404(message_id)
     message.approved = True
     db.session.commit()
@@ -315,9 +326,12 @@ def approve_message(message_id):
     return redirect(url_for('admin.manage_guestbook'))
 
 
-@admin_bp.route('/mural/<int:message_id>/desaprovar')
+@admin_bp.route('/mural/<int:message_id>/desaprovar', methods=['GET', 'POST'])
 @login_required
 def disapprove_message(message_id):
+    if request.method != 'POST':
+        return redirect(url_for('admin.manage_guestbook'))
+    check_panel_csrf()
     message = GuestbookMessage.query.get_or_404(message_id)
     message.approved = False
     db.session.commit()
@@ -328,6 +342,7 @@ def disapprove_message(message_id):
 @admin_bp.route('/mural/<int:message_id>/excluir', methods=['POST'])
 @login_required
 def delete_message(message_id):
+    check_panel_csrf()
     message = GuestbookMessage.query.get_or_404(message_id)
     db.session.delete(message)
     db.session.commit()
@@ -345,6 +360,7 @@ def purchases():
 @admin_bp.route('/compras/<int:purchase_id>/excluir', methods=['POST'])
 @login_required
 def delete_purchase(purchase_id):
+    check_panel_csrf()
     purchase = GiftPurchase.query.get_or_404(purchase_id)
     db.session.delete(purchase)
     db.session.commit()
@@ -619,6 +635,7 @@ def campaigns():
             active=True,
             target_tag=request.form.get('target_tag', 'todos').strip() or 'todos',
             image_path=image_path,
+            target_rsvp=_campaign_target_rsvp(),
         )
         db.session.add(campaign)
         db.session.commit()
@@ -640,7 +657,7 @@ def campaigns():
 
     campaign_metrics = {}
     for item in campaigns:
-        eligible_contacts = [c for c in contacts if item.target_tag == 'todos' or (c.tag or '').strip().lower() == item.target_tag.strip().lower()]
+        eligible_contacts = audience_contacts(item)
         eligible_ids = {c.id for c in eligible_contacts}
         relevant_dispatches = [d for d in item.dispatches if d.contact_id in eligible_ids]
         delivered_count = len([d for d in relevant_dispatches if d.status in {'sent', 'delivered', 'delivery', 'received', 'read'}])
@@ -677,6 +694,8 @@ def campaigns():
         whatsapp_error=whatsapp_error,
         delivery=delivery_settings(),
         queue_metrics=queue_overview(),
+        audiences=AUDIENCES,
+        pending_contacts=sum(c.rsvp_status == 'pending' for c in contacts),
         editing_campaign=db.get_or_404(WhatsAppCampaign, request.args.get('edit', type=int)) if request.args.get('edit', type=int) else None,
     )
 
@@ -793,6 +812,7 @@ def edit_campaign(campaign_id):
                 raise ValueError('Esta campanha já tem mensagens na fila. Conclua os envios ou crie uma nova campanha para outro conteúdo.')
             campaign.title, campaign.message = title, message
             campaign.target_tag = request.form.get('target_tag', 'todos').strip() or 'todos'
+            campaign.target_rsvp = _campaign_target_rsvp()
             image = request.files.get('image')
             if image and image.filename:
                 campaign.image_path = save_upload(image)
@@ -801,3 +821,27 @@ def edit_campaign(campaign_id):
     except ValueError as exc:
         flash(str(exc), 'warning')
     return redirect(url_for('admin.campaigns'))
+
+
+@admin_bp.route('/campanhas/<int:campaign_id>/publico')
+@login_required
+def campaign_audience(campaign_id):
+    campaign = db.get_or_404(WhatsAppCampaign, campaign_id)
+    eligible = audience_contacts(campaign)
+    processed = {d.contact_id for d in campaign.dispatches}
+    return render_template('admin/campaign_audience.html', campaign=campaign, eligible=eligible,
+                           recipients=[c for c in eligible if c.id not in processed], audiences=AUDIENCES)
+
+
+@admin_bp.route('/campanhas/<int:campaign_id>/lembrete', methods=['POST'])
+@login_required
+def duplicate_campaign(campaign_id):
+    check_panel_csrf()
+    original = db.get_or_404(WhatsAppCampaign, campaign_id)
+    reminder = WhatsAppCampaign(title=('Lembrete - ' + original.title)[:180], message=original.message,
+                               image_path=original.image_path, target_tag=original.target_tag,
+                               target_rsvp='pending', active=True, queue_paused=False)
+    db.session.add(reminder)
+    db.session.commit()
+    flash('Novo lembrete preparado para quem ainda não respondeu. Revise a mensagem e o público antes de enviar.', 'success')
+    return redirect(url_for('admin.campaigns', edit=reminder.id))

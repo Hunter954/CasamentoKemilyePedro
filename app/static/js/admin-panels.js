@@ -10,6 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }});
     if (dialog.hasAttribute('data-auto-open')) dialog.showModal();
   });
+  document.querySelector('[data-new-reminder]')?.addEventListener('click', () => {
+    const dialog = document.getElementById('campaign-dialog');
+    if (dialog.querySelector('[name=title]').value && dialog.hasAttribute('data-auto-open')) {
+      window.location.href = '/admin/campanhas?audience=pending&new=1'; return;
+    }
+    dialog.querySelector('[data-campaign-audience]').value = 'pending';
+    dialog.showModal();
+  });
+  if (new URLSearchParams(location.search).get('new') === '1') document.getElementById('campaign-dialog')?.showModal();
   const giftForm = document.querySelector('[data-gift-editor]');
   if (giftForm) {
     const title = giftForm.elements.title;
@@ -88,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (previous !== undefined && String(errors) !== previous) { window.location.reload(); return; }
           card.dataset.errorCount = String(errors);
           card.querySelector('.campaign-queue-progress').hidden = false;
-          card.querySelector('[data-queue-summary]').textContent = `${queue.sent} / ${queue.total} mensagens enviadas`;
+          card.querySelector('[data-queue-summary]').textContent = `${queue.sent} enviadas · ${queue.cancelled || 0} canceladas · ${queue.total} mensagens no total`;
           card.querySelector('[data-queue-estimate]').textContent = `${queue.remaining} na fila · ~${queue.minutes} min`;
           card.querySelector('progress').value = queue.percent;
           card.querySelector('[data-queue-state]').textContent = queue.paused ? 'Pausada' : (queue.remaining ? 'Em andamento' : 'Concluída');

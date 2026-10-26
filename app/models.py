@@ -242,6 +242,7 @@ class WhatsAppCampaign(TimestampMixin, db.Model):
     target_tag = db.Column(db.String(80), default='todos')
     image_path = db.Column(db.String(255), default='')
     queue_paused = db.Column(db.Boolean, nullable=False, default=False)
+    target_rsvp = db.Column(db.String(20), nullable=False, default='all')
 
 
 class WhatsAppDispatch(TimestampMixin, db.Model):

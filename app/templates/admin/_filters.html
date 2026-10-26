@@ -1,0 +1,11 @@
+{% macro filters(statuses=[], tags=[], dates=false, money=false, export=false, name='registros', default_sort='newest') %}
+<div class="ux-toolbar">
+  <label class="ux-search">Buscar<input type="search" data-filter-search placeholder="Digite um nome, telefone ou palavra…" autocomplete="off"></label>
+  {% if statuses %}<label>Status<select data-filter="status"><option value="">Todos os status</option>{% for value,label in statuses %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>{% endif %}
+  {% if tags %}<label>Grupo<select data-filter="tag"><option value="">Todos os grupos</option>{% for tag in tags if tag != 'todos' %}<option value="{{ tag }}">{{ tag }}</option>{% endfor %}</select></label>{% endif %}
+  <label>Ordenar por<select data-filter-sort data-default-sort="{{ default_sort }}"><option value="newest">Mais recentes</option><option value="oldest">Mais antigos</option><option value="az">Nome: A → Z</option><option value="za">Nome: Z → A</option>{% if money %}<option value="high">Maior valor</option><option value="low">Menor valor</option>{% endif %}<option value="position" {% if default_sort == 'position' %}selected{% endif %}>Ordem original</option></select></label>
+  {% if dates %}<label>De<input type="date" data-filter-from></label><label>Até<input type="date" data-filter-to></label>{% endif %}
+</div>
+<div class="ux-results"><span data-filter-count role="status" aria-live="polite"></span><span class="ux-filter-actions"><button type="button" class="btn btn-soft btn-sm" data-filter-clear>Limpar filtros</button>{% if export %}<button type="button" class="btn btn-soft btn-sm" data-filter-export="{{ name }}">Exportar CSV</button>{% endif %}</span></div>
+<div class="ux-no-results" data-filter-empty hidden><strong>Nenhum resultado com esses filtros</strong><p>Tente outro nome ou limpe os filtros para ver todos os registros.</p></div>
+{% endmacro %}
