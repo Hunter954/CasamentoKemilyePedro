@@ -1,7 +1,8 @@
 import os
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
+from sqlalchemy import text
 
 os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
 os.environ['WA_DISABLE_AUTO_START'] = 'true'
@@ -9,8 +10,9 @@ from app import create_app, db, _sync_schema
 from app.models import (AdminUser, SiteSettings, ContactLead, WhatsAppCampaign,
                         WhatsAppDispatch, CampaignJob, FAQ, GuestbookMessage, GiftPurchase)
 from app.services.invitations import record_invitation_response
-from app.services.campaign_queue import queue_campaign, process_next
+from app.services.campaign_queue import queue_campaign, process_next, queue_overview
 from app.services.campaign_audience import audience_contacts
+from app.services.reminder_schedule import reminder_plan
 
 
 class AdminExperienceTests(unittest.TestCase):
@@ -72,8 +74,69 @@ class AdminExperienceTests(unittest.TestCase):
         self.assertEqual(self.post(f'/admin/campanhas/{self.campaign.id}/lembrete').status_code, 302)
         copy = WhatsAppCampaign.query.order_by(WhatsAppCampaign.id.desc()).first()
         self.assertEqual((copy.target_rsvp, copy.message), ('pending', self.campaign.message))
+        self.assertTrue(copy.scheduled_reminder)
         self.assertEqual(CampaignJob.query.count(), before)
-        self.assertEqual(queue_campaign(copy, 'https://example.test'), 1)
+        with self.assertRaisesRegex(ValueError, 'Revise a programação'):
+            queue_campaign(copy, 'https://example.test')
+
+    def test_reminder_preview_and_queue_follow_first_successful_invite(self):
+        now = datetime(2026, 11, 4, 14)
+        first_invite = WhatsAppCampaign(title='Convites de outubro', message='Convite')
+        second_invite = WhatsAppCampaign(title='Convites de novembro', message='Convite')
+        self.campaign.scheduled_reminder = True
+        self.campaign.target_tag = 'todos'
+        uninvited = ContactLead(name='Sem convite', phone='5511999999876')
+        db.session.add_all([first_invite, second_invite, uninvited])
+        db.session.flush()
+        db.session.add_all([
+            WhatsAppDispatch(campaign=first_invite, contact=self.pending, status='read', sent_at=now - timedelta(days=8)),
+            WhatsAppDispatch(campaign=second_invite, contact=self.pending, status='sent', sent_at=now - timedelta(hours=2)),
+            WhatsAppDispatch(campaign=first_invite, contact=self.other, status='error', sent_at=now - timedelta(days=8)),
+            WhatsAppDispatch(campaign=second_invite, contact=self.other, status='sent', sent_at=now - timedelta(hours=2)),
+            WhatsAppDispatch(campaign=first_invite, contact=self.yes, status='sent', sent_at=now - timedelta(days=8)),
+        ])
+        db.session.commit()
+        source_ids = [first_invite.id, second_invite.id]
+        rows, deadline = reminder_plan(self.campaign, source_ids, 24, '2026-11-04', now=now)
+        self.assertEqual(deadline, datetime(2026, 11, 5, 3))
+        self.assertEqual([row['state'] for row in rows], ['ready', 'expired', 'missing'])
+        url = f'/admin/campanhas/{self.campaign.id}'
+        with patch('app.services.reminder_schedule.datetime', wraps=datetime) as schedule_clock, \
+             patch('app.services.campaign_queue.datetime', wraps=datetime) as queue_clock:
+            schedule_clock.utcnow.return_value = queue_clock.utcnow.return_value = now
+            html = self.client.get(f'{url}/publico').get_data(as_text=True)
+            self.assertIn('27/10/2026 às 11:00', html)
+            self.assertIn('05/11/2026 às 09:00', html)
+            self.assertNotIn('Zélia', html)
+            self.assertEqual(CampaignJob.query.count(), 0)
+            form = dict(source_ids=source_ids, wait_hours='24', deadline='2026-11-05')
+            self.post(f'{url}/disparar', **form)
+            self.post(f'{url}/disparar', **form)
+            stats = queue_overview()[self.campaign.id]
+            self.assertEqual((stats['ready'], stats['scheduled']), (1, 1))
+        self.assertEqual(CampaignJob.query.count(), 2)
+        with patch('app.services.campaign_queue.get_instance_status', return_value={'connected': True}), \
+             patch('app.services.campaign_queue._post_send_text', return_value={'message_id': 'fake'}) as send:
+            self.assertEqual(process_next(now)['state'], 'sent')
+            self.assertEqual(send.call_args.args[0], self.pending.phone)
+            self.assertEqual(process_next(now + timedelta(hours=21))['state'], 'idle')
+            record_invitation_response(self.other, 'yes'); db.session.commit()
+            self.assertEqual(process_next(now + timedelta(hours=22))['state'], 'cancelled')
+            self.assertEqual(send.call_count, 1)
+
+    def test_reminder_expiry_cancels_queue_even_when_paused_or_disconnected(self):
+        now = datetime.utcnow()
+        queue_campaign(self.campaign, 'https://example.test')
+        dispatch = WhatsAppDispatch.query.one()
+        dispatch.scheduled_at = now - timedelta(hours=1)
+        dispatch.expires_at = now
+        self.campaign.queue_paused = True
+        db.session.commit()
+        with patch('app.services.campaign_queue.get_instance_status') as status:
+            process_next(now)
+            status.assert_not_called()
+        self.assertEqual(dispatch.jobs[0].status, 'cancelled')
+        self.assertIn('prazo de envio terminou', dispatch.error_message)
 
     def test_all_pages_render_with_existing_records(self):
         db.session.add(GuestbookMessage(author_name="Ana D'Ávila", message='Muito amor <3', approved=True))
@@ -104,8 +167,13 @@ class AdminExperienceTests(unittest.TestCase):
         self.assertFalse(b.active); self.assertEqual(b.answer, 'Resposta B')
 
     def test_schema_sync_is_repeatable(self):
+        for table, name in [('whatsapp_campaign', 'scheduled_reminder'), ('whatsapp_dispatch', 'scheduled_at'),
+                            ('whatsapp_dispatch', 'expires_at')]:
+            db.session.execute(text(f'ALTER TABLE {table} DROP COLUMN {name}'))
+        db.session.commit()
         _sync_schema(self.app); _sync_schema(self.app)
         self.assertEqual(self.campaign.target_rsvp, 'pending')
+        self.assertFalse(self.campaign.scheduled_reminder)
 
 
 if __name__ == '__main__':

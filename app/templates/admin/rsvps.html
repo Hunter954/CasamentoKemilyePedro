@@ -4,7 +4,7 @@
 {% block admin_content %}
 <div class="admin-header"><h1>Confirmações de presença</h1><p>Acompanhe quem foi convidado, quem vai comparecer e as ausências. Os nomes do cadastro são separados por &amp;.</p></div>
 <div class="stats-grid"><div class="stat-card"><span>Pessoas convidadas</span><strong>{{ totals.people }}</strong></div><div class="stat-card"><span>Pessoas confirmadas</span><strong>{{ totals.yes }}</strong></div><div class="stat-card"><span>Ausências informadas</span><strong>{{ totals.no }}</strong></div><div class="stat-card"><span>Pessoas pendentes</span><strong>{{ totals.pending }}</strong></div></div>
-<div class="ux-help"><div><h2>Hora de lembrar quem ainda não respondeu?</h2><p>Abra uma campanha de lembrete com o público atualizado. Quem recusou ou já confirmou fica fora desse público.</p></div><a class="btn btn-primary" href="{{ url_for('admin.campaigns', audience='pending', new='1') }}">Preparar lembrete</a></div>
+<div class="ux-help"><div><h2>Hora de lembrar quem ainda não respondeu?</h2><p>Abra uma campanha de lembrete com o público atualizado. Quem recusou ou já confirmou fica fora desse público.</p></div><a class="btn btn-primary" href="{{ url_for('admin.campaigns', reminder=1, new=1) }}">Preparar lembrete</a></div>
 <div class="section-card ux-table" data-filter-panel data-csv-headers='["Nome","Telefone","Código","Status","Convidados","Confirmados","Grupo"]'>
 {{ filters(statuses=[('yes','Confirmados (inclui parciais)'),('pending','Ainda não responderam'),('no','Não comparecerão'),('partial','Presença parcial')], tags=tags, dates=true, export=true, name='confirmacoes') }}
 <p class="ux-muted">O período considera a resposta; para quem ainda não respondeu, a data do cadastro.</p>

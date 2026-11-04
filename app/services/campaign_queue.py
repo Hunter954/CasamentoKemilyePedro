@@ -5,11 +5,13 @@ from datetime import datetime, timedelta
 from sqlalchemy import text, func
 from app import db
 from app.services.campaign_audience import audience_contacts, matches_audience
+from app.services.reminder_schedule import local_send_time, reminder_plan
 from app.models import CampaignDelivery, CampaignJob, WhatsAppCampaign, WhatsAppDispatch, ContactLead, SiteSettings
 from app.services.whatsapp import (normalize_whatsapp_phone, render_campaign_message, to_public_media_url,
                                    get_instance_status, _post_send_text, _post_send_image, serialize_payload)
 
 _local_lock = threading.Lock()
+_REMINDER_EXPIRED = 'Lembrete cancelado: o prazo de envio terminou.'
 
 
 class QueueBusy(ValueError):
@@ -50,7 +52,7 @@ def delivery_settings():
     return settings
 
 
-def queue_campaign(campaign, site_url, scope='unsent'):
+def queue_campaign(campaign, site_url, scope='unsent', schedule=None):
     if scope not in ('unsent', 'errors'):
         raise ValueError('Selecione pendentes ou erros para enviar.')
     with queue_lock():
@@ -60,12 +62,21 @@ def queue_campaign(campaign, site_url, scope='unsent'):
         image = to_public_media_url(campaign.image_path or '', site_url=site_url)
         count = 0
         existing_dispatches = {dispatch.contact_id: dispatch for dispatch in WhatsAppDispatch.query.filter_by(campaign_id=campaign.id).all()}
-        for contact in audience_contacts(campaign, retry=scope == 'errors'):
-            if scope == 'unsent' and campaign.target_tag != 'todos' and (contact.tag or '').strip().lower() != campaign.target_tag.strip().lower():
-                continue
+        now = datetime.utcnow()
+        expires_at = None
+        if campaign.scheduled_reminder and scope == 'unsent':
+            if schedule is None or campaign.target_rsvp != 'pending':
+                raise ValueError('Revise a programação antes de confirmar o lembrete.')
+            rows, expires_at = reminder_plan(campaign, **schedule, now=now)
+            recipients = [(row['contact'], row['release']) for row in rows if row['state'] in ('ready', 'scheduled')]
+        else:
+            recipients = [(contact, None) for contact in audience_contacts(campaign, retry=scope == 'errors')]
+        for contact, scheduled_at in recipients:
             dispatch = existing_dispatches.get(contact.id)
             if scope == 'errors':
                 if not dispatch or dispatch.status not in ('error', 'uncertain'):
+                    continue
+                if dispatch.expires_at is not None and dispatch.expires_at <= now:
                     continue
                 # Retry only failed parts: do not resend an already delivered image.
                 failed = [job for job in dispatch.jobs if job.status in ('error', 'uncertain')]
@@ -81,7 +92,8 @@ def queue_campaign(campaign, site_url, scope='unsent'):
             if not phone:
                 continue
             if dispatch is None:
-                dispatch = WhatsAppDispatch(campaign_id=campaign.id, contact_id=contact.id)
+                dispatch = WhatsAppDispatch(campaign_id=campaign.id, contact_id=contact.id,
+                                            scheduled_at=scheduled_at, expires_at=expires_at)
                 db.session.add(dispatch)
             dispatch.status, dispatch.phone_sent, dispatch.error_message = 'queued', phone, ''
             message = render_campaign_message(campaign.message, contact, settings, site_url)
@@ -102,6 +114,12 @@ def queue_overview():
               .join(CampaignJob, CampaignJob.dispatch_id == WhatsAppDispatch.id)
               .group_by(WhatsAppDispatch.campaign_id, CampaignJob.status).all())
     paused = dict(db.session.query(WhatsAppCampaign.id, WhatsAppCampaign.queue_paused).all())
+    now = datetime.utcnow()
+    scheduled = {cid: (count, next_release) for cid, count, next_release in
+                 (db.session.query(WhatsAppDispatch.campaign_id, func.count(CampaignJob.id), func.min(WhatsAppDispatch.scheduled_at))
+                  .join(CampaignJob, CampaignJob.dispatch_id == WhatsAppDispatch.id)
+                  .filter(CampaignJob.status == 'queued', WhatsAppDispatch.scheduled_at > now)
+                  .group_by(WhatsAppDispatch.campaign_id).all())}
     interval = delivery_settings().interval_seconds
     overview = {}
     for cid, status, count in groups:
@@ -110,15 +128,27 @@ def queue_overview():
         if status in data:
             data[status] += count
     for cid, data in overview.items():
+        data['scheduled'], next_release = scheduled.get(cid, (0, None))
+        data['next_release'] = local_send_time(next_release) if next_release else ''
         data['remaining'] = data['queued'] + data['sending']
-        data['minutes'] = (data['remaining'] * interval + 59) // 60
+        data['ready'] = data['remaining'] - data['scheduled']
+        data['minutes'] = (data['ready'] * interval + 59) // 60
         data['percent'] = round(100 * (data['sent'] + data['cancelled']) / data['total']) if data['total'] else 0
         data['paused'] = paused.get(cid, True)
     return overview
 
 
+def cancel_pending(dispatch, reason):
+    for part in dispatch.jobs:
+        if part.status == 'queued':
+            part.status = 'cancelled'
+    dispatch.status = 'cancelled'
+    dispatch.error_message = reason
+
+
 def process_next(now=None):
-    now = now or datetime.utcnow()
+    clock = datetime.utcnow if now is None else lambda: now
+    now = clock()
     try:
         with queue_lock():
             pacing = delivery_settings()
@@ -133,24 +163,32 @@ def process_next(now=None):
             db.session.commit()
             if CampaignJob.query.filter_by(status='sending').first():
                 return {'state': 'busy'}
+            expired = WhatsAppDispatch.query.filter(WhatsAppDispatch.expires_at <= now,
+                                                   WhatsAppDispatch.jobs.any(CampaignJob.status == 'queued')).all()
+            if expired:
+                for dispatch in expired:
+                    cancel_pending(dispatch, _REMINDER_EXPIRED)
+                db.session.commit()
             if pacing.next_send_at and pacing.next_send_at > now:
                 return {'state': 'waiting'}
             job = (CampaignJob.query.join(WhatsAppDispatch).join(WhatsAppCampaign)
-                   .filter(CampaignJob.status == 'queued', WhatsAppCampaign.queue_paused.is_(False), WhatsAppCampaign.active.is_(True))
+                   .filter(CampaignJob.status == 'queued', WhatsAppCampaign.queue_paused.is_(False), WhatsAppCampaign.active.is_(True),
+                           (WhatsAppDispatch.scheduled_at.is_(None) | (WhatsAppDispatch.scheduled_at <= now)))
                    .order_by(CampaignJob.id).first())
             if job is None:
                 return {'state': 'idle'}
             # A guest may reply while a reminder is waiting. Never send it then.
             if job.dispatch.campaign.target_rsvp == 'pending' and not matches_audience(job.dispatch.campaign, job.dispatch.contact):
-                for part in job.dispatch.jobs:
-                    if part.status == 'queued':
-                        part.status = 'cancelled'
-                job.dispatch.status = 'cancelled'
-                job.dispatch.error_message = 'Lembrete cancelado: o contato já respondeu ou saiu do público.'
+                cancel_pending(job.dispatch, 'Lembrete cancelado: o contato já respondeu ou saiu do público.')
                 db.session.commit()
                 return {'state': 'cancelled'}
             if not get_instance_status().get('connected'):
                 return {'state': 'disconnected'}
+            now = clock()
+            if job.dispatch.expires_at is not None and job.dispatch.expires_at <= now:
+                cancel_pending(job.dispatch, _REMINDER_EXPIRED)
+                db.session.commit()
+                return {'state': 'cancelled'}
             job.status, job.started_at = 'sending', now
             pacing.next_send_at = now + timedelta(seconds=max(15, pacing.interval_seconds))
             db.session.commit()

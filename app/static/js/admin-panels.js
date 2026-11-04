@@ -10,13 +10,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }});
     if (dialog.hasAttribute('data-auto-open')) dialog.showModal();
   });
-  document.querySelector('[data-new-reminder]')?.addEventListener('click', () => {
-    const dialog = document.getElementById('campaign-dialog');
-    if (dialog.querySelector('[name=title]').value && dialog.hasAttribute('data-auto-open')) {
-      window.location.href = '/admin/campanhas?audience=pending&new=1'; return;
-    }
-    dialog.querySelector('[data-campaign-audience]').value = 'pending';
-    dialog.showModal();
+  const reminder = document.querySelector('[data-scheduled-reminder]');
+  if (reminder) {
+    const audience = document.querySelector('[data-campaign-audience]');
+    const syncReminder = () => {
+      if (reminder.checked) audience.value = 'pending';
+      audience.disabled = reminder.checked;
+    };
+    reminder.addEventListener('change', syncReminder);
+    syncReminder();
+  }
+  document.querySelector('[data-reminder-options]')?.addEventListener('input', () => {
+    document.querySelector('[data-reminder-confirm]').disabled = true;
   });
   if (new URLSearchParams(location.search).get('new') === '1') document.getElementById('campaign-dialog')?.showModal();
   const giftForm = document.querySelector('[data-gift-editor]');
@@ -98,9 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
           card.dataset.errorCount = String(errors);
           card.querySelector('.campaign-queue-progress').hidden = false;
           card.querySelector('[data-queue-summary]').textContent = `${queue.sent} enviadas · ${queue.cancelled || 0} canceladas · ${queue.total} mensagens no total`;
-          card.querySelector('[data-queue-estimate]').textContent = `${queue.remaining} na fila · ~${queue.minutes} min`;
+          const future = queue.scheduled ? ` · ${queue.scheduled} agendadas · próximas em ${queue.next_release}` : '';
+          card.querySelector('[data-queue-estimate]').textContent = `${queue.ready} prontas · ~${queue.minutes} min${future}`;
           card.querySelector('progress').value = queue.percent;
-          card.querySelector('[data-queue-state]').textContent = queue.paused ? 'Pausada' : (queue.remaining ? 'Em andamento' : 'Concluída');
+          const queueState = queue.ready ? 'Em andamento' : (queue.scheduled ? 'Aguardando data' : 'Concluída');
+          card.querySelector('[data-queue-state]').textContent = queue.paused ? 'Pausada' : queueState;
           card.querySelector('[data-queue-note]').textContent = errors ? 'Confira os erros no histórico antes de reenviar.' : (queue.paused ? 'Fila pausada. Retome quando desejar.' : 'Pode fechar esta página: os envios continuam em segundo plano.');
           const pause = card.querySelector('[data-pause-form]');
           pause.hidden = !queue.remaining;

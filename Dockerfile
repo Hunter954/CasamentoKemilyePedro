@@ -15,6 +15,7 @@ RUN apt-get update \
         ca-certificates \
         openssl \
         git \
+        tzdata \
         python3 \
         python3-venv \
         python3-pip \

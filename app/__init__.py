@@ -48,6 +48,9 @@ def _sync_schema(app):
         if 'queue_paused' not in columns:
             db.session.execute(text('ALTER TABLE whatsapp_campaign ADD COLUMN queue_paused BOOLEAN NOT NULL DEFAULT FALSE'))
             db.session.commit()
+        if 'scheduled_reminder' not in columns:
+            db.session.execute(text('ALTER TABLE whatsapp_campaign ADD COLUMN scheduled_reminder BOOLEAN NOT NULL DEFAULT FALSE'))
+            db.session.commit()
 
     if inspector.has_table('admin_user'):
         user_columns = {column['name'] for column in inspector.get_columns('admin_user')}
@@ -119,6 +122,9 @@ def _sync_schema(app):
 
     if inspector.has_table('whatsapp_dispatch'):
         dispatch_columns = {column['name'] for column in inspector.get_columns('whatsapp_dispatch')}
+        for name in ('scheduled_at', 'expires_at'):
+            if name not in dispatch_columns:
+                db.session.execute(text(f'ALTER TABLE whatsapp_dispatch ADD COLUMN {name} TIMESTAMP'))
         if 'phone_sent' not in dispatch_columns:
             db.session.execute(text("ALTER TABLE whatsapp_dispatch ADD COLUMN phone_sent VARCHAR(40) DEFAULT ''"))
         if 'provider_message_id' not in dispatch_columns:
