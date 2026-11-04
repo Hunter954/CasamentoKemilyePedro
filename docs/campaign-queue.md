@@ -11,6 +11,8 @@
 
 Os destinatários, números e mensagens personalizados são fotografados no início do envio. Novos contatos podem ser adicionados depois pelo botão dos pendentes, sem repetir quem já tem registro naquela campanha. Alterar a tag de um contato não impede a revisão de um envio com falha já registrado.
 
+Para lembretes, abra **Preparar lembrete**, salve a mensagem e selecione as campanhas de convite na prévia. O painel usa o envio bem-sucedido mais antigo de cada contato nas campanhas escolhidas. Ajuste a espera mínima e o último dia de envio no horário de Brasília. **Confirmar programação** salva os horários na fila. O trabalhador verifica a resposta antes do envio e cancela pendências no fim do prazo, inclusive em filas pausadas. Cada confirmação conserva seus próprios horários e prazo.
+
 O intervalo não garante proteção contra bloqueios do WhatsApp. Use o envio para convidados que esperam o contato.
 
 ## Implementação

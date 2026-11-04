@@ -45,6 +45,8 @@ from app.services.invitations import invitation_report, record_invitation_respon
 from app.services.whatsapp import render_campaign_message
 from app.services.gift_order import admin_gifts_query, move_gift
 from app.services.campaign_audience import AUDIENCES, audience_contacts
+from app.services.reminder_schedule import (DEFAULT_DEADLINE, DEFAULT_WAIT_HOURS, invite_campaigns,
+                                            local_send_time, reminder_plan)
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -54,6 +56,11 @@ def _campaign_target_rsvp():
     if value not in AUDIENCES:
         abort(400, description='Selecione um público válido para a campanha.')
     return value
+
+
+def _reminder_schedule_params(values):
+    return {'source_ids': values.getlist('source_ids', type=int),
+            'wait_hours': values.get('wait_hours', type=int), 'deadline': values.get('deadline', '')}
 
 
 def _to_float(value):
@@ -629,17 +636,21 @@ def campaigns():
             return redirect(url_for('admin.campaigns'))
         image_upload = request.files.get('image')
         image_path = save_upload(image_upload) if image_upload and image_upload.filename else ''
+        scheduled_reminder = request.form.get('scheduled_reminder') == 'yes'
         campaign = WhatsAppCampaign(
             title=request.form.get('title', '').strip(),
             message=request.form.get('message', '').strip(),
             active=True,
             target_tag=request.form.get('target_tag', 'todos').strip() or 'todos',
             image_path=image_path,
-            target_rsvp=_campaign_target_rsvp(),
+            target_rsvp='pending' if scheduled_reminder else _campaign_target_rsvp(),
+            scheduled_reminder=scheduled_reminder,
         )
         db.session.add(campaign)
         db.session.commit()
         flash('Campanha criada. Ela não dispara sozinha: use o botão de envio quando quiser.', 'success')
+        if scheduled_reminder:
+            return redirect(url_for('admin.campaign_audience', campaign_id=campaign.id))
         return redirect(url_for('admin.campaigns'))
 
     campaigns = WhatsAppCampaign.query.order_by(WhatsAppCampaign.created_at.desc()).all()
@@ -726,11 +737,14 @@ def trigger_campaign(campaign_id):
         flash('Confira as conversas antes de reenviar: uma falha de conexão pode ocorrer depois da entrega.', 'warning')
         return redirect(url_for('admin.campaigns'))
     try:
-        count = queue_campaign(campaign, request.url_root.rstrip('/'), scope)
+        schedule = _reminder_schedule_params(request.form) if campaign.scheduled_reminder else None
+        count = queue_campaign(campaign, request.url_root.rstrip('/'), scope, schedule=schedule)
         flash(f'{count} contatos adicionados à fila. O envio continuará em segundo plano.' if count else 'Nenhum contato novo para este envio.', 'success' if count else 'info')
     except ValueError as exc:
         db.session.rollback()
         flash(str(exc), 'warning')
+        if campaign.scheduled_reminder and scope == 'unsent':
+            return redirect(url_for('admin.campaign_audience', campaign_id=campaign.id))
     return redirect(url_for('admin.campaigns'))
 
 
@@ -812,12 +826,16 @@ def edit_campaign(campaign_id):
                 raise ValueError('Esta campanha já tem mensagens na fila. Conclua os envios ou crie uma nova campanha para outro conteúdo.')
             campaign.title, campaign.message = title, message
             campaign.target_tag = request.form.get('target_tag', 'todos').strip() or 'todos'
-            campaign.target_rsvp = _campaign_target_rsvp()
+            if not campaign.dispatches:
+                campaign.scheduled_reminder = request.form.get('scheduled_reminder') == 'yes'
+            campaign.target_rsvp = 'pending' if campaign.scheduled_reminder else _campaign_target_rsvp()
             image = request.files.get('image')
             if image and image.filename:
                 campaign.image_path = save_upload(image)
             db.session.commit()
         flash('Campanha atualizada.', 'success')
+        if campaign.scheduled_reminder:
+            return redirect(url_for('admin.campaign_audience', campaign_id=campaign.id))
     except ValueError as exc:
         flash(str(exc), 'warning')
     return redirect(url_for('admin.campaigns'))
@@ -827,6 +845,24 @@ def edit_campaign(campaign_id):
 @login_required
 def campaign_audience(campaign_id):
     campaign = db.get_or_404(WhatsAppCampaign, campaign_id)
+    if campaign.scheduled_reminder:
+        sources = invite_campaigns(campaign)
+        if request.args.get('plan') == '1':
+            schedule = _reminder_schedule_params(request.args)
+        else:
+            schedule = {'source_ids': [source.id for source in sources if source.target_rsvp == 'all'
+                                       and not source.title.casefold().startswith('lembrete')],
+                        'wait_hours': DEFAULT_WAIT_HOURS, 'deadline': DEFAULT_DEADLINE}
+        rows = []
+        if schedule['source_ids'] or request.args.get('plan') == '1':
+            try:
+                rows, _ = reminder_plan(campaign, **schedule)
+            except ValueError as exc:
+                flash(str(exc), 'warning')
+        return render_template('admin/reminder_schedule.html', campaign=campaign, sources=sources,
+                               schedule=schedule, rows=rows, local_send_time=local_send_time, one_minute=timedelta(minutes=1),
+                               planned=sorted((d for d in campaign.dispatches if d.scheduled_at),
+                                              key=lambda d: (d.scheduled_at, d.id)))
     eligible = audience_contacts(campaign)
     processed = {d.contact_id for d in campaign.dispatches}
     return render_template('admin/campaign_audience.html', campaign=campaign, eligible=eligible,
@@ -840,7 +876,7 @@ def duplicate_campaign(campaign_id):
     original = db.get_or_404(WhatsAppCampaign, campaign_id)
     reminder = WhatsAppCampaign(title=('Lembrete - ' + original.title)[:180], message=original.message,
                                image_path=original.image_path, target_tag=original.target_tag,
-                               target_rsvp='pending', active=True, queue_paused=False)
+                               target_rsvp='pending', active=True, scheduled_reminder=True)
     db.session.add(reminder)
     db.session.commit()
     flash('Novo lembrete preparado para quem ainda não respondeu. Revise a mensagem e o público antes de enviar.', 'success')

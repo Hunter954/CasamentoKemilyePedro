@@ -1,0 +1,75 @@
+{% extends 'admin/base.html' %}
+{% from 'admin/_filters.html' import filters %}
+{% block admin_content %}
+{% set labels = {'ready':'Pode receber agora', 'scheduled':'Aguardando o intervalo', 'missing':'Sem convite enviado nas campanhas escolhidas', 'expired':'Fora do prazo'} %}
+{% set ready = rows|selectattr('state', 'equalto', 'ready')|list %}
+{% set later = rows|selectattr('state', 'equalto', 'scheduled')|list %}
+<div class="admin-header admin-header-row">
+  <div><span class="admin-kicker">Programar lembrete</span><h1>{{ campaign.title }}</h1><p>Quem ainda não respondeu · {{ 'Todos os grupos' if campaign.target_tag == 'todos' else campaign.target_tag }}</p></div>
+  <a class="btn btn-soft" href="{{ url_for('admin.campaigns') }}">Voltar às campanhas</a>
+</div>
+<section class="section-card">
+  <h2>Quando enviar</h2>
+  <form method="get" class="stack-form" data-reminder-options>
+    <input type="hidden" name="plan" value="1">
+    <div class="admin-form-grid two-cols">
+      <label>Espera mínima após o primeiro convite (horas)<input name="wait_hours" type="number" min="1" max="720" value="{{ schedule.wait_hours if schedule.wait_hours is not none else '' }}" required></label>
+      <label>Último dia para enviar<input name="deadline" type="date" value="{{ schedule.deadline }}" required><small>Inclui o dia inteiro, no horário de Brasília.</small></label>
+    </div>
+    <fieldset>
+      <legend>Campanhas dos convites originais</legend>
+      <p>Marque todas as campanhas usadas para enviar o primeiro convite. Se alguém recebeu em mais de uma, vale o envio mais antigo.</p>
+      {% for source in sources %}
+      <label class="check"><input type="checkbox" name="source_ids" value="{{ source.id }}" {% if source.id in schedule.source_ids %}checked{% endif %}> {{ source.title }}{% if source.created_at %} · {{ source.created_at.strftime('%d/%m/%Y') }}{% endif %}</label>
+      {% else %}<p>Assim que houver um convite enviado no histórico, a campanha aparecerá aqui.</p>{% endfor %}
+    </fieldset>
+    <div><button class="btn btn-soft" {% if not sources %}disabled{% endif %}>Atualizar prévia</button></div>
+  </form>
+</section>
+<div class="stats-grid">
+  <div class="stat-card"><span>Podem receber agora</span><strong>{{ ready|length }}</strong></div>
+  <div class="stat-card"><span>Vão aguardar o intervalo</span><strong>{{ later|length }}</strong></div>
+  <div class="stat-card"><span>Fora do prazo</span><strong>{{ rows|selectattr('state', 'equalto', 'expired')|list|length }}</strong></div>
+  <div class="stat-card"><span>Sem convite no histórico selecionado</span><strong>{{ rows|selectattr('state', 'equalto', 'missing')|list|length }}</strong></div>
+</div>
+<section class="section-card" data-filter-panel>
+  <h2>Prévia por convidado</h2>
+  {{ filters(statuses=labels.items()|list, default_sort='position') }}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Convidado</th><th>Primeiro convite</th><th>Pode receber a partir de</th><th>Situação</th></tr></thead>
+    <tbody data-filter-list>
+    {% for row in rows %}
+    <tr data-filter-row data-name="{{ row.contact.name }}" data-status="{{ row.state }}">
+      <td>{{ row.contact.name }}</td><td>{{ local_send_time(row.first) if row.first else '—' }}</td>
+      <td>{{ local_send_time(row.release) if row.release else '—' }}</td><td>{{ labels[row.state] }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+<section class="section-card ux-panel">
+  <details><summary>Conferir mensagem</summary><p class="campaign-message">{{ campaign.message }}</p>{% if campaign.image_path %}<img src="{{ media_url(campaign.image_path) }}" alt="Imagem da campanha" style="max-width:260px;width:100%">{% endif %}</details>
+  <p>A confirmação abaixo agenda {{ (ready|length) + (later|length) }} contatos da prévia. Para aplicar alterações acima, clique em Atualizar prévia.</p>
+  <form method="post" action="{{ url_for('admin.trigger_campaign', campaign_id=campaign.id) }}" class="ux-reminder-form">
+    <input type="hidden" name="csrf_token" value="{{ panel_csrf() }}">
+    <input type="hidden" name="wait_hours" value="{{ schedule.wait_hours }}">
+    <input type="hidden" name="deadline" value="{{ schedule.deadline }}">
+    {% for source_id in schedule.source_ids %}<input type="hidden" name="source_ids" value="{{ source_id }}">{% endfor %}
+    <button class="btn btn-primary" data-reminder-confirm {% if not (ready or later) %}disabled{% endif %}>Confirmar programação</button>
+  </form>
+  <p class="ux-progress-help">A fila usa a frequência configurada. O painel verifica a resposta novamente na hora do envio e cancela os lembretes pendentes ao atingir o prazo.</p>
+</section>
+{% if planned %}
+<section class="section-card">
+  <h2>Programação confirmada</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Convidado</th><th>Pode receber a partir de</th><th>Último dia de envio</th><th>Situação</th></tr></thead>
+    <tbody>{% for dispatch in planned %}
+    <tr><td>{{ dispatch.contact.name if dispatch.contact else '—' }}</td><td>{{ local_send_time(dispatch.scheduled_at) }}</td><td>{{ local_send_time(dispatch.expires_at - one_minute, '%d/%m/%Y') }}</td>
+      <td>{{ dispatch.error_message or {'queued':'Na fila', 'sent':'Enviado', 'delivered':'Entregue', 'read':'Lido', 'cancelled':'Cancelado'}.get(dispatch.status, 'Em revisão') }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}{{ super() }}<script src="{{ url_for('static', filename='js/admin-panels.js', v='reminder-schedule-20261104') }}"></script>{% endblock %}
